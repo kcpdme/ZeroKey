@@ -1,10 +1,20 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { generatePassword } from '../lib/password-generator';
+import {
+    GeneratorType,
+    generatePBKDF2Password,
+    generateMemorizablePassword,
+    DEFAULT_MEMORIZABLE_OPTIONS
+} from '../lib/generators';
 import { OptionsState } from '../types';
+import { MemorizableOptionsState } from '../components/MemorizableOptions';
 
 interface UsePasswordGeneratorReturn {
+    // Algorithm selection
+    algorithm: GeneratorType;
+    setAlgorithm: (algorithm: GeneratorType) => void;
+
     // Form state
     masterPassword: string;
     setMasterPassword: (value: string) => void;
@@ -14,8 +24,17 @@ interface UsePasswordGeneratorReturn {
     setLogin: (value: string) => void;
     userSalt: string;
     setUserSalt: (value: string) => void;
+
+    // PBKDF2 options
     options: OptionsState;
     handleOptionChange: <K extends keyof OptionsState>(key: K, value: OptionsState[K]) => void;
+
+    // Memorizable options
+    memorizableOptions: MemorizableOptionsState;
+    handleMemorizableOptionChange: <K extends keyof MemorizableOptionsState>(
+        key: K,
+        value: MemorizableOptionsState[K]
+    ) => void;
 
     // Generated password state
     generatedPassword: string;
@@ -40,7 +59,7 @@ interface UsePasswordGeneratorReturn {
     canGenerate: boolean;
 }
 
-const DEFAULT_OPTIONS: OptionsState = {
+const DEFAULT_PBKDF2_OPTIONS: OptionsState = {
     counter: 1,
     length: 16,
     useSymbols: true,
@@ -50,12 +69,23 @@ const DEFAULT_OPTIONS: OptionsState = {
 };
 
 export function usePasswordGenerator(): UsePasswordGeneratorReturn {
+    // Algorithm selection
+    const [algorithm, setAlgorithm] = useState<GeneratorType>('pbkdf2');
+
     // Form inputs
     const [masterPassword, setMasterPassword] = useState<string>('');
     const [site, setSite] = useState<string>('');
     const [login, setLogin] = useState<string>('');
     const [userSalt, setUserSalt] = useState<string>('');
-    const [options, setOptions] = useState<OptionsState>(DEFAULT_OPTIONS);
+
+    // PBKDF2 options
+    const [options, setOptions] = useState<OptionsState>(DEFAULT_PBKDF2_OPTIONS);
+
+    // Memorizable options
+    const [memorizableOptions, setMemorizableOptions] = useState<MemorizableOptionsState>({
+        shift: DEFAULT_MEMORIZABLE_OPTIONS.shift,
+        magicNumber: DEFAULT_MEMORIZABLE_OPTIONS.magicNumber,
+    });
 
     // Password state
     const [generatedPassword, setGeneratedPassword] = useState<string>('');
@@ -67,10 +97,12 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
     // UI state
     const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
-    // Computed
-    const canGenerate = Boolean(masterPassword && site && login && !isLoading);
+    // Computed - validation depends on algorithm
+    const canGenerate = algorithm === 'pbkdf2'
+        ? Boolean(masterPassword && site && login && !isLoading)
+        : Boolean(site && login && !isLoading);
 
-    // Handle option changes
+    // Handle PBKDF2 option changes
     const handleOptionChange = useCallback(<K extends keyof OptionsState>(
         key: K,
         value: OptionsState[K]
@@ -78,25 +110,53 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         setOptions(prev => ({ ...prev, [key]: value }));
     }, []);
 
-    // Generate password
-    const handleGenerate = useCallback(async () => {
-        if (!masterPassword || !site || !login) {
-            setGeneratedPassword('');
-            return;
-        }
+    // Handle memorizable option changes
+    const handleMemorizableOptionChange = useCallback(<K extends keyof MemorizableOptionsState>(
+        key: K,
+        value: MemorizableOptionsState[K]
+    ): void => {
+        setMemorizableOptions(prev => ({ ...prev, [key]: value }));
+    }, []);
 
+    // Generate password based on selected algorithm
+    const handleGenerate = useCallback(async () => {
+        // Clear previous state
         setIsLoading(true);
         setGeneratedPassword('');
         setError(null);
 
         try {
-            const password = await generatePassword({
-                masterPassword,
-                site,
-                login,
-                userSalt,
-                ...options,
-            });
+            let password: string;
+
+            if (algorithm === 'pbkdf2') {
+                // PBKDF2 requires master password
+                if (!masterPassword || !site || !login) {
+                    setGeneratedPassword('');
+                    setIsLoading(false);
+                    return;
+                }
+
+                password = await generatePBKDF2Password({
+                    masterPassword,
+                    site,
+                    login,
+                    userSalt,
+                    ...options,
+                });
+            } else {
+                // Memorizable - no master password needed
+                if (!site || !login) {
+                    setGeneratedPassword('');
+                    setIsLoading(false);
+                    return;
+                }
+
+                password = generateMemorizablePassword(
+                    { login, site },
+                    memorizableOptions
+                );
+            }
+
             setGeneratedPassword(password);
             setIsPasswordVisible(false);
         } catch (err) {
@@ -105,7 +165,7 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [masterPassword, site, login, userSalt, options]);
+    }, [algorithm, masterPassword, site, login, userSalt, options, memorizableOptions]);
 
     // Copy to clipboard
     const handleCopy = useCallback(async (): Promise<void> => {
@@ -142,7 +202,11 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         setSite('');
         setLogin('');
         setUserSalt('');
-        setOptions(DEFAULT_OPTIONS);
+        setOptions(DEFAULT_PBKDF2_OPTIONS);
+        setMemorizableOptions({
+            shift: DEFAULT_MEMORIZABLE_OPTIONS.shift,
+            magicNumber: DEFAULT_MEMORIZABLE_OPTIONS.magicNumber,
+        });
         setGeneratedPassword('');
         setError(null);
         setShowAdvanced(false);
@@ -151,6 +215,10 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
     }, []);
 
     return {
+        // Algorithm
+        algorithm,
+        setAlgorithm,
+
         // Form state
         masterPassword,
         setMasterPassword,
@@ -160,8 +228,14 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         setLogin,
         userSalt,
         setUserSalt,
+
+        // PBKDF2 options
         options,
         handleOptionChange,
+
+        // Memorizable options
+        memorizableOptions,
+        handleMemorizableOptionChange,
 
         // Password state
         generatedPassword,

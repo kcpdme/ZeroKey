@@ -1,8 +1,19 @@
-// lib/password-generator.ts
-// Password Generation Logic - DO NOT MODIFY THIS FILE
+// lib/generators/pbkdf2-generator.ts
+// PBKDF2 Password Generation Logic - DO NOT MODIFY THIS FILE
 // This is the core deterministic password generation algorithm
 
-import { GeneratePasswordParams } from '../types';
+export interface PBKDF2Params {
+    masterPassword: string;
+    site: string;
+    login: string;
+    userSalt?: string;
+    counter?: number;
+    length?: number;
+    useSymbols?: boolean;
+    useNumbers?: boolean;
+    useUppercase?: boolean;
+    useLowercase?: boolean;
+}
 
 /**
  * Normalizes a site URL.
@@ -48,7 +59,7 @@ const bufferToBase64Url = (buffer: ArrayBuffer): string => {
  * The core password generation function, translated from your Dart code.
  * It's deterministic based on the inputs.
  */
-export const generatePassword = async ({
+export const generatePBKDF2Password = async ({
     masterPassword,
     site,
     login,
@@ -59,7 +70,7 @@ export const generatePassword = async ({
     useNumbers = true,
     useUppercase = true,
     useLowercase = true,
-}: GeneratePasswordParams): Promise<string> => {
+}: PBKDF2Params): Promise<string> => {
     if (!masterPassword || !site || !login) {
         return '';
     }

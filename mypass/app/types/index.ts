@@ -3,6 +3,9 @@
 
 import { ReactNode, ChangeEvent } from 'react';
 
+// Re-export generator types
+export type { GeneratorType } from '../lib/generators';
+
 export interface GeneratePasswordParams {
     masterPassword: string;
     site: string;

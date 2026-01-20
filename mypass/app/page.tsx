@@ -15,12 +15,21 @@ import {
 } from 'lucide-react';
 
 // Modular imports
-import { FormInput, Checkbox, CounterInput, PasswordDisplay } from './components';
+import {
+  FormInput,
+  Checkbox,
+  CounterInput,
+  PasswordDisplay,
+  AlgorithmSelector,
+  MemorizableOptions
+} from './components';
 import { usePasswordGenerator, useAutoClean } from './hooks';
 
 export default function HomePage() {
   // Use custom hook for all password generator state
   const {
+    algorithm,
+    setAlgorithm,
     masterPassword,
     setMasterPassword,
     site,
@@ -31,6 +40,8 @@ export default function HomePage() {
     setUserSalt,
     options,
     handleOptionChange,
+    memorizableOptions,
+    handleMemorizableOptionChange,
     generatedPassword,
     isLoading,
     error,
@@ -57,7 +68,7 @@ export default function HomePage() {
     {
       inactivityTimeout: 2 * 60 * 1000, // 2 minutes
       clipboardTimeout: 30 * 1000, // 30 seconds
-      clearOnBlur: false, // Don't clear on tab switch (optional - enable if needed)
+      clearOnBlur: false,
     }
   );
 
@@ -81,23 +92,38 @@ export default function HomePage() {
     loginInputRef.current?.focus();
   }, [resetFields]);
 
+  // Get algorithm-specific description
+  const getDescription = () => {
+    if (algorithm === 'pbkdf2') {
+      return 'Cryptographically secure password generation.';
+    }
+    return 'Human-memorizable passwords using Indian rivers.';
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans flex items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto">
         {/* Header */}
-        <header className="text-center mb-8">
+        <header className="text-center mb-6">
           <h1 className="text-4xl font-bold text-slate-100 flex items-center justify-center gap-3">
             <KeyRound className="w-10 h-10 text-cyan-400" aria-hidden="true" />
             <span>Stateless Pass</span>
           </h1>
           <p className="text-slate-400 mt-2">
-            Deterministic password generation in your browser.
+            {getDescription()}
           </p>
         </header>
+
+        {/* Algorithm Selector */}
+        <AlgorithmSelector
+          algorithm={algorithm}
+          onChange={setAlgorithm}
+        />
 
         {/* Main Form */}
         <main>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Common Fields: Login and Site */}
             <FormInput
               ref={loginInputRef}
               type="text"
@@ -121,25 +147,30 @@ export default function HomePage() {
               autoComplete="off"
             />
 
-            <FormInput
-              type="password"
-              placeholder="Master Password"
-              value={masterPassword}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setMasterPassword(e.target.value)}
-              icon={<Shield className="w-5 h-5" aria-hidden="true" />}
-              label="Master password"
-              autoComplete="current-password"
-            />
+            {/* PBKDF2-specific Fields */}
+            {algorithm === 'pbkdf2' && (
+              <>
+                <FormInput
+                  type="password"
+                  placeholder="Master Password"
+                  value={masterPassword}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setMasterPassword(e.target.value)}
+                  icon={<Shield className="w-5 h-5" aria-hidden="true" />}
+                  label="Master password"
+                  autoComplete="current-password"
+                />
 
-            <FormInput
-              type="text"
-              placeholder="User Salt (optional, but recommended)"
-              value={userSalt}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setUserSalt(e.target.value)}
-              icon={<Hash className="w-5 h-5" aria-hidden="true" />}
-              label="User salt for additional security"
-              autoComplete="off"
-            />
+                <FormInput
+                  type="text"
+                  placeholder="User Salt (optional, but recommended)"
+                  value={userSalt}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUserSalt(e.target.value)}
+                  icon={<Hash className="w-5 h-5" aria-hidden="true" />}
+                  label="User salt for additional security"
+                  autoComplete="off"
+                />
+              </>
+            )}
 
             {/* Advanced Options Panel */}
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 transition-all">
@@ -152,7 +183,9 @@ export default function HomePage() {
               >
                 <div className="flex items-center gap-2">
                   <Settings className="w-5 h-5" aria-hidden="true" />
-                  <span>Advanced Options</span>
+                  <span>
+                    {algorithm === 'pbkdf2' ? 'Advanced Options' : 'Generation Options'}
+                  </span>
                 </div>
                 <ChevronsRight
                   className={`w-5 h-5 transition-transform ${showAdvanced ? 'rotate-90' : ''}`}
@@ -161,77 +194,88 @@ export default function HomePage() {
               </button>
 
               {showAdvanced && (
-                <div id="advanced-options" className="mt-6 space-y-6">
-                  <div className="space-y-4">
-                    <CounterInput
-                      label="Counter (Version)"
-                      value={options.counter}
-                      onIncrement={() => handleOptionChange('counter', options.counter + 1)}
-                      onDecrement={() => handleOptionChange('counter', options.counter - 1)}
-                      min={1}
+                <div id="advanced-options" className="mt-6">
+                  {/* PBKDF2 Options */}
+                  {algorithm === 'pbkdf2' && (
+                    <div className="space-y-4">
+                      <CounterInput
+                        label="Counter (Version)"
+                        value={options.counter}
+                        onIncrement={() => handleOptionChange('counter', options.counter + 1)}
+                        onDecrement={() => handleOptionChange('counter', options.counter - 1)}
+                        min={1}
+                      />
+
+                      <div>
+                        <label
+                          htmlFor="length-slider"
+                          className="flex justify-between items-center text-slate-300 mb-2"
+                        >
+                          <span>Length</span>
+                          <span className="font-mono text-lg" aria-live="polite">
+                            {options.length}
+                          </span>
+                        </label>
+                        <input
+                          id="length-slider"
+                          type="range"
+                          min="8"
+                          max="64"
+                          value={options.length}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleOptionChange('length', parseInt(e.target.value, 10))
+                          }
+                          className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                          aria-valuemin={8}
+                          aria-valuemax={64}
+                          aria-valuenow={options.length}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <Checkbox
+                          id="lower"
+                          label="Lowercase (a-z)"
+                          checked={options.useLowercase}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleOptionChange('useLowercase', e.target.checked)
+                          }
+                        />
+                        <Checkbox
+                          id="upper"
+                          label="Uppercase (A-Z)"
+                          checked={options.useUppercase}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleOptionChange('useUppercase', e.target.checked)
+                          }
+                        />
+                        <Checkbox
+                          id="numbers"
+                          label="Numbers (0-9)"
+                          checked={options.useNumbers}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleOptionChange('useNumbers', e.target.checked)
+                          }
+                        />
+                        <Checkbox
+                          id="symbols"
+                          label="Symbols (!@#)"
+                          checked={options.useSymbols}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleOptionChange('useSymbols', e.target.checked)
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Memorizable Options */}
+                  {algorithm === 'memorizable' && (
+                    <MemorizableOptions
+                      options={memorizableOptions}
+                      onChange={handleMemorizableOptionChange}
                     />
-
-                    <div>
-                      <label
-                        htmlFor="length-slider"
-                        className="flex justify-between items-center text-slate-300 mb-2"
-                      >
-                        <span>Length</span>
-                        <span className="font-mono text-lg" aria-live="polite">
-                          {options.length}
-                        </span>
-                      </label>
-                      <input
-                        id="length-slider"
-                        type="range"
-                        min="8"
-                        max="64"
-                        value={options.length}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleOptionChange('length', parseInt(e.target.value, 10))
-                        }
-                        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                        aria-valuemin={8}
-                        aria-valuemax={64}
-                        aria-valuenow={options.length}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <Checkbox
-                        id="lower"
-                        label="Lowercase (a-z)"
-                        checked={options.useLowercase}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleOptionChange('useLowercase', e.target.checked)
-                        }
-                      />
-                      <Checkbox
-                        id="upper"
-                        label="Uppercase (A-Z)"
-                        checked={options.useUppercase}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleOptionChange('useUppercase', e.target.checked)
-                        }
-                      />
-                      <Checkbox
-                        id="numbers"
-                        label="Numbers (0-9)"
-                        checked={options.useNumbers}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleOptionChange('useNumbers', e.target.checked)
-                        }
-                      />
-                      <Checkbox
-                        id="symbols"
-                        label="Symbols (!@#)"
-                        checked={options.useSymbols}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleOptionChange('useSymbols', e.target.checked)
-                        }
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
