@@ -15,15 +15,19 @@ export const Checkbox = memo<CheckboxProps>(({ id, label, checked, onChange }) =
             aria-checked={checked}
         />
         <div
-            className={`w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all duration-200 ${checked ? 'bg-cyan-500 border-cyan-500' : 'bg-slate-700 border-slate-600'
-                }`}
+            className="w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all duration-200"
+            style={{
+                background: checked ? 'var(--color-cyan-500)' : 'var(--bg-tertiary)',
+                borderColor: checked ? 'var(--color-cyan-500)' : 'var(--border-color)'
+            }}
             role="checkbox"
             aria-checked={checked}
         >
-            {checked && <Check className="w-4 h-4 text-slate-900" />}
+            {checked && <Check className="w-4 h-4" style={{ color: '#ffffff' }} />}
         </div>
-        <span className="text-slate-300">{label}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
     </label>
 ));
 
 Checkbox.displayName = 'Checkbox';
+

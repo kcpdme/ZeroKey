@@ -12,15 +12,20 @@ export const CounterInput = memo<CounterInputProps>(({
     min = 1
 }) => (
     <div className="flex items-center justify-between">
-        <span className="text-slate-300">{label}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
         <div
-            className="flex items-center space-x-2 bg-slate-800 border border-slate-700 rounded-lg p-1"
+            className="flex items-center space-x-2 rounded-lg p-1"
+            style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)'
+            }}
             role="group"
             aria-label={label}
         >
             <button
                 onClick={onDecrement}
-                className="p-2 rounded-md hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="p-2 rounded-md transition-colors disabled:opacity-50"
+                style={{ color: 'var(--text-secondary)' }}
                 disabled={value <= min}
                 aria-label={`Decrease ${label}`}
                 type="button"
@@ -29,13 +34,15 @@ export const CounterInput = memo<CounterInputProps>(({
             </button>
             <span
                 className="px-3 font-mono text-lg w-12 text-center"
+                style={{ color: 'var(--color-cyan-500)' }}
                 aria-live="polite"
             >
                 {value}
             </span>
             <button
                 onClick={onIncrement}
-                className="p-2 rounded-md hover:bg-slate-700 transition-colors"
+                className="p-2 rounded-md transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
                 aria-label={`Increase ${label}`}
                 type="button"
             >

@@ -4,7 +4,21 @@
    Premium Design System - Stateless Pass
    ============================================ */
 
-:root {
+/* Dark Theme (default) */
+:root,
+html.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-input: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --border-color: rgba(148, 163, 184, 0.2);
+  --border-focus: #06b6d4;
+
   /* Cyan accent palette */
   --color-cyan-400: #22d3ee;
   --color-cyan-500: #06b6d4;
@@ -30,6 +44,48 @@
   --glass-bg: rgba(15, 23, 42, 0.7);
   --glass-border: rgba(148, 163, 184, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Light Theme */
+html.light {
+  /* Backgrounds - soft grays instead of pure white */
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --bg-input: #ffffff;
+
+  /* Text - strong contrast */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
+  /* Borders - more visible */
+  --border-color: #cbd5e1;
+  --border-focus: #0891b2;
+
+  /* Input specific */
+  --input-border: #94a3b8;
+  --input-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Cyan accent - slightly darker for light mode */
+  --color-cyan-400: #06b6d4;
+  --color-cyan-500: #0891b2;
+  --color-cyan-600: #0e7490;
+
+  /* Slate - adjusted for light mode contrast */
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* Glass effect - light version with more depth */
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #cbd5e1;
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 @theme inline {

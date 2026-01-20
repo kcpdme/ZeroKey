@@ -17,7 +17,8 @@ export const AlgorithmSelector = memo<AlgorithmSelectorProps>(({
 
     return (
         <div
-            className="flex gap-2 p-1 bg-slate-800/50 rounded-xl mb-6"
+            className="flex gap-2 p-1 rounded-xl mb-6"
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
             role="tablist"
             aria-label="Password generation method"
         >
@@ -33,14 +34,12 @@ export const AlgorithmSelector = memo<AlgorithmSelectorProps>(({
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => onChange(alg)}
-                        className={`
-              flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
-              font-medium transition-all duration-200
-              ${isActive
-                                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                            }
-            `}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200"
+                        style={{
+                            background: isActive ? 'var(--color-cyan-500)' : 'transparent',
+                            color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                            boxShadow: isActive ? '0 4px 12px rgba(6, 182, 212, 0.3)' : 'none'
+                        }}
                     >
                         <Icon className="w-5 h-5" aria-hidden="true" />
                         <span>{info.name}</span>
@@ -52,3 +51,4 @@ export const AlgorithmSelector = memo<AlgorithmSelectorProps>(({
 });
 
 AlgorithmSelector.displayName = 'AlgorithmSelector';
+
