@@ -40,7 +40,7 @@ export const RIVER_DATA: Record<string, RiverEntry> = {
     'm': { river: 'Mahananda', major: 3 },   // M = 3
     'n': { river: 'Narmada', major: 2 },     // N = 2
     'o': { river: 'Orsang', major: 4 },      // R from oRsang
-    'p': { river: 'Periyar', major: 9 },     // P = 9
+    'p': { river: 'Pampa', major: 9 },     // P = 9
     'q': { river: 'Qaveri', major: 7 },      // Q (K sound) = 7
     'r': { river: 'Ravi', major: 4 },        // R = 4
     's': { river: 'Sindhu', major: 0 },      // S = 0

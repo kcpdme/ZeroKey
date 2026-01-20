@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PBKDF2 Password Generator > Snapshot Tests (Regression) > should produce known output for standard inputs (REGRESSION TEST) 1`] = `"J!cMx+d7Rw>h]3>R"`;
