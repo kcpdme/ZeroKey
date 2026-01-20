@@ -9,13 +9,13 @@ export interface MemorizableParams {
 }
 
 export interface MemorizableOptions {
-    shift: number;       // Which letter of site to use (1-indexed), default: 3
-    magicNumber: number; // Added to the product, default: 23
+    shift: number;       // Which letter of site to use (1-indexed), default: 1
+    magicNumber: number; // Added to the product, default: 0
 }
 
 export const DEFAULT_MEMORIZABLE_OPTIONS: MemorizableOptions = {
-    shift: 3,
-    magicNumber: 23,
+    shift: 1,
+    magicNumber: 0,
 };
 
 /**

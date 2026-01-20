@@ -172,6 +172,15 @@ export default function HomePage() {
               </>
             )}
 
+            {/* Memorizable-specific Fields */}
+            {algorithm === 'memorizable' && (
+              <MemorizableOptions
+                options={memorizableOptions}
+                onChange={handleMemorizableOptionChange}
+                showAsFields={true}
+              />
+            )}
+
             {/* Advanced Options Panel */}
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 transition-all">
               <button
