@@ -130,7 +130,9 @@ export default function HomePage() {
         site,
         login,
         algorithm,
-        options: algorithm === 'pbkdf2' ? options : { ...options, ...memorizableOptions } as any
+        options: algorithm === 'pbkdf2'
+          ? { ...options, userSalt }
+          : { ...options, ...memorizableOptions } as any
       });
       setSaveStatus({ type: 'success', message: 'Saved to vault!' });
     } catch (error: any) {
@@ -490,8 +492,8 @@ export default function HomePage() {
               {saveStatus && (
                 <div
                   className={`text-center text-sm py-2 px-4 rounded-lg ${saveStatus.type === 'success'
-                      ? 'text-green-600 bg-green-500/10'
-                      : 'text-red-500 bg-red-500/10'
+                    ? 'text-green-600 bg-green-500/10'
+                    : 'text-red-500 bg-red-500/10'
                     }`}
                 >
                   {saveStatus.message}
