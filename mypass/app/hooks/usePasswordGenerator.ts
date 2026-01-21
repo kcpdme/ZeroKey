@@ -27,10 +27,12 @@ interface UsePasswordGeneratorReturn {
 
     // PBKDF2 options
     options: OptionsState;
+    setOptions: (options: OptionsState) => void;
     handleOptionChange: <K extends keyof OptionsState>(key: K, value: OptionsState[K]) => void;
 
     // Memorizable options
     memorizableOptions: MemorizableOptionsState;
+    setMemorizableOptions: (options: MemorizableOptionsState) => void;
     handleMemorizableOptionChange: <K extends keyof MemorizableOptionsState>(
         key: K,
         value: MemorizableOptionsState[K]
@@ -231,10 +233,12 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
 
         // PBKDF2 options
         options,
+        setOptions,
         handleOptionChange,
 
         // Memorizable options
         memorizableOptions,
+        setMemorizableOptions,
         handleMemorizableOptionChange,
 
         // Password state

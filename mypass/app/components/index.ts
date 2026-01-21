@@ -7,3 +7,4 @@ export { CounterInput } from './CounterInput';
 export { PasswordDisplay } from './PasswordDisplay';
 export { AlgorithmSelector } from './AlgorithmSelector';
 export { MemorizableOptions, type MemorizableOptionsState } from './MemorizableOptions';
+export { Dashboard } from './Dashboard';

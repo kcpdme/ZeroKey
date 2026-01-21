@@ -7,25 +7,28 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          // Content Security Policy
+          // Content Security Policy - Updated for Firebase Auth
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Required for Next.js
+              // Allow Google/Firebase scripts
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
+              "img-src 'self' data: blob: https://*.googleusercontent.com https://*.google.com",
               "font-src 'self'",
-              "connect-src 'self'",
-              "frame-ancestors 'none'",
+              // Allow connections to Firebase services
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com",
+              // Allow Firebase auth popups
+              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
               "base-uri 'self'",
               "form-action 'self'",
             ].join('; '),
           },
-          // Prevent clickjacking
+          // Prevent clickjacking (but allow Firebase frames)
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           // Prevent MIME type sniffing
           {
@@ -54,3 +57,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+

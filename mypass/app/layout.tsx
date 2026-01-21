@@ -35,6 +35,10 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import { AuthProvider } from './context/AuthContext';
+
+// ... imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,7 +53,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

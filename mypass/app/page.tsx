@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import { useCallback, useRef, ChangeEvent, FormEvent } from 'react';
+import { useCallback, useRef, useState, ChangeEvent, FormEvent } from 'react';
 import {
   Shield,
   KeyRound,
@@ -13,7 +13,8 @@ import {
   RefreshCw,
   Sparkles,
   Sun,
-  Moon
+  Moon,
+  Save
 } from 'lucide-react';
 
 // Modular imports
@@ -23,13 +24,21 @@ import {
   CounterInput,
   PasswordDisplay,
   AlgorithmSelector,
-  MemorizableOptions
+  MemorizableOptions,
+  Dashboard
 } from './components';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
+import { useAuth } from './context/AuthContext';
+import { ProfileService } from './services/ProfileService';
 
 export default function HomePage() {
   // Theme
   const { theme, toggleTheme, mounted } = useTheme();
+
+  // Auth
+  const { user, signInWithGoogle } = useAuth();
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Use custom hook for all password generator state
   const {
@@ -44,8 +53,10 @@ export default function HomePage() {
     userSalt,
     setUserSalt,
     options,
+    setOptions,
     handleOptionChange,
     memorizableOptions,
+    setMemorizableOptions,
     handleMemorizableOptionChange,
     generatedPassword,
     isLoading,
@@ -105,6 +116,53 @@ export default function HomePage() {
     return 'Human-memorizable passwords using Indian rivers.';
   };
 
+  const handleSaveProfile = async () => {
+    if (!user || !generatedPassword) return;
+    setIsSaving(true);
+    try {
+      await ProfileService.saveProfile({
+        userId: user.uid,
+        site,
+        login,
+        algorithm,
+        options: algorithm === 'pbkdf2' ? options : { ...options, ...memorizableOptions } as any
+      });
+      alert('Profile saved successfully!');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save profile.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadProfile = useCallback((profile: any) => {
+    setSite(profile.site);
+    setLogin(profile.login);
+    setAlgorithm(profile.algorithm);
+
+    if (profile.algorithm === 'pbkdf2') {
+      if (profile.options.length) handleOptionChange('length', profile.options.length);
+      if (profile.options.counter) handleOptionChange('counter', profile.options.counter);
+      if (profile.options.userSalt) setUserSalt(profile.options.userSalt);
+      // options.useLowercase etc are not in the profile type yet but should be mapped if needed
+    } else {
+      setMemorizableOptions({
+        shift: profile.options.shift,
+        magicNumber: profile.options.magicNumber
+      });
+    }
+
+    setIsDashboardOpen(false);
+    // Focus master password field after loading
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('input');
+      // Find the master password input - it's usually the 3rd one if visible
+      const masterPassInput = Array.from(inputs).find(i => i.placeholder.includes('Master Password'));
+      if (masterPassInput) (masterPassInput as HTMLElement).focus();
+    }, 100);
+  }, [setSite, setLogin, setAlgorithm, handleOptionChange, setUserSalt, setMemorizableOptions]);
+
   // Prevent hydration mismatch
   if (!mounted) {
     return null;
@@ -112,9 +170,45 @@ export default function HomePage() {
 
   return (
     <div
-      className="min-h-screen font-sans flex items-center justify-center p-4 transition-colors duration-300"
+      className="min-h-screen font-sans flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden"
       style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
     >
+      <Dashboard
+        isOpen={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
+        onLoadProfile={handleLoadProfile}
+      />
+
+      {/* Auth & Theme Controls - Top Right */}
+      <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
+        {!user ? (
+          <button
+            onClick={signInWithGoogle}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+          >
+            Sign In
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsDashboardOpen(true)}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+            style={{
+              background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
+            }}
+          >
+            <User className="w-4 h-4" />
+            My Vault
+          </button>
+        )}
+      </div>
+
       {/* Floating Theme Toggle - Bottom Right */}
       <button
         onClick={toggleTheme}
@@ -134,7 +228,7 @@ export default function HomePage() {
         )}
       </button>
 
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full max-w-md mx-auto relative z-10">
         {/* Header - Seamless */}
         <header className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-3">
@@ -347,7 +441,7 @@ export default function HomePage() {
             </div>
 
             {/* Generate Button */}
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <button
                 type="submit"
                 disabled={!canGenerate}
@@ -357,6 +451,26 @@ export default function HomePage() {
                 <Sparkles className="w-5 h-5" aria-hidden="true" />
                 {isLoading ? 'Generating...' : 'Generate Password'}
               </button>
+
+              {/* Save Profile Button (Only if generated and logged in) */}
+              {generatedPassword && user && (
+                <button
+                  type="button"
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium transition-colors hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-cyan-600 dark:text-cyan-400"
+                >
+                  {isSaving ? (
+                    <span>Saving...</span>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save to Vault
+                    </>
+                  )}
+                </button>
+              )}
+
               <span id="generate-hint" className="sr-only">
                 Press Enter or click to generate password
               </span>
@@ -394,7 +508,9 @@ export default function HomePage() {
           className="text-center text-xs mt-8"
           style={{ color: 'var(--text-muted)' }}
         >
-          Your password is generated locally. Nothing is stored.
+          {user
+            ? 'Your settings are synced. Your master password is NEVER stored.'
+            : 'Your password is generated locally. Nothing is stored.'}
         </p>
       </div>
     </div>
