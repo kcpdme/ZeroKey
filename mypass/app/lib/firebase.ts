@@ -2,6 +2,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'mock-key-for-build',
@@ -12,20 +13,21 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:abcdef',
 };
 
-// Debug: Log config in development (remove in production)
-if (typeof window !== 'undefined') {
-    console.log('Firebase Config Loaded:', {
-        apiKey: firebaseConfig.apiKey ? '✓ Set' : '✗ Missing',
-        authDomain: firebaseConfig.authDomain ? '✓ Set' : '✗ Missing',
-        projectId: firebaseConfig.projectId ? '✓ Set' : '✗ Missing',
-    });
-}
-
 // Initialize Firebase only once
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
-// If using a named database 'default', specify it explicitly
-// If you used the default database (default), change 'default' to '(default)'
-export const db = getFirestore(app, 'default');
+// Initialize App Check for bot protection (only in browser)
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    try {
+        initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+            isTokenAutoRefreshEnabled: true,
+        });
+        console.log('✅ App Check initialized');
+    } catch (error) {
+        console.warn('App Check initialization skipped:', error);
+    }
+}
 
+export const auth = getAuth(app);
+export const db = getFirestore(app, 'default');

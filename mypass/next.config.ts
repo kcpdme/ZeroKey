@@ -12,15 +12,15 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Allow Google/Firebase scripts
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com",
+              // Allow Google/Firebase/reCAPTCHA scripts
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.googleusercontent.com https://*.google.com",
               "font-src 'self'",
               // Allow connections to Firebase services
               "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com",
-              // Allow Firebase auth popups
-              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
+              // Allow Firebase auth popups and reCAPTCHA frames
+              "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://www.google.com",
               "base-uri 'self'",
               "form-action 'self'",
             ].join('; '),
