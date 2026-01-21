@@ -13,14 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stateless Pass - Deterministic Password Generator",
+  title: "MyPass - Secure Password Vault",
   description: "Generate secure, deterministic passwords that never need to be stored. Your master password + site + login = unique password every time.",
   keywords: ["password generator", "deterministic", "stateless", "secure", "PBKDF2"],
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Stateless Pass",
+    title: "MyPass",
   },
   formatDetection: {
     telephone: false,
