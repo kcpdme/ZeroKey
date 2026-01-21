@@ -38,59 +38,125 @@ export interface PasswordProfile {
 }
 
 const COLLECTION_NAME = 'password_profiles';
+const TIMEOUT_MS = 10000; // 10 seconds
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000; // Initial delay, doubles each retry
+
+// Helper: Delay function
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper: Wrap operation with timeout
+async function withTimeout<T>(operation: () => Promise<T>, timeoutMs: number): Promise<T> {
+    let timeoutId: NodeJS.Timeout;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+            reject(new Error('Operation timed out. Please check your internet connection.'));
+        }, timeoutMs);
+    });
+
+    try {
+        const result = await Promise.race([operation(), timeoutPromise]);
+        clearTimeout(timeoutId!);
+        return result;
+    } catch (error) {
+        clearTimeout(timeoutId!);
+        throw error;
+    }
+}
+
+// Helper: Retry with exponential backoff
+async function withRetry<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = MAX_RETRIES,
+    initialDelay: number = RETRY_DELAY_MS
+): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            lastError = error as Error;
+
+            // Don't retry on timeout or if it's the last attempt
+            if (attempt === maxRetries || lastError.message.includes('timed out')) {
+                break;
+            }
+
+            // Exponential backoff: 1s, 2s, 4s...
+            const delayTime = initialDelay * Math.pow(2, attempt);
+            console.log(`Retry ${attempt + 1}/${maxRetries} after ${delayTime}ms...`);
+            await delay(delayTime);
+        }
+    }
+
+    throw lastError;
+}
 
 export const ProfileService = {
-    // Save or Update a profile
-    saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
-        // Check if duplicate exists (same user, site, login, algorithm)
-        const q = query(
-            collection(db, COLLECTION_NAME),
-            where("userId", "==", profile.userId),
-            where("site", "==", profile.site),
-            where("login", "==", profile.login),
-            where("algorithm", "==", profile.algorithm)
-        );
+    // Save or Update a profile with timeout and retry
+    saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                // Check if duplicate exists (same user, site, login, algorithm)
+                const q = query(
+                    collection(db, COLLECTION_NAME),
+                    where("userId", "==", profile.userId),
+                    where("site", "==", profile.site),
+                    where("login", "==", profile.login),
+                    where("algorithm", "==", profile.algorithm)
+                );
 
-        const querySnapshot = await getDocs(q);
+                const querySnapshot = await getDocs(q);
+                const timestamp = Timestamp.now();
 
-        const timestamp = Timestamp.now();
-
-        if (!querySnapshot.empty) {
-            // Update existing
-            const docId = querySnapshot.docs[0].id;
-            const ref = doc(db, COLLECTION_NAME, docId);
-            await updateDoc(ref, {
-                options: profile.options,
-                updatedAt: timestamp
-            });
-            return docId;
-        } else {
-            // Create new
-            const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-                ...profile,
-                createdAt: timestamp,
-                updatedAt: timestamp
-            });
-            return docRef.id;
-        }
+                if (!querySnapshot.empty) {
+                    // Update existing
+                    const docId = querySnapshot.docs[0].id;
+                    const ref = doc(db, COLLECTION_NAME, docId);
+                    await updateDoc(ref, {
+                        options: profile.options,
+                        updatedAt: timestamp
+                    });
+                    return docId;
+                } else {
+                    // Create new
+                    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+                        ...profile,
+                        createdAt: timestamp,
+                        updatedAt: timestamp
+                    });
+                    return docRef.id;
+                }
+            }, TIMEOUT_MS);
+        });
     },
 
-    // Get all profiles for a user
+    // Get all profiles for a user with timeout
     getUserProfiles: async (userId: string): Promise<PasswordProfile[]> => {
-        const q = query(
-            collection(db, COLLECTION_NAME),
-            where("userId", "==", userId)
-        );
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                const q = query(
+                    collection(db, COLLECTION_NAME),
+                    where("userId", "==", userId)
+                );
 
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as PasswordProfile));
+                const querySnapshot = await getDocs(q);
+                return querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                } as PasswordProfile));
+            }, TIMEOUT_MS);
+        });
     },
 
-    // Delete a profile
-    deleteProfile: async (id: string) => {
-        await deleteDoc(doc(db, COLLECTION_NAME, id));
+    // Delete a profile with timeout
+    deleteProfile: async (id: string): Promise<void> => {
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                await deleteDoc(doc(db, COLLECTION_NAME, id));
+            }, TIMEOUT_MS);
+        });
     }
 };

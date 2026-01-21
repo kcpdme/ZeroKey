@@ -25,5 +25,7 @@ if (typeof window !== 'undefined') {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// If using a named database 'default', specify it explicitly
+// If you used the default database (default), change 'default' to '(default)'
+export const db = getFirestore(app, 'default');
 

@@ -41,6 +41,7 @@ export default function HomePage() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Use custom hook for all password generator state
   const {
@@ -121,6 +122,8 @@ export default function HomePage() {
   const handleSaveProfile = async () => {
     if (!user || !generatedPassword) return;
     setIsSaving(true);
+    setSaveStatus(null);
+
     try {
       await ProfileService.saveProfile({
         userId: user.uid,
@@ -129,12 +132,17 @@ export default function HomePage() {
         algorithm,
         options: algorithm === 'pbkdf2' ? options : { ...options, ...memorizableOptions } as any
       });
-      alert('Profile saved successfully!');
-    } catch (error) {
+      setSaveStatus({ type: 'success', message: 'Saved to vault!' });
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to save profile.');
+      setSaveStatus({
+        type: 'error',
+        message: error.message || 'Failed to save. Please try again.'
+      });
     } finally {
       setIsSaving(false);
+      // Auto-clear status after 3 seconds
+      setTimeout(() => setSaveStatus(null), 3000);
     }
   };
 
@@ -476,6 +484,18 @@ export default function HomePage() {
                     </>
                   )}
                 </button>
+              )}
+
+              {/* Save Status Feedback */}
+              {saveStatus && (
+                <div
+                  className={`text-center text-sm py-2 px-4 rounded-lg ${saveStatus.type === 'success'
+                      ? 'text-green-600 bg-green-500/10'
+                      : 'text-red-500 bg-red-500/10'
+                    }`}
+                >
+                  {saveStatus.message}
+                </div>
               )}
 
               <span id="generate-hint" className="sr-only">
