@@ -1,19 +1,20 @@
 // app/components/dashboard/Dashboard.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Plus, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileService, PasswordProfile } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
 import { SettingsModal } from '../settings';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStats } from './DashboardStats';
-import { QuickAddForm } from './QuickAddForm';
 import { ProfileFilters } from './ProfileFilters';
 import { ProfileList } from './ProfileList';
 import { GenerateModal } from './GenerateModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { QuickAddModal } from './QuickAddModal';
+import { ExportImportModal } from './ExportImportModal';
 
 interface DashboardProps {
     isOpen: boolean;
@@ -35,9 +36,41 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
 
     // Modals
     const [showSettings, setShowSettings] = useState(false);
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
+    const [showExportImport, setShowExportImport] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<PasswordProfile | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<PasswordProfile | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isOpen) return;
+
+            // Ctrl/Cmd + N = Quick Add
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                setShowQuickAdd(true);
+            }
+            // Ctrl/Cmd + E = Export/Import
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                setShowExportImport(true);
+            }
+            // Escape = Close modals or dashboard
+            if (e.key === 'Escape') {
+                if (showQuickAdd) setShowQuickAdd(false);
+                else if (showExportImport) setShowExportImport(false);
+                else if (showSettings) setShowSettings(false);
+                else if (selectedProfile) setSelectedProfile(null);
+                else if (deleteTarget) setDeleteTarget(null);
+                else onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, onClose]);
 
     // Load data
     useEffect(() => {
@@ -47,7 +80,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         }
     }, [isOpen, user]);
 
-    const loadProfiles = async () => {
+    const loadProfiles = useCallback(async () => {
         if (!user) return;
         setLoading(true);
         try {
@@ -63,7 +96,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
     const loadSettings = async () => {
         if (!user) return;
@@ -125,6 +158,14 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         onClose();
     };
 
+    const handleGenerate = async (profile: PasswordProfile) => {
+        // Update last used timestamp
+        if (profile.id) {
+            ProfileService.updateLastUsed(profile.id).catch(console.error);
+        }
+        setSelectedProfile(profile);
+    };
+
     const handleViewChange = (view: string) => {
         setActiveView(view);
         setSearchQuery(''); // Clear search when changing views
@@ -136,7 +177,6 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
             case 'favorites': return 'Favorite Passwords';
             case 'secure': return 'Secure Passwords';
             case 'memorable': return 'Memorable Passwords';
-            case 'quick-add': return 'Quick Add Password';
             default: return 'All Passwords';
         }
     };
@@ -152,6 +192,28 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     onClose={() => setShowSettings(false)}
                     userId={user.uid}
                     onSettingsSaved={setUserSettings}
+                />
+            )}
+
+            {/* Quick Add Modal */}
+            {user && (
+                <QuickAddModal
+                    isOpen={showQuickAdd}
+                    onClose={() => setShowQuickAdd(false)}
+                    userId={user.uid}
+                    userSettings={userSettings}
+                    onSuccess={loadProfiles}
+                />
+            )}
+
+            {/* Export/Import Modal */}
+            {user && (
+                <ExportImportModal
+                    isOpen={showExportImport}
+                    onClose={() => setShowExportImport(false)}
+                    userId={user.uid}
+                    profiles={profiles}
+                    onImportComplete={loadProfiles}
                 />
             )}
 
@@ -191,74 +253,76 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                             {getViewTitle()}
                         </h2>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                            {activeView === 'quick-add'
-                                ? 'Create a new password using your default settings'
-                                : `${filteredProfiles.length} ${filteredProfiles.length === 1 ? 'password' : 'passwords'}`
-                            }
+                            {filteredProfiles.length} {filteredProfiles.length === 1 ? 'password' : 'passwords'}
+                            <span className="ml-2 opacity-50">• Ctrl+N: Add • Ctrl+E: Backup</span>
                         </p>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-lg transition-colors hover:bg-white/10"
-                        style={{ color: 'var(--text-secondary)' }}
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* Quick Add Button */}
+                        <button
+                            onClick={() => setShowQuickAdd(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all hover:scale-105"
+                            style={{
+                                background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
+                                color: 'white',
+                            }}
+                        >
+                            <Plus className="w-4 h-4" />
+                            Quick Add
+                        </button>
+
+                        {/* Export/Import Button */}
+                        <button
+                            onClick={() => setShowExportImport(true)}
+                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
+                            style={{ color: 'var(--text-secondary)' }}
+                            title="Backup & Restore"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+
+                        {/* Close Button */}
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
+                            style={{ color: 'var(--text-secondary)' }}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </header>
 
-                {/* Content based on active view */}
-                {activeView === 'quick-add' ? (
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <div className="max-w-xl mx-auto">
-                            {user && (
-                                <QuickAddForm
-                                    userId={user.uid}
-                                    userSettings={userSettings}
-                                    onSuccess={() => {
-                                        loadProfiles();
-                                        // Stay on quick-add for rapid password creation
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {/* Stats Bar (only for All view) */}
-                        {activeView === 'all' && (
-                            <DashboardStats
-                                total={stats.total}
-                                secure={stats.secure}
-                                memorable={stats.memorable}
-                            />
-                        )}
-
-                        {/* Search */}
-                        <div className="px-6 py-4">
-                            <ProfileFilters
-                                searchQuery={searchQuery}
-                                onSearchChange={setSearchQuery}
-                                typeFilter="all"
-                                onTypeFilterChange={() => { }}
-                                hideTypeFilter={true}
-                            />
-                        </div>
-
-                        {/* Profile List */}
-                        <div className="flex-1 overflow-y-auto px-6 pb-6">
-                            <ProfileList
-                                profiles={filteredProfiles}
-                                loading={loading}
-                                isEmpty={profiles.length === 0}
-                                onGenerate={setSelectedProfile}
-                                onEdit={handleEdit}
-                                onDelete={setDeleteTarget}
-                                onProfilesChange={loadProfiles}
-                            />
-                        </div>
-                    </>
+                {/* Stats Bar (only for All view) */}
+                {activeView === 'all' && (
+                    <DashboardStats
+                        total={stats.total}
+                        secure={stats.secure}
+                        memorable={stats.memorable}
+                    />
                 )}
+
+                {/* Search */}
+                <div className="px-6 py-4">
+                    <ProfileFilters
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        hideTypeFilter={true}
+                    />
+                </div>
+
+                {/* Profile List */}
+                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                    <ProfileList
+                        profiles={filteredProfiles}
+                        loading={loading}
+                        isEmpty={profiles.length === 0}
+                        onGenerate={handleGenerate}
+                        onEdit={handleEdit}
+                        onDelete={setDeleteTarget}
+                        onProfilesChange={loadProfiles}
+                    />
+                </div>
             </div>
         </div>
     );

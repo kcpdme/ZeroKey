@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { KeyRound, RefreshCw, ArrowUpDown, Check } from 'lucide-react';
+import { KeyRound, RefreshCw, ArrowUpDown, Check, Trash2, X } from 'lucide-react';
 import { PasswordProfile, ProfileService } from '../../services/ProfileService';
 import { ProfileRow } from './ProfileRow';
 
@@ -32,9 +32,13 @@ export function ProfileList({
     const [copiedLogin, setCopiedLogin] = useState<string | null>(null);
     const [togglingFavorite, setTogglingFavorite] = useState<string | null>(null);
 
-    // Sort profiles - favorites always come first
+    // Bulk selection
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkMode, setBulkMode] = useState(false);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+
+    // Sort profiles
     const sortedProfiles = [...profiles].sort((a, b) => {
-        // Favorites first
         if (sortBy === 'favorites') {
             if (a.favorite && !b.favorite) return -1;
             if (!a.favorite && b.favorite) return 1;
@@ -46,10 +50,6 @@ export function ProfileList({
             case 'type':
                 return a.algorithm.localeCompare(b.algorithm);
             case 'favorites':
-                // After favorites sorting, sort by recent
-                const aTime1 = a.updatedAt?.toDate?.() || new Date(0);
-                const bTime1 = b.updatedAt?.toDate?.() || new Date(0);
-                return bTime1.getTime() - aTime1.getTime();
             case 'recent':
             default:
                 const aTime = a.updatedAt?.toDate?.() || new Date(0);
@@ -78,6 +78,46 @@ export function ProfileList({
         }
     };
 
+    const handleToggleSelect = (profile: PasswordProfile) => {
+        if (!profile.id) return;
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(profile.id)) {
+            newSelected.delete(profile.id);
+        } else {
+            newSelected.add(profile.id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedIds.size === profiles.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(profiles.map(p => p.id!).filter(Boolean)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+
+        setBulkDeleting(true);
+        try {
+            await ProfileService.bulkDelete(Array.from(selectedIds));
+            setSelectedIds(new Set());
+            setBulkMode(false);
+            onProfilesChange?.();
+        } catch (error) {
+            console.error('Bulk delete failed:', error);
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
+    const cancelBulkMode = () => {
+        setBulkMode(false);
+        setSelectedIds(new Set());
+    };
+
     const sortOptions: { id: SortOption; label: string }[] = [
         { id: 'recent', label: 'Most Recent' },
         { id: 'favorites', label: 'Favorites First' },
@@ -102,7 +142,7 @@ export function ProfileList({
                     <>
                         <KeyRound className="w-12 h-12 mx-auto mb-4 opacity-50" />
                         <p>No saved profiles yet.</p>
-                        <p className="text-sm mt-1">Use Quick Add from the sidebar to create your first password!</p>
+                        <p className="text-sm mt-1">Click "Quick Add" to create your first password!</p>
                     </>
                 ) : (
                     <p>No profiles match your search.</p>
@@ -113,51 +153,99 @@ export function ProfileList({
 
     return (
         <div className="space-y-3">
-            {/* Header with sort */}
+            {/* Header with sort and bulk actions */}
             <div className="flex items-center justify-between px-1">
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {profiles.length} {profiles.length === 1 ? 'password' : 'passwords'}
-                    {favoriteCount > 0 && ` • ${favoriteCount} favorite${favoriteCount > 1 ? 's' : ''}`}
-                </span>
-
-                {/* Sort dropdown */}
-                <div className="relative">
-                    <button
-                        onClick={() => setShowSortMenu(!showSortMenu)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors hover:bg-white/5"
-                        style={{ color: 'var(--text-secondary)' }}
-                    >
-                        <ArrowUpDown className="w-4 h-4" />
-                        Sort: {sortOptions.find(o => o.id === sortBy)?.label}
-                    </button>
-
-                    {showSortMenu && (
+                <div className="flex items-center gap-3">
+                    {bulkMode ? (
                         <>
-                            <div
-                                className="fixed inset-0 z-10"
-                                onClick={() => setShowSortMenu(false)}
+                            <input
+                                type="checkbox"
+                                checked={selectedIds.size === profiles.length}
+                                onChange={handleSelectAll}
+                                className="w-4 h-4 rounded accent-cyan-500"
                             />
-                            <div
-                                className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg z-20 min-w-[170px]"
-                                style={{
-                                    background: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-color)'
-                                }}
+                            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                                {selectedIds.size} selected
+                            </span>
+                        </>
+                    ) : (
+                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            {profiles.length} {profiles.length === 1 ? 'password' : 'passwords'}
+                            {favoriteCount > 0 && ` • ${favoriteCount} ★`}
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                    {bulkMode ? (
+                        <>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={selectedIds.size === 0 || bulkDeleting}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500 text-white disabled:opacity-50"
                             >
-                                {sortOptions.map(option => (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => {
-                                            setSortBy(option.id);
-                                            setShowSortMenu(false);
-                                        }}
-                                        className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-white/5 transition-colors"
-                                        style={{ color: sortBy === option.id ? 'var(--color-cyan-500)' : 'var(--text-secondary)' }}
-                                    >
-                                        {option.label}
-                                        {sortBy === option.id && <Check className="w-4 h-4" />}
-                                    </button>
-                                ))}
+                                <Trash2 className="w-4 h-4" />
+                                {bulkDeleting ? 'Deleting...' : `Delete (${selectedIds.size})`}
+                            </button>
+                            <button
+                                onClick={cancelBulkMode}
+                                className="p-1.5 rounded-lg hover:bg-white/5"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => setBulkMode(true)}
+                                className="px-3 py-1.5 rounded-lg text-sm transition-colors hover:bg-white/5"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                Select
+                            </button>
+
+                            {/* Sort dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowSortMenu(!showSortMenu)}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors hover:bg-white/5"
+                                    style={{ color: 'var(--text-secondary)' }}
+                                >
+                                    <ArrowUpDown className="w-4 h-4" />
+                                    {sortOptions.find(o => o.id === sortBy)?.label}
+                                </button>
+
+                                {showSortMenu && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowSortMenu(false)}
+                                        />
+                                        <div
+                                            className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg z-20 min-w-[170px]"
+                                            style={{
+                                                background: 'var(--bg-secondary)',
+                                                border: '1px solid var(--border-color)'
+                                            }}
+                                        >
+                                            {sortOptions.map(option => (
+                                                <button
+                                                    key={option.id}
+                                                    onClick={() => {
+                                                        setSortBy(option.id);
+                                                        setShowSortMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-white/5 transition-colors"
+                                                    style={{ color: sortBy === option.id ? 'var(--color-cyan-500)' : 'var(--text-secondary)' }}
+                                                >
+                                                    {option.label}
+                                                    {sortBy === option.id && <Check className="w-4 h-4" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </>
                     )}
@@ -189,6 +277,9 @@ export function ProfileList({
                         onDelete={onDelete}
                         onCopyLogin={handleCopyLogin}
                         onToggleFavorite={handleToggleFavorite}
+                        showCheckbox={bulkMode}
+                        isSelected={profile.id ? selectedIds.has(profile.id) : false}
+                        onToggleSelect={handleToggleSelect}
                     />
                 ))}
             </div>

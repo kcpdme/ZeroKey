@@ -48,7 +48,6 @@ export function DashboardSidebar({
         { id: 'favorites', label: 'Favorites', icon: Star, count: stats.favorites },
         { id: 'secure', label: 'Secure', icon: Shield, count: stats.secure },
         { id: 'memorable', label: 'Memorable', icon: Sparkles, count: stats.memorable },
-        { id: 'quick-add', label: 'Quick Add', icon: Plus },
     ];
 
     return (

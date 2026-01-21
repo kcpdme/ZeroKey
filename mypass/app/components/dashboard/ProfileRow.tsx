@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { KeyRound, Shield, Sparkles, Trash2, Clock, Copy, Edit, Star } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { PasswordProfile } from '../../services/ProfileService';
 
 interface ProfileRowProps {
@@ -13,9 +13,22 @@ interface ProfileRowProps {
     onDelete: (profile: PasswordProfile) => void;
     onCopyLogin: (login: string) => void;
     onToggleFavorite: (profile: PasswordProfile) => void;
+    isSelected?: boolean;
+    onToggleSelect?: (profile: PasswordProfile) => void;
+    showCheckbox?: boolean;
 }
 
-export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin, onToggleFavorite }: ProfileRowProps) {
+export function ProfileRow({
+    profile,
+    onGenerate,
+    onEdit,
+    onDelete,
+    onCopyLogin,
+    onToggleFavorite,
+    isSelected = false,
+    onToggleSelect,
+    showCheckbox = false
+}: ProfileRowProps) {
     const formatDate = (timestamp: any) => {
         if (!timestamp) return '-';
         try {
@@ -26,14 +39,35 @@ export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin,
         }
     };
 
+    const formatLastUsed = (timestamp: any) => {
+        if (!timestamp) return 'Never';
+        try {
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return formatDistanceToNow(date, { addSuffix: true });
+        } catch {
+            return 'Never';
+        }
+    };
+
     return (
         <div
-            className="flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 group"
+            className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-white/5 group ${isSelected ? 'ring-2 ring-cyan-500' : ''
+                }`}
             style={{
-                background: 'var(--bg-secondary)',
+                background: isSelected ? 'var(--color-cyan-500)/5' : 'var(--bg-secondary)',
                 border: '1px solid var(--border-color)',
             }}
         >
+            {/* Checkbox for bulk select */}
+            {showCheckbox && (
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggleSelect?.(profile)}
+                    className="w-4 h-4 rounded accent-cyan-500"
+                />
+            )}
+
             {/* Favorite Star */}
             <button
                 onClick={(e) => {
@@ -106,10 +140,12 @@ export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin,
                 </div>
             )}
 
-            {/* Date */}
-            <div className="hidden lg:flex items-center gap-1 text-sm shrink-0" style={{ color: 'var(--text-muted)' }}>
-                <Clock className="w-3 h-3" />
-                {formatDate(profile.updatedAt)}
+            {/* Last Used */}
+            <div className="hidden lg:block text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>
+                <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{formatLastUsed(profile.lastUsedAt)}</span>
+                </div>
             </div>
 
             {/* Actions */}

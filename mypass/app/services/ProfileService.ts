@@ -34,6 +34,7 @@ export interface PasswordProfile {
         magicNumber: number;
     };
     favorite?: boolean;
+    lastUsedAt?: any;
     createdAt: any;
     updatedAt: any;
 }
@@ -172,5 +173,34 @@ export const ProfileService = {
                 });
             }, TIMEOUT_MS);
         });
+    },
+
+    // Update last used timestamp
+    updateLastUsed: async (id: string): Promise<void> => {
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                const ref = doc(db, COLLECTION_NAME, id);
+                await updateDoc(ref, {
+                    lastUsedAt: Timestamp.now()
+                });
+            }, TIMEOUT_MS);
+        });
+    },
+
+    // Bulk delete profiles
+    bulkDelete: async (ids: string[]): Promise<{ success: number; failed: number }> => {
+        let success = 0;
+        let failed = 0;
+
+        for (const id of ids) {
+            try {
+                await deleteDoc(doc(db, COLLECTION_NAME, id));
+                success++;
+            } catch {
+                failed++;
+            }
+        }
+
+        return { success, failed };
     }
 };

@@ -6,6 +6,7 @@ export { DashboardHeader } from './DashboardHeader';
 export { DashboardSidebar } from './DashboardSidebar';
 export { DashboardStats } from './DashboardStats';
 export { QuickAddForm } from './QuickAddForm';
+export { QuickAddModal } from './QuickAddModal';
 export { ProfileFilters } from './ProfileFilters';
 export { ProfileCard } from './ProfileCard';
 export { ProfileRow } from './ProfileRow';
@@ -13,5 +14,5 @@ export { ProfileGrid } from './ProfileGrid';
 export { ProfileList } from './ProfileList';
 export { GenerateModal } from './GenerateModal';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
+export { ExportImportModal } from './ExportImportModal';
 export * from './types';
-
