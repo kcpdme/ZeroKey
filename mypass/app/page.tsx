@@ -27,6 +27,7 @@ import {
   MemorizableOptions,
   Dashboard
 } from './components';
+import { AuthModal } from './components/auth';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
 import { useAuth } from './context/AuthContext';
 import { ProfileService } from './services/ProfileService';
@@ -36,8 +37,9 @@ export default function HomePage() {
   const { theme, toggleTheme, mounted } = useTheme();
 
   // Auth
-  const { user, signInWithGoogle } = useAuth();
+  const { user } = useAuth();
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Use custom hook for all password generator state
@@ -179,11 +181,16 @@ export default function HomePage() {
         onLoadProfile={handleLoadProfile}
       />
 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+
       {/* Auth & Theme Controls - Top Right */}
       <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
         {!user ? (
           <button
-            onClick={signInWithGoogle}
+            onClick={() => setIsAuthModalOpen(true)}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg"
             style={{
               background: 'var(--bg-secondary)',
