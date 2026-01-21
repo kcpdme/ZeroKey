@@ -10,7 +10,7 @@ import {
     Settings,
     LogOut,
     LayoutGrid,
-    User
+    Star
 } from 'lucide-react';
 
 interface NavItem {
@@ -30,6 +30,7 @@ interface DashboardSidebarProps {
         total: number;
         secure: number;
         memorable: number;
+        favorites: number;
     };
     userEmail?: string;
 }
@@ -44,6 +45,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
     const mainNavItems: NavItem[] = [
         { id: 'all', label: 'All Passwords', icon: LayoutGrid, count: stats.total },
+        { id: 'favorites', label: 'Favorites', icon: Star, count: stats.favorites },
         { id: 'secure', label: 'Secure', icon: Shield, count: stats.secure },
         { id: 'memorable', label: 'Memorable', icon: Sparkles, count: stats.memorable },
         { id: 'quick-add', label: 'Quick Add', icon: Plus },

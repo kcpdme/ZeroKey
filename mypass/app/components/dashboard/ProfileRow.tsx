@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { KeyRound, Shield, Sparkles, Trash2, Clock, Copy, Edit } from 'lucide-react';
+import { KeyRound, Shield, Sparkles, Trash2, Clock, Copy, Edit, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { PasswordProfile } from '../../services/ProfileService';
 
@@ -12,9 +12,10 @@ interface ProfileRowProps {
     onEdit: (profile: PasswordProfile) => void;
     onDelete: (profile: PasswordProfile) => void;
     onCopyLogin: (login: string) => void;
+    onToggleFavorite: (profile: PasswordProfile) => void;
 }
 
-export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin }: ProfileRowProps) {
+export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin, onToggleFavorite }: ProfileRowProps) {
     const formatDate = (timestamp: any) => {
         if (!timestamp) return '-';
         try {
@@ -33,6 +34,20 @@ export function ProfileRow({ profile, onGenerate, onEdit, onDelete, onCopyLogin 
                 border: '1px solid var(--border-color)',
             }}
         >
+            {/* Favorite Star */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(profile);
+                }}
+                className={`p-1 rounded transition-all ${profile.favorite ? '' : 'opacity-0 group-hover:opacity-100'}`}
+                title={profile.favorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+                <Star
+                    className={`w-4 h-4 transition-all ${profile.favorite ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
+                />
+            </button>
+
             {/* Icon */}
             <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"

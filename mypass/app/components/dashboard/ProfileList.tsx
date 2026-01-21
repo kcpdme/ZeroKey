@@ -3,10 +3,10 @@
 
 import React, { useState } from 'react';
 import { KeyRound, RefreshCw, ArrowUpDown, Check } from 'lucide-react';
-import { PasswordProfile } from '../../services/ProfileService';
+import { PasswordProfile, ProfileService } from '../../services/ProfileService';
 import { ProfileRow } from './ProfileRow';
 
-type SortOption = 'recent' | 'name' | 'type';
+type SortOption = 'recent' | 'name' | 'type' | 'favorites';
 
 interface ProfileListProps {
     profiles: PasswordProfile[];
@@ -15,6 +15,7 @@ interface ProfileListProps {
     onGenerate: (profile: PasswordProfile) => void;
     onEdit: (profile: PasswordProfile) => void;
     onDelete: (profile: PasswordProfile) => void;
+    onProfilesChange?: () => void;
 }
 
 export function ProfileList({
@@ -23,19 +24,32 @@ export function ProfileList({
     isEmpty,
     onGenerate,
     onEdit,
-    onDelete
+    onDelete,
+    onProfilesChange
 }: ProfileListProps) {
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [copiedLogin, setCopiedLogin] = useState<string | null>(null);
+    const [togglingFavorite, setTogglingFavorite] = useState<string | null>(null);
 
-    // Sort profiles
+    // Sort profiles - favorites always come first
     const sortedProfiles = [...profiles].sort((a, b) => {
+        // Favorites first
+        if (sortBy === 'favorites') {
+            if (a.favorite && !b.favorite) return -1;
+            if (!a.favorite && b.favorite) return 1;
+        }
+
         switch (sortBy) {
             case 'name':
                 return a.site.toLowerCase().localeCompare(b.site.toLowerCase());
             case 'type':
                 return a.algorithm.localeCompare(b.algorithm);
+            case 'favorites':
+                // After favorites sorting, sort by recent
+                const aTime1 = a.updatedAt?.toDate?.() || new Date(0);
+                const bTime1 = b.updatedAt?.toDate?.() || new Date(0);
+                return bTime1.getTime() - aTime1.getTime();
             case 'recent':
             default:
                 const aTime = a.updatedAt?.toDate?.() || new Date(0);
@@ -50,11 +64,28 @@ export function ProfileList({
         setTimeout(() => setCopiedLogin(null), 2000);
     };
 
+    const handleToggleFavorite = async (profile: PasswordProfile) => {
+        if (!profile.id || togglingFavorite) return;
+
+        setTogglingFavorite(profile.id);
+        try {
+            await ProfileService.toggleFavorite(profile.id, !profile.favorite);
+            onProfilesChange?.();
+        } catch (error) {
+            console.error('Failed to toggle favorite:', error);
+        } finally {
+            setTogglingFavorite(null);
+        }
+    };
+
     const sortOptions: { id: SortOption; label: string }[] = [
         { id: 'recent', label: 'Most Recent' },
+        { id: 'favorites', label: 'Favorites First' },
         { id: 'name', label: 'Name (A-Z)' },
         { id: 'type', label: 'Type' },
     ];
+
+    const favoriteCount = profiles.filter(p => p.favorite).length;
 
     if (loading) {
         return (
@@ -86,6 +117,7 @@ export function ProfileList({
             <div className="flex items-center justify-between px-1">
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {profiles.length} {profiles.length === 1 ? 'password' : 'passwords'}
+                    {favoriteCount > 0 && ` • ${favoriteCount} favorite${favoriteCount > 1 ? 's' : ''}`}
                 </span>
 
                 {/* Sort dropdown */}
@@ -106,7 +138,7 @@ export function ProfileList({
                                 onClick={() => setShowSortMenu(false)}
                             />
                             <div
-                                className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg z-20 min-w-[150px]"
+                                className="absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg z-20 min-w-[170px]"
                                 style={{
                                     background: 'var(--bg-secondary)',
                                     border: '1px solid var(--border-color)'
@@ -156,6 +188,7 @@ export function ProfileList({
                         onEdit={onEdit}
                         onDelete={onDelete}
                         onCopyLogin={handleCopyLogin}
+                        onToggleFavorite={handleToggleFavorite}
                     />
                 ))}
             </div>

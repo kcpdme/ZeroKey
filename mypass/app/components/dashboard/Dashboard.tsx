@@ -80,6 +80,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         // Filter by sidebar selection
         if (activeView === 'secure' && profile.algorithm !== 'pbkdf2') return false;
         if (activeView === 'memorable' && profile.algorithm !== 'memorizable') return false;
+        if (activeView === 'favorites' && !profile.favorite) return false;
 
         // Filter by search
         if (searchQuery) {
@@ -96,6 +97,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         total: profiles.length,
         secure: profiles.filter(p => p.algorithm === 'pbkdf2').length,
         memorable: profiles.filter(p => p.algorithm === 'memorizable').length,
+        favorites: profiles.filter(p => p.favorite).length,
     };
 
     // Handlers
@@ -131,6 +133,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
     // Get view title
     const getViewTitle = () => {
         switch (activeView) {
+            case 'favorites': return 'Favorite Passwords';
             case 'secure': return 'Secure Passwords';
             case 'memorable': return 'Memorable Passwords';
             case 'quick-add': return 'Quick Add Password';
@@ -251,6 +254,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                                 onGenerate={setSelectedProfile}
                                 onEdit={handleEdit}
                                 onDelete={setDeleteTarget}
+                                onProfilesChange={loadProfiles}
                             />
                         </div>
                     </>
