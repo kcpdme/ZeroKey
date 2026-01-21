@@ -11,7 +11,7 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardStats } from './DashboardStats';
 import { QuickAddForm } from './QuickAddForm';
 import { ProfileFilters } from './ProfileFilters';
-import { ProfileGrid } from './ProfileGrid';
+import { ProfileList } from './ProfileList';
 import { GenerateModal } from './GenerateModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
@@ -242,9 +242,9 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                             />
                         </div>
 
-                        {/* Profile Grid */}
+                        {/* Profile List */}
                         <div className="flex-1 overflow-y-auto px-6 pb-6">
-                            <ProfileGrid
+                            <ProfileList
                                 profiles={filteredProfiles}
                                 loading={loading}
                                 isEmpty={profiles.length === 0}

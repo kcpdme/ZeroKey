@@ -33,6 +33,7 @@ export interface PasswordProfile {
         shift: number;
         magicNumber: number;
     };
+    favorite?: boolean;
     createdAt: any;
     updatedAt: any;
 }
@@ -156,6 +157,19 @@ export const ProfileService = {
         return withRetry(async () => {
             return withTimeout(async () => {
                 await deleteDoc(doc(db, COLLECTION_NAME, id));
+            }, TIMEOUT_MS);
+        });
+    },
+
+    // Toggle favorite status
+    toggleFavorite: async (id: string, isFavorite: boolean): Promise<void> => {
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                const ref = doc(db, COLLECTION_NAME, id);
+                await updateDoc(ref, {
+                    favorite: isFavorite,
+                    updatedAt: Timestamp.now()
+                });
             }, TIMEOUT_MS);
         });
     }

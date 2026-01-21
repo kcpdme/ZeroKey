@@ -8,7 +8,10 @@ export { DashboardStats } from './DashboardStats';
 export { QuickAddForm } from './QuickAddForm';
 export { ProfileFilters } from './ProfileFilters';
 export { ProfileCard } from './ProfileCard';
+export { ProfileRow } from './ProfileRow';
 export { ProfileGrid } from './ProfileGrid';
+export { ProfileList } from './ProfileList';
 export { GenerateModal } from './GenerateModal';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
 export * from './types';
+
