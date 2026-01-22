@@ -22,4 +22,7 @@ export { TagSelector, TagChips, TagFilter } from './TagSelector';
 export { DuplicateWarning } from './DuplicateWarning';
 export * from './types';
 
+// V2 Dashboard (Proton Pass inspired redesign)
+export { DashboardV2 } from './v2';
+
 

@@ -9,5 +9,5 @@ export { AlgorithmSelector } from './AlgorithmSelector';
 export { MemorizableOptions, type MemorizableOptionsState } from './MemorizableOptions';
 
 // Dashboard (modular)
-export { Dashboard } from './dashboard';
+export { Dashboard, DashboardV2 } from './dashboard';
 

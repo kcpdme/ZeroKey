@@ -25,7 +25,7 @@ import {
   PasswordDisplay,
   AlgorithmSelector,
   MemorizableOptions,
-  Dashboard
+  DashboardV2
 } from './components';
 import { AuthModal } from './components/auth';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
@@ -185,7 +185,7 @@ export default function HomePage() {
       className="min-h-screen font-sans flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden"
       style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
     >
-      <Dashboard
+      <DashboardV2
         isOpen={isDashboardOpen}
         onClose={() => setIsDashboardOpen(false)}
         onLoadProfile={handleLoadProfile}
