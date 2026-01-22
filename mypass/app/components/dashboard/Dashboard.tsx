@@ -60,13 +60,13 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!isOpen) return;
 
-            // Ctrl/Cmd + Shift + N = Quick Add (using Shift to avoid browser new tab)
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'n') {
+            // Alt + N = Quick Add (avoids browser shortcuts)
+            if (e.altKey && e.key === 'n') {
                 e.preventDefault();
                 setShowQuickAdd(true);
             }
-            // Ctrl/Cmd + Shift + E = Export/Import (using Shift to avoid browser)
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'e') {
+            // Alt + B = Backup/Export
+            if (e.altKey && e.key === 'b') {
                 e.preventDefault();
                 setShowExportImport(true);
             }
@@ -90,7 +90,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, isMobileMenuOpen, onClose]);
+    }, [isOpen, showQuickSearch, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, isMobileMenuOpen, onClose]);
 
     // Load data
     useEffect(() => {
@@ -286,6 +286,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     onViewChange={handleViewChange}
                     onSettingsClick={() => setShowSettings(true)}
                     onSignOut={handleSignOut}
+                    onClose={onClose}
                     stats={stats}
                     userEmail={user?.email || undefined}
                 />

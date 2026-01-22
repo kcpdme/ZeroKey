@@ -26,6 +26,7 @@ interface DashboardSidebarProps {
     onViewChange: (view: string) => void;
     onSettingsClick: () => void;
     onSignOut: () => void;
+    onClose: () => void;
     stats: {
         total: number;
         secure: number;
@@ -40,6 +41,7 @@ export function DashboardSidebar({
     onViewChange,
     onSettingsClick,
     onSignOut,
+    onClose,
     stats,
     userEmail
 }: DashboardSidebarProps) {
@@ -58,9 +60,13 @@ export function DashboardSidebar({
                 borderColor: 'var(--border-color)'
             }}
         >
-            {/* Logo */}
+            {/* Logo - Click to go back to homepage */}
             <div className="p-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                <div className="flex items-center gap-3">
+                <button
+                    onClick={onClose}
+                    className="flex items-center gap-3 w-full text-left hover:opacity-80 transition-opacity"
+                    title="Back to Generator"
+                >
                     <div
                         className="flex items-center justify-center w-10 h-10 rounded-xl"
                         style={{
@@ -77,7 +83,7 @@ export function DashboardSidebar({
                             {userEmail}
                         </p>
                     </div>
-                </div>
+                </button>
             </div>
 
             {/* Main Navigation */}

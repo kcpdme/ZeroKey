@@ -69,6 +69,8 @@ export function QuickSearch({
                 }
                 break;
             case 'Escape':
+                e.preventDefault();
+                e.stopPropagation(); // Prevent Dashboard from also handling this
                 onClose();
                 break;
         }
