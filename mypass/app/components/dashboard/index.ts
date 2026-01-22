@@ -19,6 +19,7 @@ export { MobileBottomNav, MobileHeader, MobileDrawer } from './MobileNav';
 export { Skeleton, ProfileRowSkeleton, ProfileListSkeleton, StatsSkeleton, SearchSkeleton } from './Skeleton';
 export { QuickSearch, useQuickSearch } from './QuickSearch';
 export { TagSelector, TagChips, TagFilter } from './TagSelector';
+export { DuplicateWarning } from './DuplicateWarning';
 export * from './types';
 
 

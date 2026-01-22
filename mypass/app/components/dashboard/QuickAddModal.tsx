@@ -6,6 +6,7 @@ import { X, Shield, Sparkles, Eye, EyeOff, Copy, Check, RefreshCw } from 'lucide
 import { ProfileService } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
 import { generatePBKDF2Password, generateMemorizablePassword } from '../../lib/generators';
+import { TagSelector } from './TagSelector';
 
 interface QuickAddModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
     const [saving, setSaving] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const siteInputRef = useRef<HTMLInputElement>(null);
 
     // Focus on open
@@ -91,6 +93,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                 login,
                 algorithm: type,
                 options,
+                tags: selectedTags.length > 0 ? selectedTags : undefined,
             });
 
             setGeneratedPassword(password);
@@ -116,6 +119,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
         setMasterPass('');
         setGeneratedPassword('');
         setPasswordVisible(false);
+        setSelectedTags([]);
     };
 
     const handleClose = () => {
@@ -214,6 +218,14 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                                     }}
                                 />
                             )}
+
+                            {/* Tags */}
+                            <TagSelector
+                                selectedTags={selectedTags}
+                                onChange={setSelectedTags}
+                                showLabel={true}
+                                maxTags={3}
+                            />
 
                             {/* Generate Button */}
                             <button

@@ -6,6 +6,7 @@ import { KeyRound, Shield, Sparkles, Trash2, Clock, Copy, Edit, Star, MoreVertic
 import { format, formatDistanceToNow } from 'date-fns';
 import { PasswordProfile } from '../../services/ProfileService';
 import { getFaviconUrl } from '../../lib/favicon';
+import { TagChips } from './TagSelector';
 
 interface ProfileRowProps {
     profile: PasswordProfile;
@@ -137,6 +138,12 @@ export function ProfileRow({
                         <Copy className="w-3 h-3" />
                     </button>
                 </div>
+                {/* Tags */}
+                {profile.tags && profile.tags.length > 0 && (
+                    <div className="hidden md:block mt-1">
+                        <TagChips tags={profile.tags} size="sm" maxVisible={2} />
+                    </div>
+                )}
             </div>
 
             {/* Type Badge - Hidden on small mobile */}
