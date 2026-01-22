@@ -1,4 +1,4 @@
-// Dashboard V2 PasswordCard - Modern card design for password entries
+// Dashboard V2 PasswordCard - Proton Pass style card design
 'use client';
 
 import React, { useState } from 'react';
@@ -12,11 +12,9 @@ import {
     Star,
     MoreVertical,
     Clock,
-    Eye,
-    EyeOff,
     Check
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { PasswordProfile } from '../../../services/ProfileService';
 import { getFaviconUrl } from '../../../lib/favicon';
 import { TagChips } from '../TagSelector';
@@ -74,22 +72,22 @@ export function PasswordCard({
     return (
         <div
             className={`
-                relative flex items-center gap-4 px-4 py-3.5 rounded-2xl
-                transition-all duration-200 group cursor-pointer
-                ${isSelected ? 'ring-2 ring-cyan-500/50' : ''}
+                relative flex items-center gap-4 px-4 py-3 rounded-xl
+                transition-all duration-200 ease-in-out group cursor-pointer
+                ${showCheckbox && isSelected ? 'pass-item--bulk-selected' : ''}
             `}
             style={{
-                background: isHovered
-                    ? 'rgba(255, 255, 255, 0.04)'
-                    : isSelected
-                        ? 'rgba(6, 182, 212, 0.08)'
-                        : 'rgba(255, 255, 255, 0.02)',
+                background: isSelected
+                    ? 'var(--card-bg-selected)'
+                    : isHovered
+                        ? 'var(--card-bg-hover)'
+                        : 'var(--card-bg)',
                 border: '1px solid',
-                borderColor: isHovered
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : isSelected
-                        ? 'rgba(6, 182, 212, 0.3)'
-                        : 'rgba(255, 255, 255, 0.05)',
+                borderColor: isSelected
+                    ? 'var(--card-border-selected)'
+                    : isHovered
+                        ? 'var(--card-border-hover)'
+                        : 'var(--card-border)',
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -97,32 +95,39 @@ export function PasswordCard({
         >
             {/* Checkbox for bulk select */}
             {showCheckbox && (
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onToggleSelect?.(profile)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded accent-cyan-500 cursor-pointer"
-                />
+                <div className="relative shrink-0">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onToggleSelect?.(profile)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-5 h-5 rounded-md accent-cyan-500 cursor-pointer"
+                        style={{
+                            accentColor: 'var(--color-cyan-500)',
+                        }}
+                    />
+                </div>
             )}
 
-            {/* Favorite Star */}
+            {/* Favorite Star - Visible on hover or if favorited */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     onToggleFavorite(profile);
                 }}
                 className={`
-                    p-1.5 rounded-lg transition-all shrink-0
+                    p-1.5 rounded-lg transition-all duration-150 shrink-0
                     ${profile.favorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
-                    hover:bg-white/10
                 `}
+                style={{
+                    background: profile.favorite ? 'rgba(250, 204, 21, 0.1)' : 'transparent',
+                }}
                 title={profile.favorite ? 'Remove from favorites' : 'Add to favorites'}
             >
                 <Star
                     className={`w-4 h-4 transition-all ${profile.favorite
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-slate-500 hover:text-yellow-400'
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-slate-400 hover:text-yellow-400'
                         }`}
                 />
             </button>
@@ -131,37 +136,37 @@ export function PasswordCard({
             <div className="relative shrink-0">
                 {!faviconError ? (
                     <div
-                        className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center"
-                        style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                        className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center"
+                        style={{ background: 'var(--sidebar-count-bg)' }}
                     >
                         <img
                             src={faviconUrl}
                             alt=""
-                            className="w-6 h-6"
+                            className="w-5 h-5"
                             onError={() => setFaviconError(true)}
                         />
                     </div>
                 ) : (
                     <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
                         style={{
                             background: isSecure
-                                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.2))'
-                                : 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2))',
+                                ? 'rgba(6, 182, 212, 0.12)'
+                                : 'rgba(168, 85, 247, 0.12)',
                         }}
                     >
                         {isSecure ? (
-                            <Shield className="w-5 h-5 text-cyan-400" />
+                            <Shield className="w-5 h-5" style={{ color: 'var(--sidebar-accent-cyan)' }} />
                         ) : (
-                            <Sparkles className="w-5 h-5 text-purple-400" />
+                            <Sparkles className="w-5 h-5" style={{ color: 'var(--sidebar-accent-purple)' }} />
                         )}
                     </div>
                 )}
 
-                {/* Favorite indicator overlay for mobile */}
+                {/* Mobile favorite indicator */}
                 {profile.favorite && (
                     <Star
-                        className="absolute -top-1 -right-1 w-3.5 h-3.5 fill-yellow-400 text-yellow-400 md:hidden"
+                        className="absolute -top-1 -right-1 w-3 h-3 fill-yellow-400 text-yellow-400 md:hidden"
                     />
                 )}
             </div>
@@ -169,18 +174,21 @@ export function PasswordCard({
             {/* Main Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-white truncate">
+                    <h3
+                        className="font-semibold truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
                         {profile.site}
                     </h3>
 
                     {/* Type Badge */}
                     <span
-                        className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide shrink-0"
+                        className="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide shrink-0"
                         style={{
                             background: isSecure
-                                ? 'rgba(6, 182, 212, 0.15)'
-                                : 'rgba(139, 92, 246, 0.15)',
-                            color: isSecure ? 'var(--color-cyan-400)' : '#a855f7',
+                                ? 'rgba(6, 182, 212, 0.12)'
+                                : 'rgba(168, 85, 247, 0.12)',
+                            color: isSecure ? 'var(--sidebar-accent-cyan)' : 'var(--sidebar-accent-purple)',
                         }}
                     >
                         {isSecure ? 'Secure' : 'Memorable'}
@@ -188,15 +196,24 @@ export function PasswordCard({
                 </div>
 
                 <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-sm text-slate-400 truncate">
+                    <p
+                        className="text-sm truncate"
+                        style={{ color: 'var(--text-muted)' }}
+                    >
                         {profile.login}
                     </p>
                     <button
                         onClick={handleCopyLogin}
                         className={`
-                            p-1 rounded transition-all shrink-0
-                            ${copiedField === 'login' ? 'text-green-400' : 'text-slate-500 hover:text-white opacity-0 group-hover:opacity-100'}
+                            p-1 rounded transition-all duration-150 shrink-0
+                            ${copiedField === 'login'
+                                ? ''
+                                : 'opacity-0 group-hover:opacity-100'
+                            }
                         `}
+                        style={{
+                            color: copiedField === 'login' ? '#22c55e' : 'var(--text-muted)',
+                        }}
                         title="Copy login"
                     >
                         {copiedField === 'login' ? (
@@ -217,18 +234,30 @@ export function PasswordCard({
 
             {/* Password Details (Desktop) */}
             {isSecure && (
-                <div className="hidden lg:flex items-center gap-4 text-xs text-slate-500 shrink-0">
-                    <span className="px-2 py-1 rounded-lg bg-white/5">
+                <div
+                    className="hidden lg:flex items-center gap-3 text-xs shrink-0"
+                    style={{ color: 'var(--text-muted)' }}
+                >
+                    <span
+                        className="px-2 py-1 rounded-md"
+                        style={{ background: 'var(--sidebar-count-bg)' }}
+                    >
                         {profile.options.length} chars
                     </span>
-                    <span className="px-2 py-1 rounded-lg bg-white/5">
+                    <span
+                        className="px-2 py-1 rounded-md"
+                        style={{ background: 'var(--sidebar-count-bg)' }}
+                    >
                         v{profile.options.counter}
                     </span>
                 </div>
             )}
 
             {/* Last Used (Desktop) */}
-            <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+            <div
+                className="hidden xl:flex items-center gap-1.5 text-xs shrink-0"
+                style={{ color: 'var(--text-muted)' }}
+            >
                 <Clock className="w-3.5 h-3.5" />
                 <span>{formatLastUsed(profile.lastUsedAt)}</span>
             </div>
@@ -240,11 +269,11 @@ export function PasswordCard({
                         e.stopPropagation();
                         onGenerate(profile);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
                     style={{
-                        background: 'linear-gradient(135deg, var(--color-cyan-500), #6366f1)',
+                        background: 'var(--btn-primary-gradient)',
                         color: 'white',
-                        boxShadow: '0 2px 10px rgba(6, 182, 212, 0.2)',
+                        boxShadow: '0 2px 8px rgba(6, 182, 212, 0.2)',
                     }}
                 >
                     <KeyRound className="w-4 h-4" />
@@ -256,10 +285,13 @@ export function PasswordCard({
                         e.stopPropagation();
                         onEdit(profile);
                     }}
-                    className="p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
+                    className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     title="Edit"
                 >
-                    <Edit className="w-4 h-4 text-slate-400" />
+                    <Edit className="w-4 h-4" />
                 </button>
 
                 <button
@@ -267,10 +299,19 @@ export function PasswordCard({
                         e.stopPropagation();
                         onDelete(profile);
                     }}
-                    className="p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/15"
+                    className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--sidebar-danger-hover-bg)';
+                        e.currentTarget.style.color = 'var(--sidebar-danger-text)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                    }}
+                    style={{ color: 'var(--text-muted)' }}
                     title="Delete"
                 >
-                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <Trash2 className="w-4 h-4" />
                 </button>
             </div>
 
@@ -281,9 +322,9 @@ export function PasswordCard({
                         e.stopPropagation();
                         onGenerate(profile);
                     }}
-                    className="p-2.5 rounded-xl"
+                    className="p-2.5 rounded-lg"
                     style={{
-                        background: 'linear-gradient(135deg, var(--color-cyan-500), #6366f1)',
+                        background: 'var(--btn-primary-gradient)',
                         color: 'white',
                     }}
                 >
@@ -296,9 +337,10 @@ export function PasswordCard({
                             e.stopPropagation();
                             setShowMobileMenu(!showMobileMenu);
                         }}
-                        className="p-2.5 rounded-xl hover:bg-white/10"
+                        className="p-2.5 rounded-lg"
+                        style={{ color: 'var(--text-muted)' }}
                     >
-                        <MoreVertical className="w-4 h-4 text-slate-400" />
+                        <MoreVertical className="w-4 h-4" />
                     </button>
 
                     {showMobileMenu && (
@@ -313,8 +355,8 @@ export function PasswordCard({
                             <div
                                 className="absolute right-0 top-full mt-1 py-2 rounded-xl shadow-xl z-20 min-w-[160px]"
                                 style={{
-                                    background: '#1e293b',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border-color)',
                                 }}
                             >
                                 <MobileMenuItem
@@ -342,7 +384,10 @@ export function PasswordCard({
                                         setShowMobileMenu(false);
                                     }}
                                 />
-                                <div className="my-1 border-t border-white/10" />
+                                <div
+                                    className="my-1 border-t"
+                                    style={{ borderColor: 'var(--border-color)' }}
+                                />
                                 <MobileMenuItem
                                     icon={Trash2}
                                     label="Delete"
@@ -380,11 +425,18 @@ function MobileMenuItem({
                 e.stopPropagation();
                 onClick();
             }}
-            className={`
-                w-full flex items-center gap-3 px-4 py-2.5 text-sm
-                transition-colors
-                ${danger ? 'text-red-400 hover:bg-red-500/10' : 'text-slate-300 hover:bg-white/5'}
-            `}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
+            style={{
+                color: danger ? 'var(--sidebar-danger-text)' : 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.background = danger
+                    ? 'var(--sidebar-danger-hover-bg)'
+                    : 'var(--sidebar-hover-bg)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+            }}
         >
             <Icon className={`w-4 h-4 ${iconClass}`} />
             {label}

@@ -10,7 +10,7 @@ import {
     LogOut,
     LayoutGrid,
     Star,
-    ChevronLeft,
+    ArrowLeft,
     User
 } from 'lucide-react';
 import { ViewType, DashboardStats } from './types';
@@ -23,8 +23,6 @@ interface SidebarProps {
     onClose: () => void;
     stats: DashboardStats;
     userEmail?: string;
-    isCollapsed?: boolean;
-    onToggleCollapse?: () => void;
 }
 
 interface NavItemConfig {
@@ -37,9 +35,9 @@ interface NavItemConfig {
 
 const navItems: NavItemConfig[] = [
     { id: 'all', label: 'All Items', icon: LayoutGrid, countKey: 'total' },
-    { id: 'favorites', label: 'Favorites', icon: Star, countKey: 'favorites', accentColor: '#eab308' },
-    { id: 'secure', label: 'Secure', icon: Shield, countKey: 'secure', accentColor: 'var(--color-cyan-500)' },
-    { id: 'memorable', label: 'Memorable', icon: Sparkles, countKey: 'memorable', accentColor: '#a855f7' },
+    { id: 'favorites', label: 'Favorites', icon: Star, countKey: 'favorites', accentColor: 'var(--sidebar-accent-yellow)' },
+    { id: 'secure', label: 'Secure', icon: Shield, countKey: 'secure', accentColor: 'var(--sidebar-accent-cyan)' },
+    { id: 'memorable', label: 'Memorable', icon: Sparkles, countKey: 'memorable', accentColor: 'var(--sidebar-accent-purple)' },
 ];
 
 export function Sidebar({
@@ -50,94 +48,90 @@ export function Sidebar({
     onClose,
     stats,
     userEmail,
-    isCollapsed = false,
-    onToggleCollapse
 }: SidebarProps) {
     return (
         <aside
-            className={`
-                hidden md:flex flex-col h-full
-                transition-all duration-300 ease-in-out
-                ${isCollapsed ? 'w-20' : 'w-64'}
-            `}
+            className="hidden md:flex flex-col h-full w-64 shrink-0"
             style={{
-                background: 'linear-gradient(180deg, #0d1424 0%, #0f172a 100%)',
-                borderRight: '1px solid rgba(148, 163, 184, 0.1)',
+                background: 'var(--sidebar-bg)',
+                borderRight: '1px solid var(--sidebar-border)',
             }}
         >
-            {/* Gradient accent border */}
+            {/* Logo Section with Back Button */}
             <div
-                className="absolute right-0 top-0 bottom-0 w-[1px]"
-                style={{
-                    background: 'linear-gradient(180deg, var(--color-cyan-500) 0%, #a855f7 50%, var(--color-cyan-500) 100%)',
-                    opacity: 0.3,
-                }}
-            />
-
-            {/* Logo Section */}
-            <div className="p-4 border-b border-white/5">
+                className="p-4 border-b flex items-center gap-3"
+                style={{ borderColor: 'var(--sidebar-border)' }}
+            >
+                {/* Back/Close Button - LEFT side */}
                 <button
                     onClick={onClose}
-                    className="flex items-center gap-3 w-full text-left hover:opacity-90 transition-opacity group"
-                    title="Back to Generator"
+                    className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 shrink-0"
+                    style={{ color: 'var(--sidebar-text-muted)' }}
+                    title="Close Vault"
                 >
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
+
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div
-                        className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-transform group-hover:scale-105"
+                        className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
                         style={{
-                            background: 'linear-gradient(135deg, var(--color-cyan-500), #6366f1)',
-                            boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)',
+                            background: 'var(--sidebar-logo-gradient)',
+                            boxShadow: 'var(--sidebar-logo-shadow)',
                         }}
                     >
                         <KeyRound className="w-5 h-5 text-white" />
                     </div>
-                    {!isCollapsed && (
-                        <div className="min-w-0">
-                            <h1 className="font-bold text-white">MyPass</h1>
-                            <p className="text-xs text-slate-400">Password Vault</p>
-                        </div>
-                    )}
-                </button>
+                    <div className="min-w-0">
+                        <h1 className="font-bold" style={{ color: 'var(--sidebar-text-primary)' }}>
+                            MyPass
+                        </h1>
+                        <p className="text-xs" style={{ color: 'var(--sidebar-text-muted)' }}>
+                            Password Vault
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* User Section */}
-            <div className={`px-4 py-4 border-b border-white/5 ${isCollapsed ? 'flex justify-center' : ''}`}>
-                {isCollapsed ? (
+            <div
+                className="px-4 py-3 border-b"
+                style={{ borderColor: 'var(--sidebar-border)' }}
+            >
+                <div className="flex items-center gap-3">
                     <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ background: 'var(--bg-tertiary)' }}
-                        title={userEmail}
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: 'var(--sidebar-avatar-gradient)' }}
                     >
-                        <User className="w-5 h-5 text-slate-400" />
+                        <span className="text-white font-semibold text-sm">
+                            {userEmail?.charAt(0).toUpperCase() || 'U'}
+                        </span>
                     </div>
-                ) : (
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                    <div className="min-w-0 flex-1">
+                        <p
+                            className="text-sm font-medium truncate"
+                            style={{ color: 'var(--sidebar-text-primary)' }}
                         >
-                            <span className="text-white font-semibold">
-                                {userEmail?.charAt(0).toUpperCase() || 'U'}
-                            </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-white truncate">
-                                {userEmail?.split('@')[0] || 'User'}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate">
-                                {userEmail}
-                            </p>
-                        </div>
+                            {userEmail?.split('@')[0] || 'User'}
+                        </p>
+                        <p
+                            className="text-xs truncate"
+                            style={{ color: 'var(--sidebar-text-muted)' }}
+                        >
+                            {userEmail}
+                        </p>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-                {!isCollapsed && (
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-3 mb-3">
-                        Vault
-                    </div>
-                )}
+            <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+                <div
+                    className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2"
+                    style={{ color: 'var(--sidebar-text-muted)' }}
+                >
+                    Vault
+                </div>
 
                 {navItems.map((item) => {
                     const isActive = activeView === item.id;
@@ -148,100 +142,82 @@ export function Sidebar({
                         <button
                             key={item.id}
                             onClick={() => onViewChange(item.id)}
-                            className={`
-                                w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                                transition-all duration-200 group relative
-                                ${isActive ? '' : 'hover:bg-white/5'}
-                                ${isCollapsed ? 'justify-center' : ''}
-                            `}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
                             style={{
-                                background: isActive
-                                    ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.1))'
-                                    : 'transparent',
-                                color: isActive ? 'var(--color-cyan-400)' : 'var(--text-secondary)',
+                                background: isActive ? 'var(--sidebar-item-active-bg)' : 'transparent',
+                                color: isActive ? 'var(--sidebar-item-active-text)' : 'var(--sidebar-text-secondary)',
                             }}
-                            title={isCollapsed ? item.label : undefined}
                         >
-                            {/* Active indicator */}
+                            {/* Active indicator bar */}
                             {isActive && (
                                 <div
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full"
-                                    style={{
-                                        background: 'linear-gradient(180deg, var(--color-cyan-400), #6366f1)',
-                                    }}
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
+                                    style={{ background: 'var(--sidebar-active-indicator)' }}
                                 />
                             )}
 
                             <Icon
-                                className={`w-5 h-5 shrink-0 ${isActive ? '' : 'group-hover:text-white'}`}
-                                style={{ color: isActive ? item.accentColor || 'var(--color-cyan-400)' : undefined }}
+                                className="w-[18px] h-[18px] shrink-0 transition-colors"
+                                style={{
+                                    color: isActive
+                                        ? item.accentColor || 'var(--sidebar-accent-cyan)'
+                                        : undefined,
+                                }}
                             />
 
-                            {!isCollapsed && (
-                                <>
-                                    <span className={`flex-1 text-left ${isActive ? 'text-white' : ''}`}>
-                                        {item.label}
-                                    </span>
-                                    <span
-                                        className="px-2 py-0.5 rounded-full text-xs font-medium"
-                                        style={{
-                                            background: isActive
-                                                ? 'rgba(255, 255, 255, 0.1)'
-                                                : 'var(--bg-tertiary)',
-                                            color: isActive
-                                                ? 'white'
-                                                : 'var(--text-muted)',
-                                        }}
-                                    >
-                                        {count}
-                                    </span>
-                                </>
-                            )}
+                            <span className="flex-1 text-left">{item.label}</span>
+
+                            <span
+                                className="px-2 py-0.5 rounded-md text-xs font-medium"
+                                style={{
+                                    background: isActive
+                                        ? 'var(--sidebar-count-active-bg)'
+                                        : 'var(--sidebar-count-bg)',
+                                    color: isActive
+                                        ? 'var(--sidebar-count-active-text)'
+                                        : 'var(--sidebar-text-muted)',
+                                }}
+                            >
+                                {count}
+                            </span>
                         </button>
                     );
                 })}
             </nav>
 
             {/* Bottom Actions */}
-            <div className="p-3 border-t border-white/5 space-y-1">
+            <div
+                className="p-2 border-t space-y-0.5"
+                style={{ borderColor: 'var(--sidebar-border)' }}
+            >
                 <button
                     onClick={onSettingsClick}
-                    className={`
-                        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                        transition-all hover:bg-white/5 text-slate-400 hover:text-white
-                        ${isCollapsed ? 'justify-center' : ''}
-                    `}
-                    title={isCollapsed ? 'Settings' : undefined}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{ color: 'var(--sidebar-text-secondary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
-                    <Settings className="w-5 h-5" />
-                    {!isCollapsed && <span>Settings</span>}
+                    <Settings className="w-[18px] h-[18px]" />
+                    <span>Settings</span>
                 </button>
 
                 <button
                     onClick={onSignOut}
-                    className={`
-                        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                        transition-all hover:bg-red-500/10 text-slate-500 hover:text-red-400
-                        ${isCollapsed ? 'justify-center' : ''}
-                    `}
-                    title={isCollapsed ? 'Sign Out' : undefined}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{ color: 'var(--sidebar-text-muted)' }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--sidebar-danger-hover-bg)';
+                        e.currentTarget.style.color = 'var(--sidebar-danger-text)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--sidebar-text-muted)';
+                    }}
                 >
-                    <LogOut className="w-5 h-5" />
-                    {!isCollapsed && <span>Sign Out</span>}
+                    <LogOut className="w-[18px] h-[18px]" />
+                    <span>Sign Out</span>
                 </button>
             </div>
-
-            {/* Collapse Toggle */}
-            {onToggleCollapse && (
-                <button
-                    onClick={onToggleCollapse}
-                    className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition-colors z-10"
-                >
-                    <ChevronLeft
-                        className={`w-4 h-4 text-slate-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-                    />
-                </button>
-            )}
         </aside>
     );
 }

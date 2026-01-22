@@ -1,8 +1,8 @@
-// Dashboard V2 Header - Clean, action-focused header
+// Dashboard V2 Header - Proton Pass style
 'use client';
 
 import React from 'react';
-import { Search, Plus, Download, Upload, Command } from 'lucide-react';
+import { Search, Plus, Download, Command } from 'lucide-react';
 import { ViewType } from './types';
 
 interface HeaderProps {
@@ -35,15 +35,27 @@ export function Header({
     onExportImport,
 }: HeaderProps) {
     return (
-        <header className="px-6 py-5 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <header
+            className="px-6 py-4 border-b backdrop-blur-sm"
+            style={{
+                background: 'var(--dashboard-header-bg)',
+                borderColor: 'var(--dashboard-header-border)',
+            }}
+        >
             <div className="flex items-center justify-between gap-4">
                 {/* Title Section */}
                 <div className="min-w-0">
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1
+                        className="text-xl font-bold"
+                        style={{ color: 'var(--text-primary)' }}
+                    >
                         {viewTitles[activeView]}
                     </h1>
-                    <p className="text-sm text-slate-400 mt-0.5">
-                        {profileCount} {profileCount === 1 ? 'password' : 'passwords'} • {viewDescriptions[activeView]}
+                    <p
+                        className="text-sm mt-0.5"
+                        style={{ color: 'var(--text-muted)' }}
+                    >
+                        {profileCount} {profileCount === 1 ? 'password' : 'passwords'}
                     </p>
                 </div>
 
@@ -52,19 +64,36 @@ export function Header({
                     {/* Search Button */}
                     <button
                         onClick={onQuickSearch}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-white/5 group"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group"
                         style={{
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: 'var(--card-bg)',
+                            border: '1px solid var(--card-border)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--card-bg-hover)';
+                            e.currentTarget.style.borderColor = 'var(--card-border-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'var(--card-bg)';
+                            e.currentTarget.style.borderColor = 'var(--card-border)';
                         }}
                     >
-                        <Search className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                        <span className="text-sm text-slate-400 group-hover:text-slate-300 hidden lg:block">
-                            Search passwords...
+                        <Search
+                            className="w-4 h-4 transition-colors"
+                            style={{ color: 'var(--text-muted)' }}
+                        />
+                        <span
+                            className="text-sm hidden lg:block"
+                            style={{ color: 'var(--text-muted)' }}
+                        >
+                            Search...
                         </span>
                         <kbd
-                            className="hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs text-slate-500"
-                            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                            className="hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs"
+                            style={{
+                                background: 'var(--sidebar-count-bg)',
+                                color: 'var(--text-muted)',
+                            }}
                         >
                             <Command className="w-3 h-3" />K
                         </kbd>
@@ -73,25 +102,38 @@ export function Header({
                     {/* Import/Export Button */}
                     <button
                         onClick={onExportImport}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:bg-white/5"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
                         style={{
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            background: 'var(--card-bg)',
+                            border: '1px solid var(--card-border)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'var(--card-bg-hover)';
+                            e.currentTarget.style.borderColor = 'var(--card-border-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'var(--card-bg)';
+                            e.currentTarget.style.borderColor = 'var(--card-border)';
                         }}
                         title="Backup & Restore"
                     >
-                        <Download className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-400 hidden lg:block">Backup</span>
+                        <Download className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                        <span
+                            className="text-sm hidden lg:block"
+                            style={{ color: 'var(--text-muted)' }}
+                        >
+                            Backup
+                        </span>
                     </button>
 
                     {/* Add Password Button */}
                     <button
                         onClick={onQuickAdd}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all hover:scale-105 hover:shadow-lg"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
-                            background: 'linear-gradient(135deg, var(--color-cyan-500), #6366f1)',
+                            background: 'var(--btn-primary-gradient)',
                             color: 'white',
-                            boxShadow: '0 4px 20px rgba(6, 182, 212, 0.25)',
+                            boxShadow: 'var(--btn-primary-shadow)',
                         }}
                     >
                         <Plus className="w-4 h-4" />

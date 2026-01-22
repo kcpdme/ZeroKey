@@ -1,4 +1,4 @@
-// Dashboard V2 - Main Dashboard Component (Proton Pass Inspired)
+// Dashboard V2 - Main Dashboard Component (Proton Pass Style)
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -41,7 +41,6 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
 
     // UI state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Modals
     const [showSettings, setShowSettings] = useState(false);
@@ -210,26 +209,8 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     return (
         <div
             className="fixed inset-0 z-50 flex overflow-hidden"
-            style={{
-                background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0d1424 100%)',
-            }}
+            style={{ background: 'var(--dashboard-bg)' }}
         >
-            {/* Ambient glow effects */}
-            <div
-                className="absolute top-0 left-1/4 w-96 h-96 rounded-full pointer-events-none"
-                style={{
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%)',
-                    filter: 'blur(60px)',
-                }}
-            />
-            <div
-                className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full pointer-events-none"
-                style={{
-                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
-                    filter: 'blur(60px)',
-                }}
-            />
-
             {/* Settings Modal */}
             {user && (
                 <SettingsModal
@@ -303,8 +284,6 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onClose={onClose}
                 stats={stats}
                 userEmail={user?.email || undefined}
-                isCollapsed={isCollapsed}
-                onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
             />
 
             {/* Main Content */}
@@ -348,13 +327,14 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 {/* Mobile Close Button */}
                 <button
                     onClick={onClose}
-                    className="fixed top-3 right-3 md:hidden p-2.5 rounded-xl z-30 transition-all hover:bg-white/10"
+                    className="fixed top-3 right-3 md:hidden p-2.5 rounded-xl z-30 transition-all"
                     style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'var(--card-bg)',
+                        border: '1px solid var(--card-border)',
+                        color: 'var(--text-muted)',
                     }}
                 >
-                    <X className="w-5 h-5 text-slate-400" />
+                    <X className="w-5 h-5" />
                 </button>
             </div>
 
