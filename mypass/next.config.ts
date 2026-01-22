@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
               // Allow Google/Firebase/reCAPTCHA scripts
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://*.googleapis.com https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.googleusercontent.com https://*.google.com",
+              "img-src 'self' data: blob: https://*.googleusercontent.com https://www.google.com https://*.gstatic.com https://icons.duckduckgo.com",
               "font-src 'self'",
               // Allow connections to Firebase services
               "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com",
