@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Plus, Download } from 'lucide-react';
+import { X, Plus, Download, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileService, PasswordProfile } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
@@ -15,6 +15,8 @@ import { GenerateModal } from './GenerateModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { QuickAddModal } from './QuickAddModal';
 import { ExportImportModal } from './ExportImportModal';
+import { MobileBottomNav, MobileHeader, MobileDrawer } from './MobileNav';
+import { ProfileListSkeleton, StatsSkeleton } from './Skeleton';
 
 interface DashboardProps {
     isOpen: boolean;
@@ -33,6 +35,9 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
 
     // View state (sidebar navigation)
     const [activeView, setActiveView] = useState<string>('all');
+
+    // Mobile state
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Modals
     const [showSettings, setShowSettings] = useState(false);
@@ -64,13 +69,14 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 else if (showSettings) setShowSettings(false);
                 else if (selectedProfile) setSelectedProfile(null);
                 else if (deleteTarget) setDeleteTarget(null);
+                else if (isMobileMenuOpen) setIsMobileMenuOpen(false);
                 else onClose();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, onClose]);
+    }, [isOpen, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, isMobileMenuOpen, onClose]);
 
     // Load data
     useEffect(() => {
@@ -174,9 +180,9 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
     // Get view title
     const getViewTitle = () => {
         switch (activeView) {
-            case 'favorites': return 'Favorite Passwords';
-            case 'secure': return 'Secure Passwords';
-            case 'memorable': return 'Memorable Passwords';
+            case 'favorites': return 'Favorites';
+            case 'secure': return 'Secure';
+            case 'memorable': return 'Memorable';
             default: return 'All Passwords';
         }
     };
@@ -231,21 +237,40 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 isDeleting={isDeleting}
             />
 
-            {/* Sidebar */}
-            <DashboardSidebar
-                activeView={activeView}
-                onViewChange={handleViewChange}
-                onSettingsClick={() => setShowSettings(true)}
+            {/* Mobile Drawer */}
+            <MobileDrawer
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                userEmail={user?.email || undefined}
                 onSignOut={handleSignOut}
                 stats={stats}
-                userEmail={user?.email || undefined}
             />
+
+            {/* Desktop Sidebar - Hidden on mobile */}
+            <div className="hidden md:block">
+                <DashboardSidebar
+                    activeView={activeView}
+                    onViewChange={handleViewChange}
+                    onSettingsClick={() => setShowSettings(true)}
+                    onSignOut={handleSignOut}
+                    stats={stats}
+                    userEmail={user?.email || undefined}
+                />
+            </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
+                {/* Mobile Header */}
+                <MobileHeader
+                    title={getViewTitle()}
+                    subtitle={`${filteredProfiles.length} passwords`}
+                    onMenuToggle={() => setIsMobileMenuOpen(true)}
+                    onSettingsClick={() => setShowSettings(true)}
+                />
+
+                {/* Desktop Header */}
                 <header
-                    className="flex items-center justify-between px-6 py-4 border-b"
+                    className="hidden md:flex items-center justify-between px-6 py-4 border-b"
                     style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}
                 >
                     <div>
@@ -293,17 +318,23 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     </div>
                 </header>
 
-                {/* Stats Bar (only for All view) */}
+                {/* Stats Bar (only for All view on desktop) */}
                 {activeView === 'all' && (
-                    <DashboardStats
-                        total={stats.total}
-                        secure={stats.secure}
-                        memorable={stats.memorable}
-                    />
+                    <div className="hidden md:block">
+                        {loading ? (
+                            <StatsSkeleton />
+                        ) : (
+                            <DashboardStats
+                                total={stats.total}
+                                secure={stats.secure}
+                                memorable={stats.memorable}
+                            />
+                        )}
+                    </div>
                 )}
 
                 {/* Search */}
-                <div className="px-6 py-4">
+                <div className="px-4 md:px-6 py-3 md:py-4">
                     <ProfileFilters
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
@@ -312,18 +343,38 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 </div>
 
                 {/* Profile List */}
-                <div className="flex-1 overflow-y-auto px-6 pb-6">
-                    <ProfileList
-                        profiles={filteredProfiles}
-                        loading={loading}
-                        isEmpty={profiles.length === 0}
-                        onGenerate={handleGenerate}
-                        onEdit={handleEdit}
-                        onDelete={setDeleteTarget}
-                        onProfilesChange={loadProfiles}
-                    />
+                <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-24 md:pb-6">
+                    {loading ? (
+                        <ProfileListSkeleton count={6} />
+                    ) : (
+                        <ProfileList
+                            profiles={filteredProfiles}
+                            loading={false}
+                            isEmpty={profiles.length === 0}
+                            onGenerate={handleGenerate}
+                            onEdit={handleEdit}
+                            onDelete={setDeleteTarget}
+                            onProfilesChange={loadProfiles}
+                        />
+                    )}
                 </div>
+
+                {/* Mobile Close Button (top-right) */}
+                <button
+                    onClick={onClose}
+                    className="fixed top-3 right-3 md:hidden p-2 rounded-lg z-30"
+                    style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
+                >
+                    <X className="w-5 h-5" />
+                </button>
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav
+                activeView={activeView}
+                onViewChange={handleViewChange}
+                onQuickAdd={() => setShowQuickAdd(true)}
+            />
         </div>
     );
 }
