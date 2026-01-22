@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Plus, Download, Search } from 'lucide-react';
+import { X, Plus, Download, Search, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileService, PasswordProfile } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
@@ -60,13 +60,13 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!isOpen) return;
 
-            // Ctrl/Cmd + N = Quick Add
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            // Ctrl/Cmd + Shift + N = Quick Add (using Shift to avoid browser new tab)
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'n') {
                 e.preventDefault();
                 setShowQuickAdd(true);
             }
-            // Ctrl/Cmd + E = Export/Import
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            // Ctrl/Cmd + Shift + E = Export/Import (using Shift to avoid browser)
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'e') {
                 e.preventDefault();
                 setShowExportImport(true);
             }
@@ -312,7 +312,6 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                         </h2>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                             {filteredProfiles.length} {filteredProfiles.length === 1 ? 'password' : 'passwords'}
-                            <span className="ml-2 opacity-50">• Ctrl+K: Search • Ctrl+N: Add</span>
                         </p>
                     </div>
 
@@ -348,20 +347,26 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                         {/* Export/Import Button */}
                         <button
                             onClick={() => setShowExportImport(true)}
-                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
-                            style={{ color: 'var(--text-secondary)' }}
-                            title="Backup & Restore (Ctrl+E)"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-white/10"
+                            style={{
+                                background: 'var(--bg-tertiary)',
+                                color: 'var(--text-secondary)'
+                            }}
+                            title="Backup & Restore"
                         >
-                            <Download className="w-5 h-5" />
+                            <Download className="w-4 h-4" />
+                            <span className="hidden lg:inline text-sm">Backup</span>
                         </button>
 
-                        {/* Close Button */}
+                        {/* Logout Button */}
                         <button
-                            onClick={onClose}
-                            className="p-2 rounded-lg transition-colors hover:bg-white/10"
-                            style={{ color: 'var(--text-secondary)' }}
+                            onClick={handleSignOut}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-red-500/10"
+                            style={{ color: 'var(--text-muted)' }}
+                            title="Sign Out"
                         >
-                            <X className="w-5 h-5" />
+                            <LogOut className="w-4 h-4" />
+                            <span className="hidden lg:inline text-sm">Logout</span>
                         </button>
                     </div>
                 </header>
@@ -381,8 +386,8 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     </div>
                 )}
 
-                {/* Search */}
-                <div className="px-4 md:px-6 py-3 md:py-4">
+                {/* Search - Only on mobile (desktop uses header search button) */}
+                <div className="px-4 py-3 md:hidden">
                     <ProfileFilters
                         searchQuery={searchQuery}
                         onSearchChange={setSearchQuery}
