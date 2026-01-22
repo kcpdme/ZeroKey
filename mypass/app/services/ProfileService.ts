@@ -33,6 +33,13 @@ export interface PasswordProfile {
         shift: number;
         magicNumber: number;
     };
+    tags?: string[];           // Category tags
+    notes?: string;            // Optional notes
+    customFields?: Array<{     // Custom metadata
+        key: string;
+        value: string;
+        encrypted?: boolean;
+    }>;
     favorite?: boolean;
     lastUsedAt?: any;
     createdAt: any;

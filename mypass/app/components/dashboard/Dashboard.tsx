@@ -17,6 +17,8 @@ import { QuickAddModal } from './QuickAddModal';
 import { ExportImportModal } from './ExportImportModal';
 import { MobileBottomNav, MobileHeader, MobileDrawer } from './MobileNav';
 import { ProfileListSkeleton, StatsSkeleton } from './Skeleton';
+import { QuickSearch } from './QuickSearch';
+import { TagFilter } from './TagSelector';
 
 interface DashboardProps {
     isOpen: boolean;
@@ -38,6 +40,12 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
 
     // Mobile state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Quick Search state
+    const [showQuickSearch, setShowQuickSearch] = useState(false);
+
+    // Tag filter state
+    const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
 
     // Modals
     const [showSettings, setShowSettings] = useState(false);
@@ -62,9 +70,15 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 e.preventDefault();
                 setShowExportImport(true);
             }
+            // Ctrl/Cmd + K = Quick Search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                setShowQuickSearch(true);
+            }
             // Escape = Close modals or dashboard
             if (e.key === 'Escape') {
-                if (showQuickAdd) setShowQuickAdd(false);
+                if (showQuickSearch) setShowQuickSearch(false);
+                else if (showQuickAdd) setShowQuickAdd(false);
                 else if (showExportImport) setShowExportImport(false);
                 else if (showSettings) setShowSettings(false);
                 else if (selectedProfile) setSelectedProfile(null);
@@ -114,23 +128,32 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         }
     };
 
-    // Computed - filter by sidebar selection AND search
+    // Computed - filter by sidebar selection AND search AND tags
     const filteredProfiles = profiles.filter(profile => {
         // Filter by sidebar selection
         if (activeView === 'secure' && profile.algorithm !== 'pbkdf2') return false;
         if (activeView === 'memorable' && profile.algorithm !== 'memorizable') return false;
         if (activeView === 'favorites' && !profile.favorite) return false;
 
+        // Filter by selected tag
+        if (selectedTagFilter && (!profile.tags || !profile.tags.includes(selectedTagFilter))) {
+            return false;
+        }
+
         // Filter by search
         if (searchQuery) {
             const matchesSearch =
                 profile.site.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                profile.login.toLowerCase().includes(searchQuery.toLowerCase());
+                profile.login.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (profile.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
             if (!matchesSearch) return false;
         }
 
         return true;
     });
+
+    // Collect all tags for the sidebar filter
+    const allTags = profiles.flatMap(p => p.tags || []);
 
     const stats = {
         total: profiles.length,
@@ -175,6 +198,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
     const handleViewChange = (view: string) => {
         setActiveView(view);
         setSearchQuery(''); // Clear search when changing views
+        setSelectedTagFilter(null); // Clear tag filter when changing views
     };
 
     // Get view title
@@ -237,6 +261,15 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 isDeleting={isDeleting}
             />
 
+            {/* Quick Search (Cmd+K) */}
+            <QuickSearch
+                isOpen={showQuickSearch}
+                onClose={() => setShowQuickSearch(false)}
+                profiles={profiles}
+                onSelectProfile={handleEdit}
+                onGeneratePassword={handleGenerate}
+            />
+
             {/* Mobile Drawer */}
             <MobileDrawer
                 isOpen={isMobileMenuOpen}
@@ -279,11 +312,26 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                         </h2>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                             {filteredProfiles.length} {filteredProfiles.length === 1 ? 'password' : 'passwords'}
-                            <span className="ml-2 opacity-50">• Ctrl+N: Add • Ctrl+E: Backup</span>
+                            <span className="ml-2 opacity-50">• Ctrl+K: Search • Ctrl+N: Add</span>
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {/* Quick Search Button */}
+                        <button
+                            onClick={() => setShowQuickSearch(true)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-white/10"
+                            style={{
+                                background: 'var(--bg-tertiary)',
+                                color: 'var(--text-secondary)',
+                            }}
+                            title="Quick Search (Ctrl+K)"
+                        >
+                            <Search className="w-4 h-4" />
+                            <span className="text-sm">Search...</span>
+                            <kbd className="hidden lg:inline-flex px-1.5 py-0.5 rounded text-xs" style={{ background: 'var(--bg-secondary)' }}>⌘K</kbd>
+                        </button>
+
                         {/* Quick Add Button */}
                         <button
                             onClick={() => setShowQuickAdd(true)}
@@ -294,7 +342,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                             }}
                         >
                             <Plus className="w-4 h-4" />
-                            Quick Add
+                            Add
                         </button>
 
                         {/* Export/Import Button */}
@@ -302,7 +350,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                             onClick={() => setShowExportImport(true)}
                             className="p-2 rounded-lg transition-colors hover:bg-white/10"
                             style={{ color: 'var(--text-secondary)' }}
-                            title="Backup & Restore"
+                            title="Backup & Restore (Ctrl+E)"
                         >
                             <Download className="w-5 h-5" />
                         </button>

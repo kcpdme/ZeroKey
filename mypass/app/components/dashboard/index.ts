@@ -17,5 +17,8 @@ export { DeleteConfirmModal } from './DeleteConfirmModal';
 export { ExportImportModal } from './ExportImportModal';
 export { MobileBottomNav, MobileHeader, MobileDrawer } from './MobileNav';
 export { Skeleton, ProfileRowSkeleton, ProfileListSkeleton, StatsSkeleton, SearchSkeleton } from './Skeleton';
+export { QuickSearch, useQuickSearch } from './QuickSearch';
+export { TagSelector, TagChips, TagFilter } from './TagSelector';
 export * from './types';
+
 
