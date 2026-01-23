@@ -197,15 +197,34 @@ export default function HomePage() {
       />
 
       {/* Auth & Theme Controls - Top Right */}
-      <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 sm:gap-2 z-20">
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-secondary)',
+          }}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+          ) : (
+            <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+          )}
+        </button>
+
+        {/* Auth Button */}
         {!user ? (
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg"
+            className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all hover:scale-105"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              border: '1px solid var(--border-color)',
             }}
           >
             Sign In
@@ -213,7 +232,7 @@ export default function HomePage() {
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+            className="p-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl text-sm font-medium transition-all hover:scale-105 flex items-center gap-2"
             style={{
               background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
               color: 'white',
@@ -221,52 +240,33 @@ export default function HomePage() {
             }}
           >
             <User className="w-4 h-4" />
-            My Vault
+            <span className="hidden sm:inline">My Vault</span>
           </button>
         )}
       </div>
 
-      {/* Floating Theme Toggle - Bottom Right */}
-      <button
-        onClick={toggleTheme}
-        className="fixed bottom-6 right-6 p-4 rounded-full transition-all duration-300 hover:scale-110 shadow-lg z-50"
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-color)',
-          color: 'var(--text-secondary)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-        }}
-        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {theme === 'dark' ? (
-          <Sun className="w-5 h-5" />
-        ) : (
-          <Moon className="w-5 h-5" />
-        )}
-      </button>
-
-      <div className="w-full max-w-md mx-auto relative z-10">
+      <div className="w-full max-w-md mx-auto relative z-10 pt-14 sm:pt-4">
         {/* Header - Seamless */}
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-3">
+        <header className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2 sm:mb-3">
             <div
-              className="flex items-center justify-center w-12 h-12 rounded-xl shadow-lg transition-all duration-300"
+              className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg transition-all duration-300"
               style={{
                 background: 'linear-gradient(135deg, var(--color-cyan-400), var(--color-cyan-600))',
                 boxShadow: '0 6px 20px rgba(6, 182, 212, 0.3)'
               }}
             >
-              <KeyRound className="w-6 h-6 text-white" aria-hidden="true" />
+              <KeyRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
             </div>
             <h1
-              className="text-3xl font-bold tracking-tight"
+              className="text-2xl sm:text-3xl font-bold tracking-tight"
               style={{ color: 'var(--text-primary)' }}
             >
               Stateless Pass
             </h1>
           </div>
           <p
-            className="text-base"
+            className="text-sm sm:text-base"
             style={{ color: 'var(--text-secondary)' }}
           >
             {getDescription()}

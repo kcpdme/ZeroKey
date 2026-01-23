@@ -12,9 +12,10 @@ import {
     Star
 } from 'lucide-react';
 import { TagFilter } from './TagSelector';
+import { ViewType } from './v2/types';
 
 interface NavItem {
-    id: string;
+    id: ViewType;
     label: string;
     icon: React.ElementType;
     count?: number;
@@ -22,8 +23,8 @@ interface NavItem {
 }
 
 interface DashboardSidebarProps {
-    activeView: string;
-    onViewChange: (view: string) => void;
+    activeView: ViewType;
+    onViewChange: (view: ViewType) => void;
     onSettingsClick: () => void;
     onSignOut: () => void;
     onClose: () => void;

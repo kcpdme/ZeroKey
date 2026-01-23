@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Plus, Download, Search, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../hooks/useTheme';
 import { ProfileService, PasswordProfile } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
 import { SettingsModal } from '../settings';
@@ -19,6 +20,7 @@ import { MobileBottomNav, MobileHeader, MobileDrawer } from './MobileNav';
 import { ProfileListSkeleton, StatsSkeleton } from './Skeleton';
 import { QuickSearch } from './QuickSearch';
 import { TagFilter } from './TagSelector';
+import { ViewType } from './v2/types';
 
 interface DashboardProps {
     isOpen: boolean;
@@ -28,6 +30,7 @@ interface DashboardProps {
 
 export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
     const { user, signOut } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     // State
     const [profiles, setProfiles] = useState<PasswordProfile[]>([]);
@@ -36,7 +39,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
     const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
 
     // View state (sidebar navigation)
-    const [activeView, setActiveView] = useState<string>('all');
+    const [activeView, setActiveView] = useState<ViewType>('all');
 
     // Mobile state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -195,7 +198,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
         setSelectedProfile(profile);
     };
 
-    const handleViewChange = (view: string) => {
+    const handleViewChange = (view: ViewType) => {
         setActiveView(view);
         setSearchQuery(''); // Clear search when changing views
         setSelectedTagFilter(null); // Clear tag filter when changing views
@@ -277,6 +280,15 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 userEmail={user?.email || undefined}
                 onSignOut={handleSignOut}
                 stats={stats}
+                activeView={activeView}
+                onViewChange={handleViewChange}
+                // Search Props
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                // Tag Props
+                selectedTag={selectedTagFilter}
+                onTagChange={setSelectedTagFilter}
+                allTags={allTags}
             />
 
             {/* Desktop Sidebar - Hidden on mobile */}
@@ -303,6 +315,10 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     subtitle={`${filteredProfiles.length} passwords`}
                     onMenuToggle={() => setIsMobileMenuOpen(true)}
                     onSettingsClick={() => setShowSettings(true)}
+                    theme={theme}
+                    onThemeToggle={toggleTheme}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
                 />
 
                 {/* Desktop Header */}
@@ -390,14 +406,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     </div>
                 )}
 
-                {/* Search - Only on mobile (desktop uses header search button) */}
-                <div className="px-4 py-3 md:hidden">
-                    <ProfileFilters
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        hideTypeFilter={true}
-                    />
-                </div>
+
 
                 {/* Profile List */}
                 <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-24 md:pb-6">

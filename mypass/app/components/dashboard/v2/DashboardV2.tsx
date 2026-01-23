@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../hooks/useTheme';
 import { ProfileService, PasswordProfile } from '../../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../../services/SettingsService';
 import { SettingsModal } from '../../settings';
@@ -28,6 +29,7 @@ interface DashboardV2Props {
 
 export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props) {
     const { user, signOut } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     // Core state
     const [profiles, setProfiles] = useState<PasswordProfile[]>([]);
@@ -149,6 +151,9 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
         return true;
     });
 
+    // Collect all tags for the sidebar filter
+    const allTags = profiles.flatMap(p => p.tags || []);
+
     // Stats
     const stats: DashboardStats = {
         total: profiles.length,
@@ -266,6 +271,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onGeneratePassword={handleGenerate}
             />
 
+
             {/* Mobile Drawer */}
             <MobileDrawer
                 isOpen={isMobileMenuOpen}
@@ -273,6 +279,15 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 userEmail={user?.email || undefined}
                 onSignOut={handleSignOut}
                 stats={stats}
+                activeView={activeView}
+                onViewChange={handleViewChange}
+                // Search Props
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                // Tag Props
+                selectedTag={selectedTagFilter}
+                onTagChange={setSelectedTagFilter}
+                allTags={allTags}
             />
 
             {/* Desktop Sidebar */}
@@ -297,6 +312,10 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     subtitle={`${filteredProfiles.length} passwords`}
                     onMenuToggle={() => setIsMobileMenuOpen(true)}
                     onSettingsClick={() => setShowSettings(true)}
+                    theme={theme}
+                    onThemeToggle={toggleTheme}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
                 />
 
                 {/* Desktop Header */}
