@@ -130,7 +130,7 @@ interface MobileHeaderProps {
     title: string;
     subtitle?: string;
     onMenuToggle: () => void;
-    onSettingsClick: () => void;
+    onClose?: () => void;
     theme?: 'light' | 'dark';
     onThemeToggle?: () => void;
     searchQuery?: string;
@@ -141,7 +141,7 @@ export function MobileHeader({
     title,
     subtitle,
     onMenuToggle,
-    onSettingsClick,
+    onClose,
     theme,
     onThemeToggle,
     searchQuery,
@@ -149,31 +149,41 @@ export function MobileHeader({
 }: MobileHeaderProps) {
     return (
         <header
-            className="flex flex-col px-4 py-3 md:hidden gap-3"
+            className="px-3 py-2 md:hidden"
             style={{
                 background: 'var(--dashboard-header-bg)',
                 borderBottom: '1px solid var(--dashboard-header-border)',
             }}
         >
-            <div className="flex items-center justify-between">
+            {/* Single Row: Menu | Title | Theme + Close */}
+            <div className="flex items-center gap-2">
+                {/* Menu Button */}
                 <button
                     onClick={onMenuToggle}
-                    className="p-2 rounded-lg transition-colors"
-                    style={{ color: 'var(--text-secondary)' }}
+                    className="flex items-center justify-center rounded-lg transition-colors shrink-0"
+                    style={{
+                        width: '36px',
+                        height: '36px',
+                        minWidth: '36px',
+                        minHeight: '36px',
+                        color: 'var(--text-secondary)',
+                        background: 'var(--bg-tertiary)',
+                    }}
                 >
                     <Menu className="w-5 h-5" />
                 </button>
 
-                <div className="text-center">
+                {/* Title - Takes remaining space */}
+                <div className="flex-1 min-w-0">
                     <h1
-                        className="font-bold"
+                        className="font-semibold text-sm truncate"
                         style={{ color: 'var(--text-primary)' }}
                     >
                         {title}
                     </h1>
                     {subtitle && (
                         <p
-                            className="text-xs"
+                            className="text-[10px] truncate"
                             style={{ color: 'var(--text-muted)' }}
                         >
                             {subtitle}
@@ -181,41 +191,60 @@ export function MobileHeader({
                     )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                {/* Right Actions */}
+                <div className="flex items-center gap-1.5 shrink-0">
                     {/* Theme Toggle */}
                     {onThemeToggle && (
                         <button
                             onClick={onThemeToggle}
-                            className="p-2 rounded-lg transition-colors"
-                            style={{ color: 'var(--text-secondary)' }}
+                            className="flex items-center justify-center rounded-lg transition-colors shrink-0"
+                            style={{
+                                width: '36px',
+                                height: '36px',
+                                minWidth: '36px',
+                                minHeight: '36px',
+                                color: 'var(--text-secondary)',
+                                background: 'var(--bg-tertiary)',
+                            }}
                             aria-label="Toggle theme"
                         >
                             {theme === 'dark' ? (
-                                <Sun className="w-5 h-5" />
+                                <Sun className="w-4 h-4" />
                             ) : (
-                                <Moon className="w-5 h-5" />
+                                <Moon className="w-4 h-4" />
                             )}
                         </button>
                     )}
-                    {/* Settings */}
-                    <button
-                        onClick={onSettingsClick}
-                        className="p-2 rounded-lg transition-colors"
-                        style={{ color: 'var(--text-secondary)' }}
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
+
+                    {/* Close/Back Button */}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="flex items-center justify-center rounded-lg transition-colors shrink-0"
+                            style={{
+                                width: '36px',
+                                height: '36px',
+                                minWidth: '36px',
+                                minHeight: '36px',
+                                color: 'var(--text-muted)',
+                                background: 'var(--bg-tertiary)',
+                            }}
+                            aria-label="Close dashboard"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Search Bar - Always visible */}
-            <div className="relative">
+            {/* Search Bar */}
+            <div className="relative mt-2">
                 <input
                     type="text"
-                    placeholder="Search vault..."
+                    placeholder="Search..."
                     value={searchQuery || ''}
                     onChange={(e) => onSearchChange?.(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-xl text-sm transition-all focus:ring-2 focus:ring-cyan-500/50 outline-none"
+                    className="w-full pl-9 pr-3 py-2 rounded-lg text-sm transition-all focus:ring-2 focus:ring-cyan-500/50 outline-none"
                     style={{
                         background: 'var(--bg-tertiary)',
                         color: 'var(--text-primary)',
@@ -241,6 +270,7 @@ interface MobileDrawerProps {
     onClose: () => void;
     userEmail?: string;
     onSignOut: () => void;
+    onSettingsClick?: () => void;
     stats: DashboardStats;
     activeView?: ViewType;
     onViewChange?: (view: ViewType) => void;
@@ -267,6 +297,7 @@ export function MobileDrawer({
     onClose,
     userEmail,
     onSignOut,
+    onSettingsClick,
     stats,
     activeView,
     onViewChange,
@@ -421,14 +452,30 @@ export function MobileDrawer({
                     </div>
                 )}
 
-                {/* Sign Out */}
+                {/* Bottom Actions */}
                 <div
-                    className="absolute bottom-0 left-0 right-0 p-4 border-t"
-                    style={{ borderColor: 'var(--sidebar-border)' }}
+                    className="absolute bottom-0 left-0 right-0 p-3 border-t space-y-1"
+                    style={{ borderColor: 'var(--sidebar-border)', background: 'var(--sidebar-bg)' }}
                 >
+                    {/* Settings Button */}
+                    {onSettingsClick && (
+                        <button
+                            onClick={() => {
+                                onSettingsClick();
+                                onClose();
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+                            style={{ color: 'var(--sidebar-text-secondary)' }}
+                        >
+                            <Settings className="w-4 h-4" />
+                            Settings
+                        </button>
+                    )}
+
+                    {/* Sign Out Button */}
                     <button
                         onClick={onSignOut}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
                         style={{ color: 'var(--sidebar-text-muted)' }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'var(--sidebar-danger-hover-bg)';

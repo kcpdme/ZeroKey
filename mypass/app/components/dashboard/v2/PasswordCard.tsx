@@ -72,7 +72,7 @@ export function PasswordCard({
     return (
         <div
             className={`
-                relative flex items-center gap-4 px-4 py-3 rounded-xl
+                relative flex items-center gap-3 px-3 py-2.5 rounded-xl
                 transition-all duration-200 ease-in-out group cursor-pointer
                 ${showCheckbox && isSelected ? 'pass-item--bulk-selected' : ''}
             `}
@@ -109,14 +109,14 @@ export function PasswordCard({
                 </div>
             )}
 
-            {/* Favorite Star - Visible on hover or if favorited */}
+            {/* Favorite Star - Desktop only, hidden on mobile */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     onToggleFavorite(profile);
                 }}
                 className={`
-                    p-1.5 rounded-lg transition-all duration-150 shrink-0
+                    hidden md:flex p-1.5 rounded-lg transition-all duration-150 shrink-0
                     ${profile.favorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                 `}
                 style={{
@@ -126,29 +126,29 @@ export function PasswordCard({
             >
                 <Star
                     className={`w-4 h-4 transition-all ${profile.favorite
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-slate-400 hover:text-yellow-400'
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-slate-400 hover:text-yellow-400'
                         }`}
                 />
             </button>
 
-            {/* Favicon / Icon */}
+            {/* Favicon / Icon - Smaller on mobile */}
             <div className="relative shrink-0">
                 {!faviconError ? (
                     <div
-                        className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center"
+                        className="w-9 h-9 md:w-10 md:h-10 rounded-lg overflow-hidden flex items-center justify-center"
                         style={{ background: 'var(--sidebar-count-bg)' }}
                     >
                         <img
                             src={faviconUrl}
                             alt=""
-                            className="w-5 h-5"
+                            className="w-4 h-4 md:w-5 md:h-5"
                             onError={() => setFaviconError(true)}
                         />
                     </div>
                 ) : (
                     <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        className="w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center"
                         style={{
                             background: isSecure
                                 ? 'rgba(6, 182, 212, 0.12)'
@@ -156,34 +156,57 @@ export function PasswordCard({
                         }}
                     >
                         {isSecure ? (
-                            <Shield className="w-5 h-5" style={{ color: 'var(--sidebar-accent-cyan)' }} />
+                            <Shield className="w-4 h-4 md:w-5 md:h-5" style={{ color: 'var(--sidebar-accent-cyan)' }} />
                         ) : (
-                            <Sparkles className="w-5 h-5" style={{ color: 'var(--sidebar-accent-purple)' }} />
+                            <Sparkles className="w-4 h-4 md:w-5 md:h-5" style={{ color: 'var(--sidebar-accent-purple)' }} />
                         )}
                     </div>
                 )}
 
-                {/* Mobile favorite indicator */}
+                {/* Mobile favorite indicator - Small star badge */}
                 {profile.favorite && (
                     <Star
-                        className="absolute -top-1 -right-1 w-3 h-3 fill-yellow-400 text-yellow-400 md:hidden"
+                        className="absolute -top-0.5 -right-0.5 w-3 h-3 fill-yellow-400 text-yellow-400 md:hidden"
                     />
                 )}
             </div>
 
             {/* Main Content */}
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                {/* Site Name + Type Badge (inline on mobile) */}
+                <div className="flex items-center gap-1.5">
                     <h3
-                        className="font-semibold truncate"
+                        className="font-semibold text-sm md:text-base truncate"
                         style={{ color: 'var(--text-primary)' }}
                     >
                         {profile.site}
                     </h3>
-
-                    {/* Type Badge */}
+                    {/* Type Badge - Mobile inline */}
                     <span
-                        className="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide shrink-0"
+                        className="md:hidden px-1.5 py-0.5 rounded text-[8px] font-semibold uppercase tracking-wide shrink-0"
+                        style={{
+                            background: isSecure
+                                ? 'rgba(6, 182, 212, 0.12)'
+                                : 'rgba(168, 85, 247, 0.12)',
+                            color: isSecure ? 'var(--sidebar-accent-cyan)' : 'var(--sidebar-accent-purple)',
+                        }}
+                    >
+                        {isSecure ? 'Secure' : 'Mem'}
+                    </span>
+                </div>
+
+                {/* Login/Email */}
+                <p
+                    className="text-xs md:text-sm truncate"
+                    style={{ color: 'var(--text-muted)' }}
+                >
+                    {profile.login}
+                </p>
+
+                {/* Desktop: Type Badge + Copy button */}
+                <div className="hidden md:flex items-center gap-2 mt-0.5">
+                    <span
+                        className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide"
                         style={{
                             background: isSecure
                                 ? 'rgba(6, 182, 212, 0.12)'
@@ -193,15 +216,6 @@ export function PasswordCard({
                     >
                         {isSecure ? 'Secure' : 'Memorable'}
                     </span>
-                </div>
-
-                <div className="flex items-center gap-2 mt-0.5">
-                    <p
-                        className="text-sm truncate"
-                        style={{ color: 'var(--text-muted)' }}
-                    >
-                        {profile.login}
-                    </p>
                     <button
                         onClick={handleCopyLogin}
                         className={`
@@ -224,7 +238,7 @@ export function PasswordCard({
                     </button>
                 </div>
 
-                {/* Tags */}
+                {/* Tags - Desktop only */}
                 {profile.tags && profile.tags.length > 0 && (
                     <div className="hidden md:block mt-1.5">
                         <TagChips tags={profile.tags} size="sm" maxVisible={2} />
@@ -316,14 +330,19 @@ export function PasswordCard({
             </div>
 
             {/* Mobile Actions */}
-            <div className="flex md:hidden items-center gap-1 shrink-0">
+            <div className="flex md:hidden items-center gap-1.5 shrink-0">
+                {/* Generate Password Button */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onGenerate(profile);
                     }}
-                    className="p-2.5 rounded-lg"
+                    className="flex items-center justify-center rounded-lg shrink-0"
                     style={{
+                        width: '32px',
+                        height: '32px',
+                        minWidth: '32px',
+                        minHeight: '32px',
                         background: 'var(--btn-primary-gradient)',
                         color: 'white',
                     }}
@@ -331,14 +350,22 @@ export function PasswordCard({
                     <KeyRound className="w-4 h-4" />
                 </button>
 
-                <div className="relative">
+                {/* Menu Button */}
+                <div className="relative shrink-0">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowMobileMenu(!showMobileMenu);
                         }}
-                        className="p-2.5 rounded-lg"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="flex items-center justify-center rounded-lg"
+                        style={{
+                            width: '32px',
+                            height: '32px',
+                            minWidth: '32px',
+                            minHeight: '32px',
+                            color: 'var(--text-muted)',
+                            background: 'var(--bg-tertiary)',
+                        }}
                     >
                         <MoreVertical className="w-4 h-4" />
                     </button>

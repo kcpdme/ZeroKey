@@ -197,12 +197,16 @@ export default function HomePage() {
       />
 
       {/* Auth & Theme Controls - Top Right */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-1.5 sm:gap-2 z-20">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 z-20">
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105"
+          className="flex items-center justify-center rounded-xl transition-all duration-300 hover:scale-105 shrink-0 sm:w-10 sm:h-10"
           style={{
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            minHeight: '36px',
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-color)',
             color: 'var(--text-secondary)',
@@ -220,7 +224,7 @@ export default function HomePage() {
         {!user ? (
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all hover:scale-105"
+            className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium transition-all hover:scale-105"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
@@ -232,8 +236,12 @@ export default function HomePage() {
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}
-            className="p-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl text-sm font-medium transition-all hover:scale-105 flex items-center gap-2"
+            className="flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all hover:scale-105 shrink-0 sm:w-auto sm:h-10 sm:px-4"
             style={{
+              width: '36px',
+              height: '36px',
+              minWidth: '36px',
+              minHeight: '36px',
               background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
               color: 'white',
               boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'

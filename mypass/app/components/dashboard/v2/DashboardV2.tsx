@@ -278,6 +278,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onClose={() => setIsMobileMenuOpen(false)}
                 userEmail={user?.email || undefined}
                 onSignOut={handleSignOut}
+                onSettingsClick={() => setShowSettings(true)}
                 stats={stats}
                 activeView={activeView}
                 onViewChange={handleViewChange}
@@ -311,7 +312,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     title={getViewTitle()}
                     subtitle={`${filteredProfiles.length} passwords`}
                     onMenuToggle={() => setIsMobileMenuOpen(true)}
-                    onSettingsClick={() => setShowSettings(true)}
+                    onClose={onClose}
                     theme={theme}
                     onThemeToggle={toggleTheme}
                     searchQuery={searchQuery}
@@ -330,7 +331,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 </div>
 
                 {/* Password List */}
-                <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 pb-24 md:pb-6">
+                <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 pb-24 md:pb-6">
                     {loading ? (
                         <ProfileListSkeleton count={6} />
                     ) : (
@@ -345,19 +346,6 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                         />
                     )}
                 </div>
-
-                {/* Mobile Close Button */}
-                <button
-                    onClick={onClose}
-                    className="fixed top-3 right-3 md:hidden p-2.5 rounded-xl z-30 transition-all"
-                    style={{
-                        background: 'var(--card-bg)',
-                        border: '1px solid var(--card-border)',
-                        color: 'var(--text-muted)',
-                    }}
-                >
-                    <X className="w-5 h-5" />
-                </button>
             </div>
 
             {/* Mobile Bottom Navigation */}
