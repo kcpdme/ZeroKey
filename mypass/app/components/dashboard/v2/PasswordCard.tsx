@@ -372,58 +372,90 @@ export function PasswordCard({
 
                     {showMobileMenu && (
                         <>
+                            {/* Backdrop */}
                             <div
-                                className="fixed inset-0 z-10"
+                                className="fixed inset-0 z-50 bg-black/40"
+                                style={{ backdropFilter: 'blur(2px)' }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setShowMobileMenu(false);
                                 }}
                             />
+                            {/* Bottom Sheet Menu */}
                             <div
-                                className="absolute right-0 top-full mt-1 py-2 rounded-xl shadow-xl z-20 min-w-[160px]"
+                                className="fixed left-3 right-3 bottom-20 z-50 p-4 rounded-2xl shadow-2xl"
                                 style={{
                                     background: 'var(--bg-secondary)',
                                     border: '1px solid var(--border-color)',
                                 }}
+                                onClick={(e) => e.stopPropagation()}
                             >
-                                <MobileMenuItem
-                                    icon={Copy}
-                                    label="Copy Login"
-                                    onClick={() => {
-                                        onCopyLogin(profile.login);
-                                        setShowMobileMenu(false);
-                                    }}
-                                />
-                                <MobileMenuItem
-                                    icon={Star}
-                                    label={profile.favorite ? 'Unfavorite' : 'Favorite'}
-                                    onClick={() => {
-                                        onToggleFavorite(profile);
-                                        setShowMobileMenu(false);
-                                    }}
-                                    iconClass={profile.favorite ? 'fill-yellow-400 text-yellow-400' : ''}
-                                />
-                                <MobileMenuItem
-                                    icon={Edit}
-                                    label="Edit"
-                                    onClick={() => {
-                                        onEdit(profile);
-                                        setShowMobileMenu(false);
-                                    }}
-                                />
+                                {/* Site name header */}
                                 <div
-                                    className="my-1 border-t"
-                                    style={{ borderColor: 'var(--border-color)' }}
-                                />
-                                <MobileMenuItem
-                                    icon={Trash2}
-                                    label="Delete"
-                                    onClick={() => {
-                                        onDelete(profile);
-                                        setShowMobileMenu(false);
-                                    }}
-                                    danger
-                                />
+                                    className="text-center text-sm font-semibold truncate mb-4"
+                                    style={{ color: 'var(--text-primary)' }}
+                                >
+                                    {profile.site}
+                                </div>
+
+                                {/* Horizontal action buttons */}
+                                <div className="flex justify-center gap-6">
+                                    {/* Favorite */}
+                                    <button
+                                        onClick={() => {
+                                            onToggleFavorite(profile);
+                                            setShowMobileMenu(false);
+                                        }}
+                                        className="flex flex-col items-center gap-1.5"
+                                    >
+                                        <div
+                                            className="w-12 h-12 flex items-center justify-center rounded-xl"
+                                            style={{ background: profile.favorite ? 'rgba(250, 204, 21, 0.15)' : 'var(--bg-tertiary)' }}
+                                        >
+                                            <Star
+                                                className={`w-5 h-5 ${profile.favorite ? 'fill-yellow-400 text-yellow-400' : ''}`}
+                                                style={{ color: profile.favorite ? undefined : 'var(--text-secondary)' }}
+                                            />
+                                        </div>
+                                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                                            {profile.favorite ? 'Unfav' : 'Favorite'}
+                                        </span>
+                                    </button>
+
+                                    {/* Edit */}
+                                    <button
+                                        onClick={() => {
+                                            onEdit(profile);
+                                            setShowMobileMenu(false);
+                                        }}
+                                        className="flex flex-col items-center gap-1.5"
+                                    >
+                                        <div
+                                            className="w-12 h-12 flex items-center justify-center rounded-xl"
+                                            style={{ background: 'var(--bg-tertiary)' }}
+                                        >
+                                            <Edit className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+                                        </div>
+                                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Edit</span>
+                                    </button>
+
+                                    {/* Delete */}
+                                    <button
+                                        onClick={() => {
+                                            onDelete(profile);
+                                            setShowMobileMenu(false);
+                                        }}
+                                        className="flex flex-col items-center gap-1.5"
+                                    >
+                                        <div
+                                            className="w-12 h-12 flex items-center justify-center rounded-xl"
+                                            style={{ background: 'rgba(239, 68, 68, 0.1)' }}
+                                        >
+                                            <Trash2 className="w-5 h-5 text-red-500" />
+                                        </div>
+                                        <span className="text-[10px] text-red-500">Delete</span>
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}

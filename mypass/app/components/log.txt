@@ -1,0 +1,31 @@
+D:\web\mypassnextjs-…x-36fcbc82.js:10431 
+ Cross-Origin-Opener-Policy policy would block the window.close call.
+close	@	D:\web\mypassnextjs-…x-36fcbc82.js:10431
+D:\web\mypassnextjs-…x-36fcbc82.js:10431 
+ Cross-Origin-Opener-Policy policy would block the window.close call.
+firestore.googleapis…e&zx=aor39ectkmnz:1 
+ 
+ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+firestore.googleapis…e&zx=3039qe48nxdz:1 
+ 
+ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+firestore.googleapis…e&zx=3937sik1o2cf:1 
+ 
+ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+firestore.googleapis…e&zx=dpe79wordlol:1 
+ 
+ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+D:\web\mypassnextjs-…l_blob_es2018.js:80 
+ 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/chann…20qFC0&SID=fQfJZ5hCB8SDDBpCNA5Rxw&RID=16411&TYPE=terminate&zx=898dp9h9bfyp net::ERR_BLOCKED_BY_CLIENT
+D:\web\mypassnextjs-…ss\app\page.tsx:137 
+ Error: Operation timed out. Please check your internet connection.
+    at eval (D:\web\mypassnextjs-…ileService.ts:54:20)
+D:\web\mypassnextjs-…l_blob_es2018.js:80 
+ 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/chann…drOM44&SID=e3Igdae_dhoxT0gEsfqP4A&RID=71141&TYPE=terminate&zx=mj8mpantxa1w net::ERR_BLOCKED_BY_CLIENT
+D:\web\mypassnextjs-…l_blob_es2018.js:80 
+ 
+ POST https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/chann…P2f76Q&SID=LpUL0sesapOo981TE2iHDA&RID=58938&TYPE=terminate&zx=9qgj148051if net::ERR_BLOCKED_BY_CLIENT
+﻿
+
