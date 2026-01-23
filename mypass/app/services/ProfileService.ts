@@ -54,6 +54,13 @@ const RETRY_DELAY_MS = 1000; // Initial delay, doubles each retry
 // Helper: Delay function
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper: Remove undefined values from object (Firestore doesn't accept undefined)
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([_, value]) => value !== undefined)
+    ) as T;
+}
+
 // Helper: Wrap operation with timeout
 async function withTimeout<T>(operation: () => Promise<T>, timeoutMs: number): Promise<T> {
     let timeoutId: NodeJS.Timeout;
@@ -130,12 +137,12 @@ export const ProfileService = {
                     });
                     return docId;
                 } else {
-                    // Create new
-                    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+                    // Create new - remove undefined fields as Firestore rejects them
+                    const docRef = await addDoc(collection(db, COLLECTION_NAME), removeUndefined({
                         ...profile,
                         createdAt: timestamp,
                         updatedAt: timestamp
-                    });
+                    }));
                     return docRef.id;
                 }
             }, TIMEOUT_MS);

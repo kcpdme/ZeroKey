@@ -93,7 +93,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                 login,
                 algorithm: type,
                 options,
-                tags: selectedTags.length > 0 ? selectedTags : undefined,
+                ...(selectedTags.length > 0 && { tags: selectedTags }),
             });
 
             setGeneratedPassword(password);

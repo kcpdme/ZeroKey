@@ -6,12 +6,12 @@ import {
     KeyRound,
     Shield,
     Sparkles,
-    Plus,
     Settings,
     LogOut,
     LayoutGrid,
     Star
 } from 'lucide-react';
+import { TagFilter } from './TagSelector';
 
 interface NavItem {
     id: string;
@@ -34,6 +34,10 @@ interface DashboardSidebarProps {
         favorites: number;
     };
     userEmail?: string;
+    // Tag filter props
+    selectedTagFilter: string | null;
+    onTagFilterChange: (tag: string | null) => void;
+    allTags: string[];
 }
 
 export function DashboardSidebar({
@@ -43,7 +47,10 @@ export function DashboardSidebar({
     onSignOut,
     onClose,
     stats,
-    userEmail
+    userEmail,
+    selectedTagFilter,
+    onTagFilterChange,
+    allTags
 }: DashboardSidebarProps) {
     const mainNavItems: NavItem[] = [
         { id: 'all', label: 'All Passwords', icon: LayoutGrid, count: stats.total },
@@ -54,7 +61,7 @@ export function DashboardSidebar({
 
     return (
         <aside
-            className="w-64 flex flex-col border-r"
+            className="w-64 flex flex-col border-r h-full"
             style={{
                 background: 'var(--bg-secondary)',
                 borderColor: 'var(--border-color)'
@@ -87,47 +94,65 @@ export function DashboardSidebar({
             </div>
 
             {/* Main Navigation */}
-            <nav className="flex-1 p-4 space-y-1">
-                <div className="text-xs font-medium uppercase tracking-wider mb-3 px-3"
-                    style={{ color: 'var(--text-muted)' }}>
-                    Vault
-                </div>
+            <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+                <div>
+                    <div className="text-xs font-medium uppercase tracking-wider mb-3 px-3"
+                        style={{ color: 'var(--text-muted)' }}>
+                        Vault
+                    </div>
 
-                {mainNavItems.map((item) => {
-                    const isActive = activeView === item.id;
-                    const Icon = item.icon;
+                    <div className="space-y-1">
+                        {mainNavItems.map((item) => {
+                            const isActive = activeView === item.id && !selectedTagFilter;
+                            const Icon = item.icon;
 
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => onViewChange(item.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive ? 'scale-[1.02]' : 'hover:bg-white/5'
-                                }`}
-                            style={{
-                                background: isActive
-                                    ? 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))'
-                                    : 'transparent',
-                                color: isActive ? 'white' : 'var(--text-secondary)',
-                            }}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Icon className="w-4 h-4" />
-                                <span>{item.label}</span>
-                            </div>
-                            {item.count !== undefined && (
-                                <span
-                                    className="text-xs px-2 py-0.5 rounded-full"
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        onViewChange(item.id);
+                                        onTagFilterChange(null); // Clear tag filter when switching views
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive ? 'scale-[1.02]' : 'hover:bg-white/5'
+                                        }`}
                                     style={{
-                                        background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-tertiary)',
-                                        color: isActive ? 'white' : 'var(--text-muted)',
+                                        background: isActive
+                                            ? 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))'
+                                            : 'transparent',
+                                        color: isActive ? 'white' : 'var(--text-secondary)',
                                     }}
                                 >
-                                    {item.count}
-                                </span>
-                            )}
-                        </button>
-                    );
-                })}
+                                    <div className="flex items-center gap-3">
+                                        <Icon className="w-4 h-4" />
+                                        <span>{item.label}</span>
+                                    </div>
+                                    {item.count !== undefined && (
+                                        <span
+                                            className="text-xs px-2 py-0.5 rounded-full"
+                                            style={{
+                                                background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-tertiary)',
+                                                color: isActive ? 'white' : 'var(--text-muted)',
+                                            }}
+                                        >
+                                            {item.count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Tag Categories Filter */}
+                {allTags.length > 0 && (
+                    <div className="pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                        <TagFilter
+                            selectedTag={selectedTagFilter}
+                            onSelect={onTagFilterChange}
+                            tags={allTags}
+                        />
+                    </div>
+                )}
             </nav>
 
             {/* Bottom Actions */}

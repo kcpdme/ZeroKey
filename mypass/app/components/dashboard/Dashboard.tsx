@@ -289,6 +289,9 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     onClose={onClose}
                     stats={stats}
                     userEmail={user?.email || undefined}
+                    selectedTagFilter={selectedTagFilter}
+                    onTagFilterChange={setSelectedTagFilter}
+                    allTags={allTags}
                 />
             </div>
 

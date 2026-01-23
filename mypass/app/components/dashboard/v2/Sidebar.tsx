@@ -11,9 +11,9 @@ import {
     LayoutGrid,
     Star,
     ArrowLeft,
-    User
 } from 'lucide-react';
 import { ViewType, DashboardStats } from './types';
+import { TagFilter } from '../TagSelector';
 
 interface SidebarProps {
     activeView: ViewType;
@@ -23,6 +23,10 @@ interface SidebarProps {
     onClose: () => void;
     stats: DashboardStats;
     userEmail?: string;
+    // Tag filter props
+    selectedTagFilter?: string | null;
+    onTagFilterChange?: (tag: string | null) => void;
+    allTags?: string[];
 }
 
 interface NavItemConfig {
@@ -48,6 +52,9 @@ export function Sidebar({
     onClose,
     stats,
     userEmail,
+    selectedTagFilter,
+    onTagFilterChange,
+    allTags = [],
 }: SidebarProps) {
     return (
         <aside
@@ -125,64 +132,85 @@ export function Sidebar({
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
-                <div
-                    className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2"
-                    style={{ color: 'var(--sidebar-text-muted)' }}
-                >
-                    Vault
+            <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
+                <div>
+                    <div
+                        className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2"
+                        style={{ color: 'var(--sidebar-text-muted)' }}
+                    >
+                        Vault
+                    </div>
+
+                    <div className="space-y-0.5">
+                        {navItems.map((item) => {
+                            const isActive = activeView === item.id && !selectedTagFilter;
+                            const Icon = item.icon;
+                            const count = stats[item.countKey];
+
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        onViewChange(item.id);
+                                        onTagFilterChange?.(null);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
+                                    style={{
+                                        background: isActive ? 'var(--sidebar-item-active-bg)' : 'transparent',
+                                        color: isActive ? 'var(--sidebar-item-active-text)' : 'var(--sidebar-text-secondary)',
+                                    }}
+                                >
+                                    {/* Active indicator bar */}
+                                    {isActive && (
+                                        <div
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
+                                            style={{ background: 'var(--sidebar-active-indicator)' }}
+                                        />
+                                    )}
+
+                                    <Icon
+                                        className="w-[18px] h-[18px] shrink-0 transition-colors"
+                                        style={{
+                                            color: isActive
+                                                ? item.accentColor || 'var(--sidebar-accent-cyan)'
+                                                : undefined,
+                                        }}
+                                    />
+
+                                    <span className="flex-1 text-left">{item.label}</span>
+
+                                    <span
+                                        className="px-2 py-0.5 rounded-md text-xs font-medium"
+                                        style={{
+                                            background: isActive
+                                                ? 'var(--sidebar-count-active-bg)'
+                                                : 'var(--sidebar-count-bg)',
+                                            color: isActive
+                                                ? 'var(--sidebar-count-active-text)'
+                                                : 'var(--sidebar-text-muted)',
+                                        }}
+                                    >
+                                        {count}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                {navItems.map((item) => {
-                    const isActive = activeView === item.id;
-                    const Icon = item.icon;
-                    const count = stats[item.countKey];
-
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => onViewChange(item.id)}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
-                            style={{
-                                background: isActive ? 'var(--sidebar-item-active-bg)' : 'transparent',
-                                color: isActive ? 'var(--sidebar-item-active-text)' : 'var(--sidebar-text-secondary)',
-                            }}
-                        >
-                            {/* Active indicator bar */}
-                            {isActive && (
-                                <div
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
-                                    style={{ background: 'var(--sidebar-active-indicator)' }}
-                                />
-                            )}
-
-                            <Icon
-                                className="w-[18px] h-[18px] shrink-0 transition-colors"
-                                style={{
-                                    color: isActive
-                                        ? item.accentColor || 'var(--sidebar-accent-cyan)'
-                                        : undefined,
-                                }}
-                            />
-
-                            <span className="flex-1 text-left">{item.label}</span>
-
-                            <span
-                                className="px-2 py-0.5 rounded-md text-xs font-medium"
-                                style={{
-                                    background: isActive
-                                        ? 'var(--sidebar-count-active-bg)'
-                                        : 'var(--sidebar-count-bg)',
-                                    color: isActive
-                                        ? 'var(--sidebar-count-active-text)'
-                                        : 'var(--sidebar-text-muted)',
-                                }}
-                            >
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
+                {/* Tag Categories Filter */}
+                {allTags.length > 0 && onTagFilterChange && (
+                    <div
+                        className="pt-3 border-t"
+                        style={{ borderColor: 'var(--sidebar-border)' }}
+                    >
+                        <TagFilter
+                            selectedTag={selectedTagFilter ?? null}
+                            onSelect={onTagFilterChange}
+                            tags={allTags}
+                        />
+                    </div>
+                )}
             </nav>
 
             {/* Bottom Actions */}

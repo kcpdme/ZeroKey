@@ -284,6 +284,9 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onClose={onClose}
                 stats={stats}
                 userEmail={user?.email || undefined}
+                selectedTagFilter={selectedTagFilter}
+                onTagFilterChange={setSelectedTagFilter}
+                allTags={profiles.flatMap(p => p.tags || [])}
             />
 
             {/* Main Content */}
