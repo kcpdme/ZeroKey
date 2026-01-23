@@ -1,9 +1,9 @@
 // app/components/dashboard/TagSelector.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { Tag, X, Plus, Check } from 'lucide-react';
-import { PREDEFINED_TAGS, Tag as TagType, getTagColor } from '../../lib/tags';
+import React, { useState, useRef } from 'react';
+import { X } from 'lucide-react';
+import { PREDEFINED_TAGS, Tag as TagType } from '../../lib/tags';
 
 interface TagSelectorProps {
     selectedTags: string[];
@@ -18,119 +18,136 @@ export function TagSelector({
     showLabel = true,
     maxTags = 3,
 }: TagSelectorProps) {
-    const [isOpen, setIsOpen] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const toggleTag = (tagId: string) => {
-        if (selectedTags.includes(tagId)) {
-            onChange(selectedTags.filter(t => t !== tagId));
-        } else if (selectedTags.length < maxTags) {
+    // Filter available tags based on input and already selected
+    const availableTags = PREDEFINED_TAGS.filter(tag =>
+        !selectedTags.includes(tag.id) &&
+        tag.name.toLowerCase().includes(inputValue.toLowerCase())
+    );
+
+    const canAddMore = selectedTags.length < maxTags;
+
+    const addTag = (tagId: string) => {
+        if (selectedTags.length < maxTags && !selectedTags.includes(tagId)) {
             onChange([...selectedTags, tagId]);
+            setInputValue('');
+        }
+    };
+
+    const removeTag = (tagId: string) => {
+        onChange(selectedTags.filter(t => t !== tagId));
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Backspace' && inputValue === '' && selectedTags.length > 0) {
+            removeTag(selectedTags[selectedTags.length - 1]);
+        } else if (e.key === 'Enter' && availableTags.length > 0) {
+            e.preventDefault();
+            addTag(availableTags[0].id);
         }
     };
 
     return (
-        <div className="relative">
+        <div>
             {showLabel && (
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Tags (optional)
+                    Tags <span style={{ color: 'var(--text-muted)', fontWeight: 'normal' }}>(optional)</span>
                 </label>
             )}
 
-            {/* Selected Tags Display */}
-            <div className="flex flex-wrap gap-2 mb-2">
-                {selectedTags.map(tagId => {
-                    const tag = PREDEFINED_TAGS.find(t => t.id === tagId);
-                    if (!tag) return null;
-                    return (
-                        <span
-                            key={tagId}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
-                            style={{
-                                background: `${tag.color}20`,
-                                color: tag.color,
-                            }}
-                        >
-                            {tag.name}
-                            <button
-                                onClick={() => toggleTag(tagId)}
-                                className="p-0.5 rounded hover:bg-white/20"
+            {/* Selected Tags */}
+            {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                    {selectedTags.map(tagId => {
+                        const tag = PREDEFINED_TAGS.find(t => t.id === tagId);
+                        if (!tag) return null;
+                        return (
+                            <span
+                                key={tagId}
+                                className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-lg text-xs font-medium"
+                                style={{
+                                    background: `${tag.color}15`,
+                                    color: tag.color,
+                                    border: `1px solid ${tag.color}30`,
+                                }}
                             >
-                                <X className="w-3 h-3" />
-                            </button>
-                        </span>
-                    );
-                })}
-            </div>
-
-            {/* Tag Picker Button */}
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
-                style={{
-                    background: 'var(--bg-tertiary)',
-                    color: 'var(--text-secondary)',
-                }}
-            >
-                <Tag className="w-4 h-4" />
-                <span>Add Tags</span>
-                {selectedTags.length > 0 && (
-                    <span
-                        className="px-1.5 py-0.5 rounded-full text-xs"
-                        style={{ background: 'var(--color-cyan-500)', color: 'white' }}
-                    >
-                        {selectedTags.length}/{maxTags}
-                    </span>
-                )}
-            </button>
-
-            {/* Dropdown */}
-            {isOpen && (
-                <>
-                    <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsOpen(false)}
-                    />
-                    <div
-                        className="absolute left-0 top-full mt-2 py-2 rounded-xl shadow-lg z-20 min-w-[200px]"
-                        style={{
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                        }}
-                    >
-                        <div className="px-3 py-2 text-xs font-medium uppercase tracking-wider"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            Categories
-                        </div>
-                        {PREDEFINED_TAGS.map(tag => {
-                            const isSelected = selectedTags.includes(tag.id);
-                            const isDisabled = !isSelected && selectedTags.length >= maxTags;
-
-                            return (
+                                <span
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ background: tag.color }}
+                                />
+                                {tag.name}
                                 <button
-                                    key={tag.id}
-                                    onClick={() => !isDisabled && toggleTag(tag.id)}
-                                    disabled={isDisabled}
-                                    className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/5'
-                                        }`}
-                                    style={{ color: 'var(--text-secondary)' }}
+                                    type="button"
+                                    onClick={() => removeTag(tagId)}
+                                    className="p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className="w-3 h-3 rounded-full"
-                                            style={{ background: tag.color }}
-                                        />
-                                        <span>{tag.name}</span>
-                                    </div>
-                                    {isSelected && (
-                                        <Check className="w-4 h-4" style={{ color: 'var(--color-cyan-500)' }} />
-                                    )}
+                                    <X className="w-3 h-3" />
                                 </button>
-                            );
-                        })}
-                    </div>
-                </>
+                            </span>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Input - minimal styling */}
+            {canAddMore && (
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type to filter categories..."
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
+                    style={{
+                        background: 'var(--bg-tertiary)',
+                        color: 'var(--text-primary)',
+                        border: 'none',
+                    }}
+                />
+            )}
+
+            {/* Inline Suggestions as clickable chips */}
+            {canAddMore && (isFocused || inputValue) && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                    {availableTags.length > 0 ? (
+                        availableTags.map(tag => (
+                            <button
+                                key={tag.id}
+                                type="button"
+                                onClick={() => addTag(tag.id)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                                style={{
+                                    background: 'var(--bg-secondary)',
+                                    color: 'var(--text-secondary)',
+                                    border: '1px solid var(--border-color)',
+                                }}
+                            >
+                                <span
+                                    className="w-2.5 h-2.5 rounded-full"
+                                    style={{ background: tag.color }}
+                                />
+                                {tag.name}
+                            </button>
+                        ))
+                    ) : inputValue ? (
+                        <span className="text-xs py-1" style={{ color: 'var(--text-muted)' }}>
+                            No matching categories
+                        </span>
+                    ) : null}
+                </div>
+            )}
+
+            {/* Max reached indicator */}
+            {!canAddMore && (
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Maximum {maxTags} tags selected
+                </p>
             )}
         </div>
     );

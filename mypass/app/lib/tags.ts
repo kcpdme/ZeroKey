@@ -8,16 +8,20 @@ export interface Tag {
     icon?: string;
 }
 
-// Predefined system tags
+// Predefined system tags - comprehensive categories for password organization
 export const PREDEFINED_TAGS: Tag[] = [
-    { id: 'work', name: 'Work', color: '#3b82f6' },      // Blue
-    { id: 'personal', name: 'Personal', color: '#22c55e' }, // Green
-    { id: 'finance', name: 'Finance', color: '#eab308' },   // Yellow
-    { id: 'social', name: 'Social', color: '#ec4899' },     // Pink
-    { id: 'shopping', name: 'Shopping', color: '#f97316' }, // Orange
-    { id: 'entertainment', name: 'Entertainment', color: '#8b5cf6' }, // Purple
-    { id: 'gaming', name: 'Gaming', color: '#ef4444' },     // Red
-    { id: 'travel', name: 'Travel', color: '#14b8a6' },     // Teal
+    { id: 'work', name: 'Work', color: '#3b82f6' },           // Blue
+    { id: 'personal', name: 'Personal', color: '#22c55e' },   // Green
+    { id: 'finance', name: 'Finance', color: '#eab308' },     // Yellow (Banking, Investments)
+    { id: 'social', name: 'Social', color: '#ec4899' },       // Pink (Social Media)
+    { id: 'shopping', name: 'Shopping', color: '#f97316' },   // Orange (E-commerce)
+    { id: 'entertainment', name: 'Entertainment', color: '#8b5cf6' }, // Purple (Streaming, Music)
+    { id: 'gaming', name: 'Gaming', color: '#ef4444' },       // Red
+    { id: 'travel', name: 'Travel', color: '#14b8a6' },       // Teal (Airlines, Hotels, Booking)
+    { id: 'tech', name: 'Tech', color: '#6366f1' },           // Indigo (Developer, APIs, Cloud)
+    { id: 'health', name: 'Health', color: '#10b981' },       // Emerald (Medical, Fitness)
+    { id: 'education', name: 'Education', color: '#0ea5e9' }, // Sky (Schools, Courses, Learning)
+    { id: 'crypto', name: 'Crypto', color: '#a855f7' },       // Violet (Exchanges, Wallets)
 ];
 
 // Tag colors for custom tags
