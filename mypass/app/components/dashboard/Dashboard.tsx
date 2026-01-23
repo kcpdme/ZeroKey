@@ -279,6 +279,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                 onClose={() => setIsMobileMenuOpen(false)}
                 userEmail={user?.email || undefined}
                 onSignOut={handleSignOut}
+                onSettingsClick={() => setShowSettings(true)}
                 stats={stats}
                 activeView={activeView}
                 onViewChange={handleViewChange}
@@ -314,7 +315,7 @@ export function Dashboard({ isOpen, onClose, onLoadProfile }: DashboardProps) {
                     title={getViewTitle()}
                     subtitle={`${filteredProfiles.length} passwords`}
                     onMenuToggle={() => setIsMobileMenuOpen(true)}
-                    onSettingsClick={() => setShowSettings(true)}
+                    onClose={onClose}
                     theme={theme}
                     onThemeToggle={toggleTheme}
                     searchQuery={searchQuery}
