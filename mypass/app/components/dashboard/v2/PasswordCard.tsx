@@ -171,8 +171,8 @@ export function PasswordCard({
                 )}
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
+            {/* Main Content - Column 1 */}
+            <div className="flex-1 min-w-0 lg:flex-initial lg:w-64">
                 {/* Site Name + Type Badge (inline on mobile) */}
                 <div className="flex items-center gap-1.5">
                     <h3
@@ -193,33 +193,34 @@ export function PasswordCard({
                     >
                         {isSecure ? 'Secure' : 'Mem'}
                     </span>
-                </div>
-
-                {/* Login/Email */}
-                <p
-                    className="text-xs md:text-sm truncate"
-                    style={{ color: 'var(--text-muted)' }}
-                >
-                    {profile.login}
-                </p>
-
-                {/* Desktop: Type Badge + Copy button */}
-                <div className="hidden md:flex items-center gap-2 mt-0.5">
-                    <span
-                        className="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide"
+                    {/* Type Icon - Desktop only */}
+                    <div className="hidden md:flex items-center justify-center w-5 h-5 rounded shrink-0"
                         style={{
                             background: isSecure
                                 ? 'rgba(6, 182, 212, 0.12)'
                                 : 'rgba(168, 85, 247, 0.12)',
-                            color: isSecure ? 'var(--sidebar-accent-cyan)' : 'var(--sidebar-accent-purple)',
                         }}
                     >
-                        {isSecure ? 'Secure' : 'Memorable'}
-                    </span>
+                        {isSecure ? (
+                            <Shield className="w-3 h-3" style={{ color: 'var(--sidebar-accent-cyan)' }} />
+                        ) : (
+                            <Sparkles className="w-3 h-3" style={{ color: 'var(--sidebar-accent-purple)' }} />
+                        )}
+                    </div>
+                </div>
+
+                {/* Login/Email + Copy button */}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                    <p
+                        className="text-xs md:text-sm truncate"
+                        style={{ color: 'var(--text-muted)' }}
+                    >
+                        {profile.login}
+                    </p>
                     <button
                         onClick={handleCopyLogin}
                         className={`
-                            p-1 rounded transition-all duration-150 shrink-0
+                            hidden md:flex p-1 rounded transition-all duration-150 shrink-0
                             ${copiedField === 'login'
                                 ? ''
                                 : 'opacity-0 group-hover:opacity-100'
@@ -237,53 +238,65 @@ export function PasswordCard({
                         )}
                     </button>
                 </div>
+            </div>
 
-                {/* Tags - Desktop only */}
-                {profile.tags && profile.tags.length > 0 && (
-                    <div className="hidden md:block mt-1.5">
-                        <TagChips tags={profile.tags} size="sm" maxVisible={2} />
-                    </div>
+            {/* Tags Column - Column 2 */}
+            <div className="hidden lg:flex items-center w-72 px-3">
+                {profile.tags && profile.tags.length > 0 ? (
+                    <TagChips tags={profile.tags} size="sm" maxVisible={3} />
+                ) : (
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
                 )}
             </div>
 
-            {/* Password Details (Desktop) */}
-            {isSecure && (
-                <div
-                    className="hidden lg:flex items-center gap-3 text-xs shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
-                >
+            {/* Version & Length Column - Column 3 (Secure only) */}
+            {isSecure ? (
+                <div className="hidden lg:flex items-center gap-1.5 shrink-0">
                     <span
-                        className="px-2 py-1 rounded-md"
-                        style={{ background: 'var(--sidebar-count-bg)' }}
-                    >
-                        {profile.options.length} chars
-                    </span>
-                    <span
-                        className="px-2 py-1 rounded-md"
-                        style={{ background: 'var(--sidebar-count-bg)' }}
+                        className="px-2 py-1 rounded-md text-xs font-medium"
+                        style={{
+                            background: 'var(--sidebar-count-bg)',
+                            color: 'var(--text-secondary)',
+                        }}
+                        title={`Version ${profile.options.counter} - Increment when password expires`}
                     >
                         v{profile.options.counter}
                     </span>
+                    <span
+                        className="px-2 py-1 rounded-md text-xs font-medium"
+                        style={{
+                            background: 'var(--sidebar-count-bg)',
+                            color: 'var(--text-secondary)',
+                        }}
+                        title={`Password length: ${profile.options.length} characters`}
+                    >
+                        L{profile.options.length}
+                    </span>
                 </div>
+            ) : (
+                <div className="hidden lg:flex w-16 shrink-0" />
             )}
+
+            {/* Spacer to push right content */}
+            <div className="hidden lg:flex flex-1" />
 
             {/* Last Used (Desktop) */}
             <div
-                className="hidden xl:flex items-center gap-1.5 text-xs shrink-0"
+                className="hidden lg:flex items-center gap-1.5 text-xs shrink-0 mr-4"
                 style={{ color: 'var(--text-muted)' }}
             >
                 <Clock className="w-3.5 h-3.5" />
                 <span>{formatLastUsed(profile.lastUsedAt)}</span>
             </div>
 
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-1 shrink-0">
+            {/* Desktop Actions - Simplified */}
+            <div className="hidden md:flex items-center gap-2 shrink-0">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onGenerate(profile);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
                     style={{
                         background: 'var(--btn-primary-gradient)',
                         color: 'white',
@@ -294,6 +307,7 @@ export function PasswordCard({
                     <span className="hidden lg:inline">Generate</span>
                 </button>
 
+                {/* Edit button - visible on hover */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -308,6 +322,7 @@ export function PasswordCard({
                     <Edit className="w-4 h-4" />
                 </button>
 
+                {/* Delete button - visible on hover */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();

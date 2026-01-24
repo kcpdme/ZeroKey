@@ -167,7 +167,7 @@ export function TagChips({ tags, size = 'sm', maxVisible = 2 }: TagChipsProps) {
     const remainingCount = tags.length - maxVisible;
 
     return (
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
             {visibleTags.map(tagId => {
                 const tag = PREDEFINED_TAGS.find(t => t.id === tagId);
                 if (!tag) return null;
@@ -175,24 +175,32 @@ export function TagChips({ tags, size = 'sm', maxVisible = 2 }: TagChipsProps) {
                 return (
                     <span
                         key={tagId}
-                        className={`inline-flex items-center rounded-full font-medium ${size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs'
+                        className={`inline-flex items-center gap-1 font-semibold uppercase tracking-wide ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
                             }`}
                         style={{
-                            background: `${tag.color}20`,
+                            background: `${tag.color}15`,
                             color: tag.color,
+                            border: `1px solid ${tag.color}40`,
+                            borderRadius: '6px',
                         }}
                     >
+                        <span
+                            className={size === 'sm' ? 'w-1.5 h-1.5 rounded-full' : 'w-2 h-2 rounded-full'}
+                            style={{ background: tag.color }}
+                        />
                         {tag.name}
                     </span>
                 );
             })}
             {remainingCount > 0 && (
                 <span
-                    className={`inline-flex items-center rounded-full font-medium ${size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs'
+                    className={`inline-flex items-center font-medium ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
                         }`}
                     style={{
                         background: 'var(--bg-tertiary)',
                         color: 'var(--text-muted)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '6px',
                     }}
                 >
                     +{remainingCount}
