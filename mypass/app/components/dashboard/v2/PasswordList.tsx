@@ -14,6 +14,7 @@ interface PasswordListProps {
     onGenerate: (profile: PasswordProfile) => void;
     onEdit: (profile: PasswordProfile) => void;
     onDelete: (profile: PasswordProfile) => void;
+    onViewHistory?: (profile: PasswordProfile) => void;
     onProfilesChange?: () => void;
 }
 
@@ -24,6 +25,7 @@ export function PasswordList({
     onGenerate,
     onEdit,
     onDelete,
+    onViewHistory,
     onProfilesChange,
 }: PasswordListProps) {
     const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -317,6 +319,7 @@ export function PasswordList({
                         onGenerate={onGenerate}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        onViewHistory={onViewHistory}
                         onCopyLogin={handleCopyLogin}
                         onToggleFavorite={handleToggleFavorite}
                         showCheckbox={bulkMode}

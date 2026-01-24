@@ -14,6 +14,7 @@ import { QuickAddModal } from '../QuickAddModal';
 import { ExportImportModal } from '../ExportImportModal';
 import { QuickSearch } from '../QuickSearch';
 import { ProfileListSkeleton } from '../Skeleton';
+import { VersionHistoryModal } from '../VersionHistoryModal';
 
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -52,6 +53,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     const [selectedProfile, setSelectedProfile] = useState<PasswordProfile | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<PasswordProfile | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [historyProfile, setHistoryProfile] = useState<PasswordProfile | null>(null);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -272,6 +274,20 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onGeneratePassword={handleGenerate}
             />
 
+            {/* Version History Modal */}
+            <VersionHistoryModal
+                profile={historyProfile}
+                onClose={() => setHistoryProfile(null)}
+                onRegenerateVersion={(modifiedProfile) => {
+                    setHistoryProfile(null);
+                    setSelectedProfile(modifiedProfile);
+                }}
+                onRotate={() => {
+                    loadProfiles();
+                    setHistoryProfile(null);
+                }}
+            />
+
 
             {/* Mobile Drawer */}
             <MobileDrawer
@@ -345,6 +361,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                             onGenerate={handleGenerate}
                             onEdit={handleEdit}
                             onDelete={setDeleteTarget}
+                            onViewHistory={setHistoryProfile}
                             onProfilesChange={loadProfiles}
                         />
                     )}

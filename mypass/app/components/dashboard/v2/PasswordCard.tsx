@@ -12,12 +12,14 @@ import {
     Star,
     MoreVertical,
     Clock,
-    Check
+    Check,
+    History
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { PasswordProfile } from '../../../services/ProfileService';
 import { getFaviconUrl } from '../../../lib/favicon';
 import { TagChips } from '../TagSelector';
+import { ExpiryBadge } from '../ExpiryBadge';
 
 interface PasswordCardProps {
     profile: PasswordProfile;
@@ -26,6 +28,7 @@ interface PasswordCardProps {
     onDelete: (profile: PasswordProfile) => void;
     onCopyLogin: (login: string) => void;
     onToggleFavorite: (profile: PasswordProfile) => void;
+    onViewHistory?: (profile: PasswordProfile) => void;
     isSelected?: boolean;
     onToggleSelect?: (profile: PasswordProfile) => void;
     showCheckbox?: boolean;
@@ -38,6 +41,7 @@ export function PasswordCard({
     onDelete,
     onCopyLogin,
     onToggleFavorite,
+    onViewHistory,
     isSelected = false,
     onToggleSelect,
     showCheckbox = false,
@@ -272,9 +276,12 @@ export function PasswordCard({
                     >
                         L{profile.options.length}
                     </span>
+                    <ExpiryBadge passwordPolicy={profile.passwordPolicy} size="sm" />
                 </div>
             ) : (
-                <div className="hidden lg:flex w-16 shrink-0" />
+                <div className="hidden lg:flex items-center gap-1.5 shrink-0">
+                    <ExpiryBadge passwordPolicy={profile.passwordPolicy} size="sm" />
+                </div>
             )}
 
             {/* Spacer to push right content */}
@@ -321,6 +328,23 @@ export function PasswordCard({
                 >
                     <Edit className="w-4 h-4" />
                 </button>
+
+                {/* History button - visible on hover */}
+                {onViewHistory && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onViewHistory(profile);
+                        }}
+                        className="p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                        style={{ color: 'var(--text-secondary)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        title="Version History"
+                    >
+                        <History className="w-4 h-4" />
+                    </button>
+                )}
 
                 {/* Delete button - visible on hover */}
                 <button
