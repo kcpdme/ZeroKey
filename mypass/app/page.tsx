@@ -236,7 +236,7 @@ export default function HomePage() {
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all hover:scale-105 shrink-0 sm:w-auto sm:h-10 sm:px-4"
+            className="flex items-center justify-center rounded-xl transition-all hover:scale-105 shrink-0"
             style={{
               width: '36px',
               height: '36px',
@@ -246,9 +246,9 @@ export default function HomePage() {
               color: 'white',
               boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
             }}
+            title="My Vault"
           >
             <User className="w-4 h-4" />
-            <span className="hidden sm:inline">My Vault</span>
           </button>
         )}
       </div>
