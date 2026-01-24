@@ -35,14 +35,13 @@ export function QuickSearch({
         }
     }, [isOpen]);
 
-    // Filter profiles based on search
+    // Filter profiles based on search (site and login only, not tags)
     const filteredProfiles = profiles.filter(profile => {
         if (!searchQuery.trim()) return true; // Show all if no search
         const query = searchQuery.toLowerCase();
         return (
             profile.site.toLowerCase().includes(query) ||
-            profile.login.toLowerCase().includes(query) ||
-            (profile.tags?.some(tag => tag.toLowerCase().includes(query)))
+            profile.login.toLowerCase().includes(query)
         );
     }).slice(0, 8); // Limit to 8 results
 
@@ -115,9 +114,13 @@ export function QuickSearch({
                             setSelectedIndex(0);
                         }}
                         onKeyDown={handleKeyDown}
-                        placeholder="Search passwords..."
-                        className="flex-1 bg-transparent text-lg outline-none"
-                        style={{ color: 'var(--text-primary)' }}
+                        placeholder="Search by website or email..."
+                        className="flex-1 bg-transparent text-lg border-none shadow-none"
+                        style={{
+                            color: 'var(--text-primary)',
+                            outline: 'none',
+                            boxShadow: 'none',
+                        }}
                         autoComplete="off"
                     />
                     {searchQuery && (

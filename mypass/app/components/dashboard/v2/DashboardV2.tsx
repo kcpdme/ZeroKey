@@ -140,13 +140,12 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
             return false;
         }
 
-        // Filter by search
+        // Filter by search (site and login only, not tags)
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             const matchesSearch =
                 profile.site.toLowerCase().includes(query) ||
-                profile.login.toLowerCase().includes(query) ||
-                profile.tags?.some(tag => tag.toLowerCase().includes(query));
+                profile.login.toLowerCase().includes(query);
             if (!matchesSearch) return false;
         }
 

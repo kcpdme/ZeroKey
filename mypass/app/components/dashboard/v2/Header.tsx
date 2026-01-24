@@ -61,10 +61,10 @@ export function Header({
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                    {/* Search Button */}
+                    {/* Search Button - Wider */}
                     <button
                         onClick={onQuickSearch}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group min-w-[180px] lg:min-w-[220px]"
                         style={{
                             background: 'var(--card-bg)',
                             border: '1px solid var(--card-border)',
@@ -83,13 +83,13 @@ export function Header({
                             style={{ color: 'var(--text-muted)' }}
                         />
                         <span
-                            className="text-sm hidden lg:block"
+                            className="text-sm flex-1 text-left"
                             style={{ color: 'var(--text-muted)' }}
                         >
                             Search...
                         </span>
                         <kbd
-                            className="hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs"
+                            className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs"
                             style={{
                                 background: 'var(--sidebar-count-bg)',
                                 color: 'var(--text-muted)',

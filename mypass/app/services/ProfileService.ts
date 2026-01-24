@@ -82,6 +82,22 @@ function removeUndefined<T extends Record<string, any>>(obj: T): T {
     ) as T;
 }
 
+// Helper: Normalize site URL (lowercase, remove protocol, www, trailing slashes)
+function normalizeSite(site: string): string {
+    return site
+        .toLowerCase()
+        .trim()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/+$/, '')
+        .replace(/\?.*$/, '');
+}
+
+// Helper: Normalize login/email (lowercase, trim)
+function normalizeLogin(login: string): string {
+    return login.toLowerCase().trim();
+}
+
 // Helper: Wrap operation with timeout
 async function withTimeout<T>(operation: () => Promise<T>, timeoutMs: number): Promise<T> {
     let timeoutId: NodeJS.Timeout;
@@ -136,12 +152,16 @@ export const ProfileService = {
     saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
         return withRetry(async () => {
             return withTimeout(async () => {
+                // Normalize site and login for consistent storage
+                const normalizedSite = normalizeSite(profile.site);
+                const normalizedLogin = normalizeLogin(profile.login);
+
                 // Check if duplicate exists (same user, site, login, algorithm)
                 const q = query(
                     collection(db, COLLECTION_NAME),
                     where("userId", "==", profile.userId),
-                    where("site", "==", profile.site),
-                    where("login", "==", profile.login),
+                    where("site", "==", normalizedSite),
+                    where("login", "==", normalizedLogin),
                     where("algorithm", "==", profile.algorithm)
                 );
 
@@ -187,6 +207,8 @@ export const ProfileService = {
                     // The initial version is tracked by createdAt timestamp
                     const docRef = await addDoc(collection(db, COLLECTION_NAME), removeUndefined({
                         ...profile,
+                        site: normalizedSite,
+                        login: normalizedLogin,
                         // versionHistory starts empty - populated only on rotation
                         createdAt: timestamp,
                         updatedAt: timestamp
