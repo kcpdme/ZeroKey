@@ -28,6 +28,7 @@ import {
   DashboardV2
 } from './components';
 import { AuthModal } from './components/auth';
+import { TagSelector } from './components/dashboard/TagSelector';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
 import { useAuth } from './context/AuthContext';
 import { ProfileService } from './services/ProfileService';
@@ -42,6 +43,8 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
 
   // Use custom hook for all password generator state
   const {
@@ -108,6 +111,8 @@ export default function HomePage() {
   // Enhanced reset that focuses the first input
   const handleReset = useCallback(() => {
     resetFields();
+    setSelectedTags([]);
+    setEditingProfileId(null);
     loginInputRef.current?.focus();
   }, [resetFields]);
 
@@ -132,9 +137,11 @@ export default function HomePage() {
         algorithm,
         options: algorithm === 'pbkdf2'
           ? { ...options, userSalt }
-          : { ...options, ...memorizableOptions } as any
+          : { ...options, ...memorizableOptions } as any,
+        tags: selectedTags,
       });
-      setSaveStatus({ type: 'success', message: 'Saved to vault!' });
+      setSaveStatus({ type: 'success', message: editingProfileId ? 'Updated in vault!' : 'Saved to vault!' });
+      setEditingProfileId(null);
     } catch (error: any) {
       console.error(error);
       setSaveStatus({
@@ -152,6 +159,8 @@ export default function HomePage() {
     setSite(profile.site);
     setLogin(profile.login);
     setAlgorithm(profile.algorithm);
+    setSelectedTags(profile.tags || []);
+    setEditingProfileId(profile.id || null);
 
     if (profile.algorithm === 'pbkdf2') {
       if (profile.options.length) handleOptionChange('length', profile.options.length);
@@ -175,6 +184,15 @@ export default function HomePage() {
     }, 100);
   }, [setSite, setLogin, setAlgorithm, handleOptionChange, setUserSalt, setMemorizableOptions]);
 
+  // Close dashboard and reset all form fields (when not editing)
+  const handleCloseDashboard = useCallback(() => {
+    setIsDashboardOpen(false);
+    // Reset all fields to ensure clean state
+    resetFields();
+    setSelectedTags([]);
+    setEditingProfileId(null);
+  }, [resetFields]);
+
   // Prevent hydration mismatch
   if (!mounted) {
     return null;
@@ -187,7 +205,7 @@ export default function HomePage() {
     >
       <DashboardV2
         isOpen={isDashboardOpen}
-        onClose={() => setIsDashboardOpen(false)}
+        onClose={handleCloseDashboard}
         onLoadProfile={handleLoadProfile}
       />
 
@@ -346,6 +364,24 @@ export default function HomePage() {
                 onChange={handleMemorizableOptionChange}
                 showAsFields={true}
               />
+            )}
+
+            {/* Tags Selector - Only for logged in users */}
+            {user && (
+              <div
+                className="rounded-xl p-4 transition-all duration-300"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)'
+                }}
+              >
+                <TagSelector
+                  selectedTags={selectedTags}
+                  onChange={setSelectedTags}
+                  showLabel={true}
+                  maxTags={3}
+                />
+              </div>
             )}
 
             {/* Advanced Options Panel */}

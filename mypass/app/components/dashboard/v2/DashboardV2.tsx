@@ -183,8 +183,9 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     };
 
     const handleEdit = (profile: PasswordProfile) => {
+        // Only call onLoadProfile - it handles closing the dashboard with populated fields
+        // Do NOT call onClose here as it would reset the fields we just populated
         onLoadProfile(profile);
-        onClose();
     };
 
     const handleGenerate = async (profile: PasswordProfile) => {

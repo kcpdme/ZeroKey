@@ -131,10 +131,11 @@ export const ProfileService = {
                     // Update existing
                     const docId = querySnapshot.docs[0].id;
                     const ref = doc(db, COLLECTION_NAME, docId);
-                    await updateDoc(ref, {
+                    await updateDoc(ref, removeUndefined({
                         options: profile.options,
+                        tags: profile.tags,
                         updatedAt: timestamp
-                    });
+                    }));
                     return docId;
                 } else {
                     // Create new - remove undefined fields as Firestore rejects them
