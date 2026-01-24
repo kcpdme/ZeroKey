@@ -31,6 +31,7 @@ export function VersionHistoryModal({
     const [showRotateForm, setShowRotateForm] = useState(false);
     const [rotateReason, setRotateReason] = useState('regular');
     const [expiryDays, setExpiryDays] = useState<number | undefined>(90);
+    const [rotateSuccess, setRotateSuccess] = useState(false);
 
     if (!profile) return null;
 
@@ -67,8 +68,12 @@ export function VersionHistoryModal({
         try {
             const reason = ROTATION_REASONS.find(r => r.id === rotateReason)?.label || 'Password rotated';
             await ProfileService.rotatePassword(profile.id, reason, expiryDays);
-            onRotate();
             setShowRotateForm(false);
+            setRotateSuccess(true);
+            // Call onRotate after showing success (this refreshes data)
+            await onRotate();
+            // Hide success message after 2 seconds
+            setTimeout(() => setRotateSuccess(false), 2000);
         } catch (error) {
             console.error('Failed to rotate password:', error);
         } finally {
@@ -216,6 +221,20 @@ export function VersionHistoryModal({
                             <Clock className="w-3.5 h-3.5" />
                             <span>Last updated {formatTimeAgo(profile.updatedAt)}</span>
                         </div>
+
+                        {/* Success Message */}
+                        {rotateSuccess && (
+                            <div
+                                className="mt-3 px-3 py-2 rounded-lg text-sm font-medium text-center"
+                                style={{
+                                    background: 'rgba(34, 197, 94, 0.15)',
+                                    color: '#22c55e',
+                                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                                }}
+                            >
+                                ✓ Password rotated successfully!
+                            </div>
+                        )}
 
                         {/* Rotate Button */}
                         {!showRotateForm ? (

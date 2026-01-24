@@ -282,9 +282,17 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     setHistoryProfile(null);
                     setSelectedProfile(modifiedProfile);
                 }}
-                onRotate={() => {
-                    loadProfiles();
-                    setHistoryProfile(null);
+                onRotate={async () => {
+                    // Refresh profiles in background
+                    await loadProfiles();
+                    // Update the modal with fresh profile data (don't close it)
+                    if (historyProfile?.id) {
+                        const freshProfiles = await ProfileService.getUserProfiles(user!.uid);
+                        const updatedProfile = freshProfiles.find(p => p.id === historyProfile.id);
+                        if (updatedProfile) {
+                            setHistoryProfile(updatedProfile);
+                        }
+                    }
                 }}
             />
 

@@ -182,17 +182,12 @@ export const ProfileService = {
                     }));
                     return docId;
                 } else {
-                    // Create new profile - include initial version in history
-                    const initialHistory: VersionHistoryEntry[] = [{
-                        version: profile.options?.counter || 1,
-                        changedAt: timestamp,
-                        length: profile.options?.length,
-                        reason: 'Initial password',
-                    }];
-
+                    // Create new profile - DON'T add initial version to history
+                    // History should only contain PAST versions (rotated away from)
+                    // The initial version is tracked by createdAt timestamp
                     const docRef = await addDoc(collection(db, COLLECTION_NAME), removeUndefined({
                         ...profile,
-                        versionHistory: initialHistory,
+                        // versionHistory starts empty - populated only on rotation
                         createdAt: timestamp,
                         updatedAt: timestamp
                     }));
