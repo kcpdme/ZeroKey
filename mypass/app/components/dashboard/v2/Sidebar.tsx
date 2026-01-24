@@ -11,7 +11,10 @@ import {
     LayoutGrid,
     Star,
     ArrowLeft,
+    Moon,
+    Sun,
 } from 'lucide-react';
+import { Theme } from '../../../hooks/useTheme';
 import { ViewType, DashboardStats } from './types';
 import { TagFilter } from '../TagSelector';
 
@@ -27,6 +30,9 @@ interface SidebarProps {
     selectedTagFilter?: string | null;
     onTagFilterChange?: (tag: string | null) => void;
     allTags?: string[];
+    // Theme props
+    theme?: Theme;
+    onThemeToggle?: () => void;
 }
 
 interface NavItemConfig {
@@ -55,6 +61,8 @@ export function Sidebar({
     selectedTagFilter,
     onTagFilterChange,
     allTags = [],
+    theme = 'dark',
+    onThemeToggle,
 }: SidebarProps) {
     return (
         <aside
@@ -218,16 +226,37 @@ export function Sidebar({
                 className="p-2 border-t space-y-0.5"
                 style={{ borderColor: 'var(--sidebar-border)' }}
             >
-                <button
-                    onClick={onSettingsClick}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{ color: 'var(--sidebar-text-secondary)' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                    <Settings className="w-[18px] h-[18px]" />
-                    <span>Settings</span>
-                </button>
+                {/* Settings & Theme Toggle Row */}
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={onSettingsClick}
+                        className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                        style={{ color: 'var(--sidebar-text-secondary)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                        <Settings className="w-[18px] h-[18px]" />
+                        <span>Settings</span>
+                    </button>
+
+                    {/* Dark Mode Toggle */}
+                    {onThemeToggle && (
+                        <button
+                            onClick={onThemeToggle}
+                            className="p-2.5 rounded-lg transition-colors shrink-0"
+                            style={{ color: 'var(--sidebar-text-secondary)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        >
+                            {theme === 'dark' ? (
+                                <Sun className="w-[18px] h-[18px]" />
+                            ) : (
+                                <Moon className="w-[18px] h-[18px]" />
+                            )}
+                        </button>
+                    )}
+                </div>
 
                 <button
                     onClick={onSignOut}

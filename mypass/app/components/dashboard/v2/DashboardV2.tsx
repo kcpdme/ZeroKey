@@ -303,6 +303,8 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 selectedTagFilter={selectedTagFilter}
                 onTagFilterChange={setSelectedTagFilter}
                 allTags={profiles.flatMap(p => p.tags || [])}
+                theme={theme}
+                onThemeToggle={toggleTheme}
             />
 
             {/* Main Content */}
