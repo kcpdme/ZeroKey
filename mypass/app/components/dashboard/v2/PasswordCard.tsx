@@ -478,6 +478,25 @@ export function PasswordCard({
                                         <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Edit</span>
                                     </button>
 
+                                    {/* History */}
+                                    {onViewHistory && (
+                                        <button
+                                            onClick={() => {
+                                                onViewHistory(profile);
+                                                setShowMobileMenu(false);
+                                            }}
+                                            className="flex flex-col items-center gap-1.5"
+                                        >
+                                            <div
+                                                className="w-12 h-12 flex items-center justify-center rounded-xl"
+                                                style={{ background: 'rgba(6, 182, 212, 0.1)' }}
+                                            >
+                                                <History className="w-5 h-5" style={{ color: 'var(--sidebar-accent-cyan)' }} />
+                                            </div>
+                                            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>History</span>
+                                        </button>
+                                    )}
+
                                     {/* Delete */}
                                     <button
                                         onClick={() => {

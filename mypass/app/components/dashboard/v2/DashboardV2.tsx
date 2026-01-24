@@ -294,6 +294,10 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                         }
                     }
                 }}
+                onGenerateNew={(updatedProfile) => {
+                    // Open generate modal with the rotated profile
+                    setSelectedProfile(updatedProfile);
+                }}
             />
 
 

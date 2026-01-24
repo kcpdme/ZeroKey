@@ -1,8 +1,8 @@
 // app/components/dashboard/VersionHistoryModal.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { X, History, Clock, RotateCcw, Shield, Sparkles, AlertTriangle, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, History, Clock, RotateCcw, Shield, Sparkles, AlertTriangle, ChevronRight, KeyRound } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PasswordProfile, VersionHistoryEntry, ProfileService } from '../../services/ProfileService';
 
@@ -10,7 +10,8 @@ interface VersionHistoryModalProps {
     profile: PasswordProfile | null;
     onClose: () => void;
     onRegenerateVersion: (profile: PasswordProfile, version: number) => void;
-    onRotate: () => void;
+    onRotate: () => Promise<void>;
+    onGenerateNew?: (profile: PasswordProfile) => void;
 }
 
 const ROTATION_REASONS = [
@@ -26,12 +27,29 @@ export function VersionHistoryModal({
     onClose,
     onRegenerateVersion,
     onRotate,
+    onGenerateNew,
 }: VersionHistoryModalProps) {
     const [isRotating, setIsRotating] = useState(false);
     const [showRotateForm, setShowRotateForm] = useState(false);
     const [rotateReason, setRotateReason] = useState('regular');
     const [expiryDays, setExpiryDays] = useState<number | undefined>(90);
     const [rotateSuccess, setRotateSuccess] = useState(false);
+
+    // Reset state when profile changes (different profile opened)
+    useEffect(() => {
+        setRotateSuccess(false);
+        setShowRotateForm(false);
+        setRotateReason('regular');
+        setExpiryDays(90);
+    }, [profile?.id]);
+
+    // Auto-hide success message after 5 seconds
+    useEffect(() => {
+        if (rotateSuccess) {
+            const timer = setTimeout(() => setRotateSuccess(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [rotateSuccess]);
 
     if (!profile) return null;
 
@@ -72,8 +90,7 @@ export function VersionHistoryModal({
             setRotateSuccess(true);
             // Call onRotate after showing success (this refreshes data)
             await onRotate();
-            // Hide success message after 2 seconds
-            setTimeout(() => setRotateSuccess(false), 2000);
+            // Don't auto-hide - user can dismiss manually or click Generate
         } catch (error) {
             console.error('Failed to rotate password:', error);
         } finally {
@@ -222,17 +239,46 @@ export function VersionHistoryModal({
                             <span>Last updated {formatTimeAgo(profile.updatedAt)}</span>
                         </div>
 
-                        {/* Success Message */}
+                        {/* Success Message with Generate Button */}
                         {rotateSuccess && (
                             <div
-                                className="mt-3 px-3 py-2 rounded-lg text-sm font-medium text-center"
+                                className="mt-3 p-3 rounded-lg relative"
                                 style={{
-                                    background: 'rgba(34, 197, 94, 0.15)',
-                                    color: '#22c55e',
+                                    background: 'rgba(34, 197, 94, 0.1)',
                                     border: '1px solid rgba(34, 197, 94, 0.3)',
                                 }}
                             >
-                                ✓ Password rotated successfully!
+                                {/* Dismiss button */}
+                                <button
+                                    onClick={() => setRotateSuccess(false)}
+                                    className="absolute top-2 right-2 p-1 rounded-full transition-colors hover:bg-white/10"
+                                    style={{ color: '#22c55e' }}
+                                    aria-label="Dismiss"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                                <p
+                                    className="text-sm font-medium text-center mb-2 pr-6"
+                                    style={{ color: '#22c55e' }}
+                                >
+                                    ✓ Password rotated to v{currentVersion}!
+                                </p>
+                                {onGenerateNew && (
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            onGenerateNew(profile);
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]"
+                                        style={{
+                                            background: 'var(--btn-primary-gradient)',
+                                            color: 'white',
+                                        }}
+                                    >
+                                        <KeyRound className="w-4 h-4" />
+                                        Generate v{currentVersion} Password
+                                    </button>
+                                )}
                             </div>
                         )}
 
