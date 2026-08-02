@@ -14,6 +14,7 @@ import {
     Moon,
     Sun,
 } from 'lucide-react';
+import { ZeroKeyLogo } from '../../ui/ZeroKeyLogo';
 import { Theme } from '../../../hooks/useTheme';
 import { ViewType, DashboardStats } from './types';
 import { TagFilter } from '../TagSelector';
@@ -88,21 +89,16 @@ export function Sidebar({
                 </button>
 
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div
-                        className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-                        style={{
-                            background: 'var(--sidebar-logo-gradient)',
-                            boxShadow: 'var(--sidebar-logo-shadow)',
-                        }}
-                    >
-                        <KeyRound className="w-5 h-5 text-white" />
-                    </div>
+                    <ZeroKeyLogo 
+                        className="w-7 h-7 shrink-0" 
+                        style={{ color: 'var(--color-cyan-500)' }} 
+                    />
                     <div className="min-w-0">
-                        <h1 className="font-bold" style={{ color: 'var(--sidebar-text-primary)' }}>
-                            MyPass
+                        <h1 className="font-bold text-base" style={{ color: 'var(--sidebar-text-primary)' }}>
+                            ZeroKey
                         </h1>
                         <p className="text-xs" style={{ color: 'var(--sidebar-text-muted)' }}>
-                            Password Vault
+                            Stateless Password Vault
                         </p>
                     </div>
                 </div>

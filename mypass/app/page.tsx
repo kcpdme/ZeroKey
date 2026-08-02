@@ -17,6 +17,8 @@ import {
   Save
 } from 'lucide-react';
 
+import { ZeroKeyLogo } from './components/ui/ZeroKeyLogo';
+
 // Modular imports
 import {
   FormInput,
@@ -275,20 +277,15 @@ export default function HomePage() {
         {/* Header - Seamless */}
         <header className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2 sm:mb-3">
-            <div
-              className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg transition-all duration-300"
-              style={{
-                background: 'linear-gradient(135deg, var(--color-cyan-400), var(--color-cyan-600))',
-                boxShadow: '0 6px 20px rgba(6, 182, 212, 0.3)'
-              }}
-            >
-              <KeyRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" aria-hidden="true" />
-            </div>
+            <ZeroKeyLogo 
+              className="w-8 h-8 sm:w-10 sm:h-10" 
+              style={{ color: 'var(--color-cyan-500)' }} 
+            />
             <h1
               className="text-2xl sm:text-3xl font-bold tracking-tight"
               style={{ color: 'var(--text-primary)' }}
             >
-              Stateless Pass
+              ZeroKey
             </h1>
           </div>
           <p

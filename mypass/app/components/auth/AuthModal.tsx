@@ -15,6 +15,7 @@ import {
     KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { ZeroKeyLogo } from '../ui/ZeroKeyLogo';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -140,20 +141,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             >
                 {/* Brand Logo */}
                 <div className="flex items-center gap-2.5">
+                    <ZeroKeyLogo 
+                        className="h-7 w-7" 
+                        style={{ color: 'var(--color-cyan-500)' }} 
+                    />
                     <span
-                        className="flex h-9 w-9 items-center justify-center rounded-xl"
-                        style={{
-                            background: 'linear-gradient(135deg, var(--color-cyan-400), var(--color-cyan-600))',
-                            boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
-                        }}
-                    >
-                        <KeyRound className="h-5 w-5 text-white" />
-                    </span>
-                    <span
-                        className="text-sm font-semibold tracking-wide"
+                        className="text-base font-bold tracking-tight"
                         style={{ color: 'var(--text-primary)' }}
                     >
-                        Stateless Pass
+                        ZeroKey
                     </span>
                 </div>
 
@@ -203,17 +199,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <div className="auth-content-enter w-full max-w-sm">
                     {/* Header */}
                     <div className="mb-8 text-center lg:text-left">
-                        {/* Mobile Logo */}
-                        <div className="flex items-center justify-center gap-3 mb-6 lg:hidden">
-                            <div
-                                className="flex items-center justify-center w-12 h-12 rounded-xl"
-                                style={{
-                                    background: 'linear-gradient(135deg, var(--color-cyan-400), var(--color-cyan-600))',
-                                    boxShadow: '0 6px 20px rgba(6, 182, 212, 0.3)',
-                                }}
+                        {/* Mobile Logo & Brand */}
+                        <div className="flex items-center justify-center gap-2.5 mb-6 lg:hidden">
+                            <ZeroKeyLogo 
+                                className="w-8 h-8" 
+                                style={{ color: 'var(--color-cyan-500)' }} 
+                            />
+                            <span
+                                className="text-xl font-bold tracking-tight"
+                                style={{ color: 'var(--text-primary)' }}
                             >
-                                <KeyRound className="w-6 h-6 text-white" />
-                            </div>
+                                ZeroKey
+                            </span>
                         </div>
 
                         <h2

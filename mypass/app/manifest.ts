@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'MyPass - Password Vault',
-        short_name: 'MyPass',
-        description: 'Secure, client-side password generator and vault.',
+        name: 'ZeroKey - Stateless Password Vault',
+        short_name: 'ZeroKey',
+        description: 'Zero storage, stateless password generator and vault.',
         start_url: '/',
         display: 'standalone',
         background_color: '#0f172a',
