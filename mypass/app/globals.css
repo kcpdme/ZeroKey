@@ -698,7 +698,21 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Auth modal input placeholder styling */
-.auth-modal-enter input::placeholder {
+.auth-modal-enter input::placeholder,
+.auth-fullscreen input::placeholder {
   color: var(--text-muted);
   opacity: 0.7;
+}
+
+/* Auth Fullscreen Focus & Input Styles */
+.auth-input,
+.auth-input:focus,
+.auth-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.field-box:focus-within {
+  border-color: var(--color-cyan-500) !important;
+  box-shadow: 0 0 0 1px var(--color-cyan-500) !important;
 }
