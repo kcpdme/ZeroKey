@@ -710,6 +710,9 @@ input[type="range"]::-moz-range-thumb {
 .auth-input:focus-visible {
   outline: none !important;
   box-shadow: none !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: normal;
 }
 
 .field-box:focus-within {

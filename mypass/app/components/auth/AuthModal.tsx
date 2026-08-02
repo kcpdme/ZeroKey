@@ -196,7 +196,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {/* ─── Right Form Section (alt design) ─── */}
             <section className="flex items-center justify-center px-5 py-14 min-h-screen">
-                <div className="auth-content-enter w-full max-w-sm">
+                <div className="auth-content-enter w-full max-w-[340px]">
                     {/* Header */}
                     <div className="mb-8 text-center lg:text-left">
                         {/* Mobile Logo & Brand */}
@@ -311,20 +311,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             <div className="w-full">
                                 <label
                                     htmlFor={emailId}
-                                    className="mb-1.5 block text-xs font-medium uppercase tracking-wide"
+                                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wider"
                                     style={{ color: 'var(--text-muted)' }}
                                 >
                                     Email
                                 </label>
                                 <div
-                                    className="field-box flex items-center gap-2 rounded-xl px-3 transition-colors border"
+                                    className="field-box flex items-center gap-2.5 rounded-xl px-3.5 transition-colors border"
                                     style={{
                                         background: 'var(--bg-secondary)',
                                         borderColor: 'var(--border-color)',
                                     }}
                                 >
                                     <span style={{ color: 'var(--text-muted)' }}>
-                                        <MailIcon className="h-4 w-4" />
+                                        <MailIcon className="h-4 w-4 shrink-0" />
                                     </span>
                                     <input
                                         id={emailId}
@@ -333,7 +333,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="you@company.com"
-                                        className="auth-input h-11 w-full bg-transparent text-sm"
+                                        className="auth-input h-11 w-full bg-transparent text-sm sm:text-base font-normal tracking-normal"
                                         style={{ color: 'var(--text-primary)' }}
                                         autoComplete="email"
                                     />
@@ -344,20 +344,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             <div className="w-full">
                                 <label
                                     htmlFor={passwordId}
-                                    className="mb-1.5 block text-xs font-medium uppercase tracking-wide"
+                                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wider"
                                     style={{ color: 'var(--text-muted)' }}
                                 >
                                     Password
                                 </label>
                                 <div
-                                    className="field-box flex items-center gap-2 rounded-xl px-3 transition-colors border"
+                                    className="field-box flex items-center gap-2.5 rounded-xl px-3.5 transition-colors border"
                                     style={{
                                         background: 'var(--bg-secondary)',
                                         borderColor: 'var(--border-color)',
                                     }}
                                 >
                                     <span style={{ color: 'var(--text-muted)' }}>
-                                        <LockIcon className="h-4 w-4" />
+                                        <LockIcon className="h-4 w-4 shrink-0" />
                                     </span>
                                     <input
                                         id={passwordId}
@@ -366,7 +366,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="At least 6 characters"
-                                        className="auth-input h-11 w-full bg-transparent text-sm"
+                                        className="auth-input h-11 w-full bg-transparent text-sm sm:text-base font-normal tracking-normal"
                                         style={{ color: 'var(--text-primary)' }}
                                         autoComplete={isSignUp ? 'new-password' : 'current-password'}
                                     />
@@ -391,20 +391,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 <div className="w-full">
                                     <label
                                         htmlFor={confirmId}
-                                        className="mb-1.5 block text-xs font-medium uppercase tracking-wide"
+                                        className="mb-1.5 block text-xs font-semibold uppercase tracking-wider"
                                         style={{ color: 'var(--text-muted)' }}
                                     >
                                         Confirm Password
                                     </label>
                                     <div
-                                        className="field-box flex items-center gap-2 rounded-xl px-3 transition-colors border"
+                                        className="field-box flex items-center gap-2.5 rounded-xl px-3.5 transition-colors border"
                                         style={{
                                             background: 'var(--bg-secondary)',
                                             borderColor: 'var(--border-color)',
                                         }}
                                     >
                                         <span style={{ color: 'var(--text-muted)' }}>
-                                            <LockIcon className="h-4 w-4" />
+                                            <LockIcon className="h-4 w-4 shrink-0" />
                                         </span>
                                         <input
                                             id={confirmId}
@@ -412,8 +412,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             required
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Re-enter your password"
-                                            className="auth-input h-11 w-full bg-transparent text-sm"
+                                            placeholder="Re-enter password"
+                                            className="auth-input h-11 w-full bg-transparent text-sm sm:text-base font-normal tracking-normal"
                                             style={{ color: 'var(--text-primary)' }}
                                             autoComplete="new-password"
                                         />

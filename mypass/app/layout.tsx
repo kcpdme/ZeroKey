@@ -35,8 +35,7 @@ export const viewport: Viewport = {
 };
 
 import { AuthProvider } from './context/AuthContext';
-
-// ... imports
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -54,6 +53,18 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <Toaster 
+            theme="dark"
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>
