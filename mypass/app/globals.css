@@ -647,3 +647,58 @@ input[type="range"]::-moz-range-thumb {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-slate-500);
 }
+
+/* ============================================
+   Auth Modal - Alt Design Animations
+   ============================================ */
+@keyframes authModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authContentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authPointSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.auth-modal-enter {
+  animation: authModalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-content-enter {
+  animation: authContentFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.auth-point-enter {
+  opacity: 0;
+  animation: authPointSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Auth modal input placeholder styling */
+.auth-modal-enter input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
