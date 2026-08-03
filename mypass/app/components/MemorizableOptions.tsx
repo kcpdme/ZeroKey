@@ -62,16 +62,24 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
                 type="text"
                 inputMode="numeric"
                 placeholder="Shift Position (e.g., 3)"
-                value={options.shift}
+                value={options.shift === ('' as any) ? '' : options.shift}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val >= 1) {
-                        onChange('shift', val);
-                    } else if (e.target.value === '' || e.target.value === '0') {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                        onChange('shift', '' as any);
+                    } else {
+                        const val = parseInt(raw, 10);
+                        if (!isNaN(val)) {
+                            onChange('shift', val);
+                        }
+                    }
+                }}
+                onBlur={() => {
+                    if (options.shift === ('' as any) || isNaN(Number(options.shift)) || Number(options.shift) < 1) {
                         onChange('shift', 1);
                     }
                 }}
-                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors"
+                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors text-white"
                 aria-label="Shift position - which letter of website to use"
             />
         </div>
@@ -85,16 +93,24 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
                 type="text"
                 inputMode="numeric"
                 placeholder="Magic Number (e.g., 23)"
-                value={options.magicNumber}
+                value={options.magicNumber === ('' as any) ? '' : options.magicNumber}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val >= 0) {
-                        onChange('magicNumber', val);
-                    } else if (e.target.value === '') {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                        onChange('magicNumber', '' as any);
+                    } else {
+                        const val = parseInt(raw, 10);
+                        if (!isNaN(val)) {
+                            onChange('magicNumber', val);
+                        }
+                    }
+                }}
+                onBlur={() => {
+                    if (options.magicNumber === ('' as any) || isNaN(Number(options.magicNumber))) {
                         onChange('magicNumber', 0);
                     }
                 }}
-                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors"
+                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors text-white"
                 aria-label="Magic number - your secret number added to formula"
             />
         </div>

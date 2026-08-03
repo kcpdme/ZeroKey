@@ -520,10 +520,25 @@ export default function HomePage() {
                         </label>
                         <input
                           id="counter"
-                          type="number"
-                          min={1}
-                          value={options.counter}
-                          onChange={(e) => handleOptionChange('counter', Number(e.target.value) || 1)}
+                          type="text"
+                          inputMode="numeric"
+                          value={options.counter === ('' as any) ? '' : options.counter}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                              handleOptionChange('counter', '' as any);
+                            } else {
+                              const num = parseInt(raw, 10);
+                              if (!isNaN(num)) {
+                                handleOptionChange('counter', num);
+                              }
+                            }
+                          }}
+                          onBlur={() => {
+                            if (options.counter === ('' as any) || isNaN(Number(options.counter)) || Number(options.counter) < 1) {
+                              handleOptionChange('counter', 1);
+                            }
+                          }}
                           className="zk-text-input h-10 w-full max-w-xs rounded-xl border px-3 font-mono text-sm focus:outline-none"
                           style={{
                             background: 'var(--bg-primary)',

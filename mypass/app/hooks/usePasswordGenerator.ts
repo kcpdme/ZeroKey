@@ -144,6 +144,7 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
                     login,
                     userSalt,
                     ...options,
+                    counter: Number(options.counter) || 1,
                 });
             } else {
                 // Memorizable - no master password needed
@@ -155,7 +156,10 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
 
                 password = generateMemorizablePassword(
                     { login, site },
-                    memorizableOptions
+                    {
+                        shift: Number(memorizableOptions.shift) || 1,
+                        magicNumber: Number(memorizableOptions.magicNumber) || 0,
+                    }
                 );
             }
 
