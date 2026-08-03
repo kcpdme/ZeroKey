@@ -144,65 +144,69 @@ export function Sidebar({
                 )}
             </nav>
 
-            {/* Bottom section */}
-            <div className="mt-auto space-y-1 px-3 pb-3 sidebar-divider-top">
-                {/* Theme toggle */}
-                {onThemeToggle && (
-                    <button
-                        type="button"
-                        onClick={onThemeToggle}
-                        className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
-                    >
-                        {theme === 'dark' ? (
-                            <Sun className="h-4 w-4" />
-                        ) : (
-                            <Moon className="h-4 w-4" />
-                        )}
-                        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-                    </button>
-                )}
-
-                {/* Settings */}
-                <button
-                    onClick={onSettingsClick}
-                    className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
-                >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                </button>
-
-                {/* User profile card */}
-                <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 sidebar-user-card">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold sidebar-user-avatar">
-                        {initials}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium sidebar-ink">
-                            {userEmail?.split('@')[0] || 'User'}
-                        </span>
-                        <span className="block truncate text-[11px] sidebar-muted">
-                            {userEmail}
-                        </span>
-                    </span>
-                </div>
-
+            {/* Bottom section - Uncluttered modern footer */}
+            <div className="mt-auto space-y-2 px-3 pb-3 pt-3 sidebar-divider-top">
                 {/* Back to Generator */}
                 <button
                     onClick={onClose}
-                    className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+                    className="sidebar-btn-ghost w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium transition-colors"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back to Generator</span>
                 </button>
 
-                {/* Sign out */}
-                <button
-                    onClick={onSignOut}
-                    className="sidebar-btn-danger w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
-                >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                </button>
+                {/* Integrated User Profile Card with Compact Action Toolbar */}
+                <div className="flex items-center justify-between rounded-xl px-2.5 py-2 sidebar-user-card">
+                    {/* User Avatar + Name */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-1">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold sidebar-user-avatar">
+                            {initials}
+                        </span>
+                        <span className="block truncate text-xs font-medium sidebar-ink">
+                            {userEmail?.split('@')[0] || 'User'}
+                        </span>
+                    </div>
+
+                    {/* Compact Icon Action Toolbar */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                        {/* Theme toggle */}
+                        {onThemeToggle && (
+                            <button
+                                type="button"
+                                onClick={onThemeToggle}
+                                className="sidebar-action-icon flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+                                title={theme === 'dark' ? 'Switch to Light mode' : 'Switch to Dark mode'}
+                                aria-label="Toggle theme"
+                            >
+                                {theme === 'dark' ? (
+                                    <Sun className="h-3.5 w-3.5" />
+                                ) : (
+                                    <Moon className="h-3.5 w-3.5" />
+                                )}
+                            </button>
+                        )}
+
+                        {/* Settings */}
+                        <button
+                            onClick={onSettingsClick}
+                            className="sidebar-action-icon flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+                            title="Settings"
+                            aria-label="Settings"
+                        >
+                            <Settings className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Sign Out */}
+                        <button
+                            onClick={onSignOut}
+                            className="sidebar-action-icon-danger flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
+                            title="Sign Out"
+                            aria-label="Sign Out"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
             </div>
         </aside>
     );

@@ -185,6 +185,30 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     };
 
     // Handlers
+    const handleToggleFavorite = useCallback(async (profile: PasswordProfile) => {
+        if (!profile.id) return;
+        const targetId = profile.id;
+        const newFavoriteState = !profile.favorite;
+
+        // 1. Optimistic local state update (instant UI change, zero reload)
+        setProfiles(prev =>
+            prev.map(p => (p.id === targetId ? { ...p, favorite: newFavoriteState } : p))
+        );
+
+        // 2. Persist to backend asynchronously if not seed profile
+        if (!targetId.startsWith('seed-') && user) {
+            try {
+                await ProfileService.toggleFavorite(targetId, newFavoriteState);
+            } catch (error) {
+                console.error('Failed to toggle favorite:', error);
+                // Revert on failure
+                setProfiles(prev =>
+                    prev.map(p => (p.id === targetId ? { ...p, favorite: !newFavoriteState } : p))
+                );
+            }
+        }
+    }, [user]);
+
     const handleSignOut = async () => {
         await signOut();
         onClose();
@@ -395,6 +419,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                             onEdit={handleEdit}
                             onDelete={setDeleteTarget}
                             onViewHistory={setHistoryProfile}
+                            onToggleFavorite={handleToggleFavorite}
                             onProfilesChange={loadProfiles}
                         />
                     )}

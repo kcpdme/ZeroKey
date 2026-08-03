@@ -15,6 +15,7 @@ interface PasswordListProps {
     onEdit: (profile: PasswordProfile) => void;
     onDelete: (profile: PasswordProfile) => void;
     onViewHistory?: (profile: PasswordProfile) => void;
+    onToggleFavorite?: (profile: PasswordProfile) => void;
     onProfilesChange?: () => void;
 }
 
@@ -26,12 +27,12 @@ export function PasswordList({
     onEdit,
     onDelete,
     onViewHistory,
+    onToggleFavorite,
     onProfilesChange,
 }: PasswordListProps) {
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [copiedLogin, setCopiedLogin] = useState<string | null>(null);
-    const [togglingFavorite, setTogglingFavorite] = useState<string | null>(null);
 
     // Bulk selection
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -69,19 +70,14 @@ export function PasswordList({
     };
 
     const handleToggleFavorite = async (profile: PasswordProfile) => {
-        if (!profile.id || togglingFavorite) return;
-
-        setTogglingFavorite(profile.id);
-        try {
-            // Skip Firebase for seed profiles
+        if (!profile.id) return;
+        if (onToggleFavorite) {
+            onToggleFavorite(profile);
+        } else {
             if (!profile.id.startsWith('seed-')) {
                 await ProfileService.toggleFavorite(profile.id, !profile.favorite);
             }
             onProfilesChange?.();
-        } catch (error) {
-            console.error('Failed to toggle favorite:', error);
-        } finally {
-            setTogglingFavorite(null);
         }
     };
 
