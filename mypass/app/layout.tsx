@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "ZeroKey - Stateless Password Generator & Vault",
   description: "Generate secure, deterministic passwords that never need to be stored. Zero storage, zero leaks. Your master key + site + login = unique password every time.",
   keywords: ["ZeroKey", "password generator", "deterministic", "stateless", "zero storage", "secure", "PBKDF2"],
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icons/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
