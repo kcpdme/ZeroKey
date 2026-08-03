@@ -1,8 +1,8 @@
-// Dashboard V2 PasswordList - Proton Pass style container
+// Dashboard V2 PasswordList - Alt Design style
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { KeyRound, RefreshCw, ArrowUpDown, Check, Trash2, X } from 'lucide-react';
+import { KeyRound, RefreshCw, ArrowUpDown, Check, Trash2, X, VaultIcon } from 'lucide-react';
 import { PasswordProfile, ProfileService } from '../../../services/ProfileService';
 import { PasswordCard } from './PasswordCard';
 import { SortOption, SORT_OPTIONS } from './types';
@@ -73,7 +73,10 @@ export function PasswordList({
 
         setTogglingFavorite(profile.id);
         try {
-            await ProfileService.toggleFavorite(profile.id, !profile.favorite);
+            // Skip Firebase for seed profiles
+            if (!profile.id.startsWith('seed-')) {
+                await ProfileService.toggleFavorite(profile.id, !profile.favorite);
+            }
             onProfilesChange?.();
         } catch (error) {
             console.error('Failed to toggle favorite:', error);
@@ -106,7 +109,10 @@ export function PasswordList({
 
         setBulkDeleting(true);
         try {
-            await ProfileService.bulkDelete(Array.from(selectedIds));
+            const realIds = Array.from(selectedIds).filter(id => !id.startsWith('seed-'));
+            if (realIds.length > 0) {
+                await ProfileService.bulkDelete(realIds);
+            }
             setSelectedIds(new Set());
             setBulkMode(false);
             onProfilesChange?.();
@@ -129,7 +135,7 @@ export function PasswordList({
             <div className="flex items-center justify-center h-40">
                 <RefreshCw
                     className="w-6 h-6 animate-spin"
-                    style={{ color: 'var(--color-cyan-500)' }}
+                    style={{ color: 'var(--c-accent, var(--color-cyan-500))' }}
                 />
             </div>
         );
@@ -137,42 +143,35 @@ export function PasswordList({
 
     if (profiles.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <div
-                    className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
-                    style={{ background: 'var(--sidebar-count-bg)' }}
-                >
-                    <KeyRound
-                        className="w-10 h-10"
-                        style={{ color: 'var(--text-muted)' }}
-                    />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-14 text-center empty-state">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl empty-state-icon">
+                    <VaultIcon className="h-5 w-5" />
                 </div>
                 {isEmpty ? (
                     <>
-                        <h3
-                            className="text-lg font-semibold mb-2"
-                            style={{ color: 'var(--text-primary)' }}
-                        >
-                            No saved passwords yet
+                        <h3 className="text-base font-semibold empty-state-title">
+                            Your vault is empty
                         </h3>
-                        <p
-                            className="text-center max-w-[300px]"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            Click the "Add Password" button to create your first secure password profile.
+                        <p className="mt-1.5 max-w-sm text-sm empty-state-desc">
+                            Generate a password and save its recipe — it comes back in one tap.
                         </p>
                     </>
                 ) : (
-                    <p style={{ color: 'var(--text-muted)' }}>
-                        No passwords match your search.
-                    </p>
+                    <>
+                        <h3 className="text-base font-semibold empty-state-title">
+                            Nothing matches
+                        </h3>
+                        <p className="mt-1.5 max-w-sm text-sm empty-state-desc">
+                            Try a different search term or clear the filters.
+                        </p>
+                    </>
                 )}
             </div>
         );
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Toolbar */}
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-3">
@@ -183,28 +182,13 @@ export function PasswordList({
                                 checked={selectedIds.size === profiles.length && profiles.length > 0}
                                 onChange={handleSelectAll}
                                 className="w-4 h-4 rounded"
-                                style={{ accentColor: 'var(--color-cyan-500)' }}
+                                style={{ accentColor: 'var(--c-accent, var(--color-cyan-500))' }}
                             />
-                            <span
-                                className="text-sm"
-                                style={{ color: 'var(--text-muted)' }}
-                            >
+                            <span className="text-sm recipe-muted">
                                 {selectedIds.size} selected
                             </span>
                         </>
-                    ) : (
-                        <span
-                            className="text-sm"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            {profiles.length} {profiles.length === 1 ? 'password' : 'passwords'}
-                            {favoriteCount > 0 && (
-                                <span style={{ color: 'var(--sidebar-accent-yellow)' }}>
-                                    {' '}• {favoriteCount} ★
-                                </span>
-                            )}
-                        </span>
-                    )}
+                    ) : null}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -213,19 +197,14 @@ export function PasswordList({
                             <button
                                 onClick={handleBulkDelete}
                                 disabled={selectedIds.size === 0 || bulkDeleting}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
-                                style={{
-                                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                                    color: 'white',
-                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all recipe-bulk-delete disabled:opacity-50"
                             >
                                 <Trash2 className="w-4 h-4" />
                                 {bulkDeleting ? 'Deleting...' : `Delete (${selectedIds.size})`}
                             </button>
                             <button
                                 onClick={cancelBulkMode}
-                                className="p-1.5 rounded-lg transition-colors"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="p-1.5 rounded-lg transition-colors recipe-muted"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -234,8 +213,7 @@ export function PasswordList({
                         <>
                             <button
                                 onClick={() => setBulkMode(true)}
-                                className="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="px-3 py-1.5 rounded-lg text-sm transition-colors recipe-muted"
                             >
                                 Select
                             </button>
@@ -244,8 +222,7 @@ export function PasswordList({
                             <div className="relative">
                                 <button
                                     onClick={() => setShowSortMenu(!showSortMenu)}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                    style={{ color: 'var(--text-secondary)' }}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors recipe-muted"
                                 >
                                     <ArrowUpDown className="w-4 h-4" />
                                     <span className="hidden sm:inline">
@@ -259,13 +236,7 @@ export function PasswordList({
                                             className="fixed inset-0 z-10"
                                             onClick={() => setShowSortMenu(false)}
                                         />
-                                        <div
-                                            className="absolute right-0 top-full mt-2 py-2 rounded-xl shadow-xl z-20 min-w-[180px]"
-                                            style={{
-                                                background: 'var(--bg-secondary)',
-                                                border: '1px solid var(--border-color)',
-                                            }}
-                                        >
+                                        <div className="absolute right-0 top-full mt-2 py-2 rounded-xl shadow-xl z-20 min-w-[180px] sort-dropdown">
                                             {SORT_OPTIONS.map(option => (
                                                 <button
                                                     key={option.id}
@@ -273,12 +244,9 @@ export function PasswordList({
                                                         setSortBy(option.id);
                                                         setShowSortMenu(false);
                                                     }}
-                                                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors"
-                                                    style={{
-                                                        color: sortBy === option.id
-                                                            ? 'var(--color-cyan-500)'
-                                                            : 'var(--text-secondary)',
-                                                    }}
+                                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors sort-option ${
+                                                        sortBy === option.id ? 'sort-option--active' : ''
+                                                    }`}
                                                 >
                                                     {option.label}
                                                     {sortBy === option.id && (
@@ -297,14 +265,7 @@ export function PasswordList({
 
             {/* Toast notification */}
             {copiedLogin && (
-                <div
-                    className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl text-sm font-medium z-50 flex items-center gap-2"
-                    style={{
-                        background: 'var(--btn-primary-gradient)',
-                        color: 'white',
-                        boxShadow: 'var(--btn-primary-shadow)',
-                    }}
-                >
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl text-sm font-medium z-50 flex items-center gap-2 recipe-toast">
                     <Check className="w-4 h-4" />
                     Copied: {copiedLogin}
                 </div>

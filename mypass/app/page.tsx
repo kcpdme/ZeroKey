@@ -303,17 +303,34 @@ export default function HomePage() {
         </button>
 
         {!user ? (
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="h-9 sm:h-10 px-4 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
-            style={{
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            Sign In
-          </button>
+          <>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="h-9 sm:h-10 px-4 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
+              style={{
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              Sign In
+            </button>
+            {/* Dev shortcut to preview vault without logging in */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => setIsDashboardOpen(true)}
+                className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-200 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}
+                title="Preview Vault (Dev Mode)"
+              >
+                <User className="w-4 h-4" />
+              </button>
+            )}
+          </>
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}

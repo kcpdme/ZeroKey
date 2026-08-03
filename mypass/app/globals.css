@@ -805,3 +805,470 @@ input[type="range"]::-moz-range-thumb {
   border: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
+
+/* ============================================
+   Dashboard V2 – Alt Design System
+   ============================================ */
+
+/* — Shell — */
+.dashboard-shell {
+  background: rgb(var(--c-bg, 8 12 20));
+  font-family: 'Inter', var(--font-sans, system-ui, sans-serif);
+}
+
+.dashboard-main {
+  background: rgb(var(--c-bg, 8 12 20));
+}
+
+/* — Sidebar — */
+.sidebar-alt {
+  background: rgb(var(--c-surface, 15 22 35));
+  border-right: 1px solid rgb(var(--c-line, 38 50 71));
+}
+
+.sidebar-ink {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sidebar-muted {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.sidebar-logo-badge {
+  background: rgb(var(--c-accent, 45 212 191) / 0.15);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+.sidebar-divider {
+  border-top: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.sidebar-divider-top {
+  border-top: 1px solid rgb(var(--c-line, 38 50 71));
+  padding-top: 0.75rem;
+}
+
+/* Nav items */
+.sidebar-nav-active {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sidebar-nav-idle {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-nav-idle:hover {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.sidebar-nav-bg {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+
+.sidebar-icon-active {
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+/* Counts */
+.sidebar-count-active {
+  background: rgb(var(--c-accent, 45 212 191) / 0.18);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+.sidebar-count-idle {
+  background: rgb(var(--c-line, 38 50 71) / 0.5);
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* Ghost button */
+.sidebar-btn-ghost {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-btn-ghost:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+/* Danger button */
+.sidebar-btn-danger {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-btn-danger:hover {
+  background: rgb(var(--c-danger, 248 113 113) / 0.1);
+  color: rgb(var(--c-danger, 248 113 113));
+}
+
+/* User card */
+.sidebar-user-card {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+.sidebar-user-avatar {
+  background: rgb(var(--c-accent, 45 212 191) / 0.15);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+/* — Dashboard Header — */
+.dashboard-header {
+  border-bottom: 1px solid rgb(var(--c-line, 38 50 71));
+  background: rgb(var(--c-surface, 15 22 35));
+}
+.dashboard-title {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.dashboard-subtitle {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.dashboard-search-btn {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.dashboard-search-btn:hover {
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.5);
+}
+.dashboard-search-icon {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.dashboard-search-text {
+  color: rgb(var(--c-muted, 141 157 181) / 0.7);
+}
+.dashboard-kbd {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.dashboard-action-btn {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.dashboard-action-btn:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.dashboard-btn-primary {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px -12px rgb(0 0 0 / 0.25);
+}
+.dashboard-btn-primary:hover {
+  filter: brightness(1.1);
+}
+.dashboard-btn-primary:active {
+  filter: brightness(0.95);
+}
+
+/* — Recipe Row (PasswordCard) — */
+.recipe-row {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+  cursor: pointer;
+}
+.recipe-row:hover {
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.5);
+}
+.recipe-row--selected {
+  background: rgb(var(--c-accent, 45 212 191) / 0.06);
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.4);
+}
+
+.recipe-ink {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.recipe-muted {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.recipe-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* Star */
+.recipe-star-active {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+.recipe-star-idle {
+  color: rgb(var(--c-muted, 141 157 181));
+  opacity: 0;
+}
+.group:hover .recipe-star-idle {
+  opacity: 1;
+}
+.recipe-star-idle:hover {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+
+.recipe-star-count {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+
+/* Action buttons */
+.recipe-action-btn-primary {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+}
+.recipe-action-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.recipe-action-btn {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.recipe-action-btn:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.recipe-action-btn-danger {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.recipe-action-btn-danger:hover {
+  background: rgb(var(--c-danger, 248 113 113) / 0.1);
+  color: rgb(var(--c-danger, 248 113 113));
+}
+
+/* Mobile bottom sheet */
+.recipe-mobile-sheet {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.recipe-mobile-action-bg {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+
+/* Bulk delete */
+.recipe-bulk-delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+/* Toast */
+.recipe-toast {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+  box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.4);
+}
+
+/* — Empty State — */
+.empty-state {
+  border-color: rgb(var(--c-line, 38 50 71));
+}
+.empty-state-icon {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-accent, 45 212 191));
+}
+.empty-state-title {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.empty-state-desc {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* — Sort Dropdown — */
+.sort-dropdown {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.sort-option {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sort-option:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sort-option--active {
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+/* ============================================
+   Alt Design Dashboard — Light Mode Overrides
+   ============================================ */
+html.light .dashboard-shell {
+  background: rgb(247 249 252);
+}
+html.light .dashboard-main {
+  background: rgb(247 249 252);
+}
+html.light .sidebar-alt {
+  background: rgb(255 255 255);
+  border-right-color: rgb(226 232 240);
+}
+html.light .sidebar-ink {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-muted {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-logo-badge {
+  background: rgb(13 148 136 / 0.12);
+  color: rgb(13 148 136);
+}
+html.light .sidebar-divider,
+html.light .sidebar-divider-top {
+  border-color: rgb(226 232 240);
+}
+html.light .sidebar-nav-active {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-nav-idle {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-nav-idle:hover {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-nav-bg {
+  background: rgb(241 245 249);
+}
+html.light .sidebar-icon-active {
+  color: rgb(13 148 136);
+}
+html.light .sidebar-count-active {
+  background: rgb(13 148 136 / 0.15);
+  color: rgb(13 148 136);
+}
+html.light .sidebar-count-idle {
+  background: rgb(0 0 0 / 0.05);
+  color: rgb(100 116 139);
+}
+html.light .sidebar-btn-ghost {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-btn-ghost:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .sidebar-btn-danger:hover {
+  background: rgb(220 38 38 / 0.08);
+  color: rgb(220 38 38);
+}
+html.light .sidebar-user-card {
+  background: rgb(241 245 249);
+}
+html.light .sidebar-user-avatar {
+  background: rgb(13 148 136 / 0.12);
+  color: rgb(13 148 136);
+}
+
+html.light .dashboard-header {
+  border-bottom-color: rgb(226 232 240);
+  background: rgb(255 255 255);
+}
+html.light .dashboard-title {
+  color: rgb(15 23 42);
+}
+html.light .dashboard-subtitle {
+  color: rgb(100 116 139);
+}
+html.light .dashboard-search-btn {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .dashboard-search-btn:hover {
+  border-color: rgb(13 148 136 / 0.5);
+}
+html.light .dashboard-search-icon,
+html.light .dashboard-search-text {
+  color: rgb(100 116 139);
+}
+html.light .dashboard-kbd {
+  background: rgb(241 245 249);
+  color: rgb(100 116 139);
+}
+html.light .dashboard-action-btn {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+  color: rgb(100 116 139);
+}
+html.light .dashboard-action-btn:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .dashboard-btn-primary {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+
+html.light .recipe-row {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .recipe-row:hover {
+  border-color: rgb(13 148 136 / 0.5);
+}
+html.light .recipe-row--selected {
+  background: rgb(13 148 136 / 0.05);
+  border-color: rgb(13 148 136 / 0.4);
+}
+html.light .recipe-ink {
+  color: rgb(15 23 42);
+}
+html.light .recipe-muted {
+  color: rgb(100 116 139);
+}
+html.light .recipe-badge {
+  background: rgb(241 245 249);
+  color: rgb(100 116 139);
+}
+html.light .recipe-star-active {
+  color: rgb(202 138 4);
+}
+html.light .recipe-star-idle:hover {
+  color: rgb(202 138 4);
+}
+html.light .recipe-star-count {
+  color: rgb(202 138 4);
+}
+html.light .recipe-action-btn-primary {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+html.light .recipe-action-btn {
+  color: rgb(100 116 139);
+}
+html.light .recipe-action-btn:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .recipe-action-btn-danger:hover {
+  background: rgb(220 38 38 / 0.08);
+  color: rgb(220 38 38);
+}
+html.light .recipe-mobile-sheet {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .recipe-mobile-action-bg {
+  background: rgb(241 245 249);
+}
+html.light .recipe-toast {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+html.light .empty-state {
+  border-color: rgb(226 232 240);
+}
+html.light .empty-state-icon {
+  background: rgb(241 245 249);
+  color: rgb(13 148 136);
+}
+html.light .empty-state-title {
+  color: rgb(15 23 42);
+}
+html.light .empty-state-desc {
+  color: rgb(100 116 139);
+}
+html.light .sort-dropdown {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .sort-option {
+  color: rgb(100 116 139);
+}
+html.light .sort-option:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .sort-option--active {
+  color: rgb(13 148 136);
+}

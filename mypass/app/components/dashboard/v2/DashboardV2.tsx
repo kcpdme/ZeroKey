@@ -1,8 +1,7 @@
-// Dashboard V2 - Main Dashboard Component (Proton Pass Style)
+// Dashboard V2 - Main Dashboard Component (Alt Design Style)
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../hooks/useTheme';
 import { ProfileService, PasswordProfile } from '../../../services/ProfileService';
@@ -15,6 +14,7 @@ import { ExportImportModal } from '../ExportImportModal';
 import { QuickSearch } from '../QuickSearch';
 import { ProfileListSkeleton } from '../Skeleton';
 import { VersionHistoryModal } from '../VersionHistoryModal';
+import { seedProfiles } from '../../../data/seedProfiles';
 
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -97,6 +97,14 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
         if (isOpen && user) {
             loadProfiles();
             loadSettings();
+        } else if (isOpen && !user) {
+            // Load seed data ONLY in local development mode
+            if (process.env.NODE_ENV === 'development') {
+                setProfiles(seedProfiles);
+            } else {
+                setProfiles([]);
+            }
+            setLoading(false);
         }
     }, [isOpen, user]);
 
@@ -110,9 +118,22 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 const bTime = b.updatedAt?.toDate?.() || new Date(0);
                 return bTime.getTime() - aTime.getTime();
             });
-            setProfiles(sorted);
+            
+            if (sorted.length > 0) {
+                setProfiles(sorted);
+            } else if (process.env.NODE_ENV === 'development') {
+                // Fallback to seed data in dev if database has 0 items
+                setProfiles(seedProfiles);
+            } else {
+                setProfiles([]);
+            }
         } catch (error) {
             console.error('Failed to load profiles:', error);
+            if (process.env.NODE_ENV === 'development') {
+                setProfiles(seedProfiles);
+            } else {
+                setProfiles([]);
+            }
         } finally {
             setLoading(false);
         }
@@ -173,7 +194,10 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
         if (!deleteTarget?.id) return;
         setIsDeleting(true);
         try {
-            await ProfileService.deleteProfile(deleteTarget.id);
+            // Only call real delete for non-seed profiles
+            if (!deleteTarget.id.startsWith('seed-')) {
+                await ProfileService.deleteProfile(deleteTarget.id);
+            }
             setProfiles(prev => prev.filter(p => p.id !== deleteTarget.id));
             setDeleteTarget(null);
         } catch (error) {
@@ -190,7 +214,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     };
 
     const handleGenerate = async (profile: PasswordProfile) => {
-        if (profile.id) {
+        if (profile.id && !profile.id.startsWith('seed-')) {
             ProfileService.updateLastUsed(profile.id).catch(console.error);
         }
         setSelectedProfile(profile);
@@ -214,10 +238,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex overflow-hidden"
-            style={{ background: 'var(--dashboard-bg)' }}
-        >
+        <div className="fixed inset-0 z-50 flex overflow-hidden dashboard-shell">
             {/* Settings Modal */}
             {user && (
                 <SettingsModal
@@ -286,7 +307,9 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     await loadProfiles();
                     // Update the modal with fresh profile data (don't close it)
                     if (historyProfile?.id) {
-                        const freshProfiles = await ProfileService.getUserProfiles(user!.uid);
+                        const freshProfiles = user
+                            ? await ProfileService.getUserProfiles(user.uid)
+                            : seedProfiles;
                         const updatedProfile = freshProfiles.find(p => p.id === historyProfile.id);
                         if (updatedProfile) {
                             setHistoryProfile(updatedProfile);
@@ -304,7 +327,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
             <MobileDrawer
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
-                userEmail={user?.email || undefined}
+                userEmail={user?.email || 'arjun@dev.io'}
                 onSignOut={handleSignOut}
                 onSettingsClick={() => setShowSettings(true)}
                 stats={stats}
@@ -327,7 +350,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 onSignOut={handleSignOut}
                 onClose={onClose}
                 stats={stats}
-                userEmail={user?.email || undefined}
+                userEmail={user?.email || 'arjun@dev.io'}
                 selectedTagFilter={selectedTagFilter}
                 onTagFilterChange={setSelectedTagFilter}
                 allTags={profiles.flatMap(p => p.tags || [])}
@@ -336,11 +359,10 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
             />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 flex flex-col overflow-hidden relative dashboard-main">
                 {/* Mobile Header */}
                 <MobileHeader
-                    title={getViewTitle()}
-                    subtitle={`${filteredProfiles.length} passwords`}
+                    title={`${getViewTitle()} · ${filteredProfiles.length}`}
                     onMenuToggle={() => setIsMobileMenuOpen(true)}
                     onClose={onClose}
                     theme={theme}
@@ -361,7 +383,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 </div>
 
                 {/* Password List */}
-                <div className="flex-1 overflow-y-auto px-3 md:px-6 py-3 pb-24 md:pb-6">
+                <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 pb-24 md:pb-6">
                     {loading ? (
                         <ProfileListSkeleton count={6} />
                     ) : (

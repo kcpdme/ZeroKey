@@ -1,4 +1,4 @@
-// Dashboard V2 Sidebar - Proton Pass inspired design
+// Dashboard V2 Sidebar - Alt Design style
 'use client';
 
 import React from 'react';
@@ -41,14 +41,13 @@ interface NavItemConfig {
     label: string;
     icon: React.ElementType;
     countKey: keyof DashboardStats;
-    accentColor?: string;
 }
 
 const navItems: NavItemConfig[] = [
     { id: 'all', label: 'All Items', icon: LayoutGrid, countKey: 'total' },
-    { id: 'favorites', label: 'Favorites', icon: Star, countKey: 'favorites', accentColor: 'var(--sidebar-accent-yellow)' },
-    { id: 'secure', label: 'Secure', icon: Shield, countKey: 'secure', accentColor: 'var(--sidebar-accent-cyan)' },
-    { id: 'memorable', label: 'Memorable', icon: Sparkles, countKey: 'memorable', accentColor: 'var(--sidebar-accent-purple)' },
+    { id: 'favorites', label: 'Favorites', icon: Star, countKey: 'favorites' },
+    { id: 'secure', label: 'Secure', icon: Shield, countKey: 'secure' },
+    { id: 'memorable', label: 'Memorable', icon: Sparkles, countKey: 'memorable' },
 ];
 
 export function Sidebar({
@@ -65,149 +64,77 @@ export function Sidebar({
     theme = 'dark',
     onThemeToggle,
 }: SidebarProps) {
+    const initials = userEmail
+        ? userEmail.split('@')[0].slice(0, 2).toUpperCase()
+        : 'U';
+
     return (
-        <aside
-            className="hidden md:flex flex-col h-full w-64 shrink-0"
-            style={{
-                background: 'var(--sidebar-bg)',
-                borderRight: '1px solid var(--sidebar-border)',
-            }}
-        >
-            {/* Logo Section with Back Button */}
-            <div
-                className="p-4 border-b flex items-center gap-3"
-                style={{ borderColor: 'var(--sidebar-border)' }}
-            >
-                {/* Back/Close Button - LEFT side */}
-                <button
-                    onClick={onClose}
-                    className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5 shrink-0"
-                    style={{ color: 'var(--sidebar-text-muted)' }}
-                    title="Close Vault"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
-
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <ZeroKeyLogo 
-                        className="w-7 h-7 shrink-0" 
-                        style={{ color: 'var(--color-cyan-500)' }} 
+        <aside className="hidden md:flex flex-col h-full w-60 shrink-0 sidebar-alt">
+            {/* Logo + brand */}
+            <div className="flex items-center gap-2.5 px-5 pt-5 pb-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl sidebar-logo-badge">
+                    <ZeroKeyLogo
+                        className="w-5 h-5"
+                        style={{ color: 'var(--c-accent, var(--color-cyan-500))' }}
                     />
-                    <div className="min-w-0">
-                        <h1 className="font-bold text-base" style={{ color: 'var(--sidebar-text-primary)' }}>
-                            ZeroKey
-                        </h1>
-                        <p className="text-xs" style={{ color: 'var(--sidebar-text-muted)' }}>
-                            Stateless Password Vault
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Section */}
-            <div
-                className="px-4 py-3 border-b"
-                style={{ borderColor: 'var(--sidebar-border)' }}
-            >
-                <div className="flex items-center gap-3">
-                    <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: 'var(--sidebar-avatar-gradient)' }}
-                    >
-                        <span className="text-white font-semibold text-sm">
-                            {userEmail?.charAt(0).toUpperCase() || 'U'}
-                        </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p
-                            className="text-sm font-medium truncate"
-                            style={{ color: 'var(--sidebar-text-primary)' }}
-                        >
-                            {userEmail?.split('@')[0] || 'User'}
-                        </p>
-                        <p
-                            className="text-xs truncate"
-                            style={{ color: 'var(--sidebar-text-muted)' }}
-                        >
-                            {userEmail}
-                        </p>
-                    </div>
-                </div>
+                </span>
+                <span>
+                    <span className="block text-sm font-semibold leading-tight sidebar-ink">
+                        ZeroKey
+                    </span>
+                    <span className="block text-[11px] sidebar-muted">nothing stored, ever</span>
+                </span>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
-                <div>
-                    <div
-                        className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2"
-                        style={{ color: 'var(--sidebar-text-muted)' }}
-                    >
-                        Vault
-                    </div>
-
-                    <div className="space-y-0.5">
-                        {navItems.map((item) => {
-                            const isActive = activeView === item.id && !selectedTagFilter;
-                            const Icon = item.icon;
-                            const count = stats[item.countKey];
-
-                            return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => {
-                                        onViewChange(item.id);
-                                        onTagFilterChange?.(null);
-                                    }}
-                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative"
-                                    style={{
-                                        background: isActive ? 'var(--sidebar-item-active-bg)' : 'transparent',
-                                        color: isActive ? 'var(--sidebar-item-active-text)' : 'var(--sidebar-text-secondary)',
-                                    }}
-                                >
-                                    {/* Active indicator bar */}
-                                    {isActive && (
-                                        <div
-                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
-                                            style={{ background: 'var(--sidebar-active-indicator)' }}
-                                        />
-                                    )}
-
-                                    <Icon
-                                        className="w-[18px] h-[18px] shrink-0 transition-colors"
-                                        style={{
-                                            color: isActive
-                                                ? item.accentColor || 'var(--sidebar-accent-cyan)'
-                                                : undefined,
-                                        }}
-                                    />
-
-                                    <span className="flex-1 text-left">{item.label}</span>
-
-                                    <span
-                                        className="px-2 py-0.5 rounded-md text-xs font-medium"
-                                        style={{
-                                            background: isActive
-                                                ? 'var(--sidebar-count-active-bg)'
-                                                : 'var(--sidebar-count-bg)',
-                                            color: isActive
-                                                ? 'var(--sidebar-count-active-text)'
-                                                : 'var(--sidebar-text-muted)',
-                                        }}
-                                    >
-                                        {count}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
+            <nav aria-label="Vault" className="mt-5 space-y-0.5 px-3 flex-1 overflow-y-auto">
+                <div
+                    className="text-[10px] font-semibold uppercase tracking-wider px-3 mb-2 sidebar-muted"
+                >
+                    Vault
                 </div>
+
+                {navItems.map(({ id, label, icon: Icon, countKey }) => {
+                    const isActive = activeView === id && !selectedTagFilter;
+                    const count = stats[countKey];
+
+                    return (
+                        <button
+                            key={id}
+                            onClick={() => {
+                                onViewChange(id);
+                                onTagFilterChange?.(null);
+                            }}
+                            className={`
+                                relative w-full flex items-center gap-3 rounded-xl px-3 py-2.5
+                                text-sm font-medium transition-colors
+                                ${isActive ? 'sidebar-nav-active' : 'sidebar-nav-idle'}
+                            `}
+                        >
+                            {/* Animated highlight background */}
+                            {isActive && (
+                                <span className="absolute inset-0 rounded-xl sidebar-nav-bg" />
+                            )}
+
+                            <Icon
+                                className={`relative h-4 w-4 ${isActive ? 'sidebar-icon-active' : ''}`}
+                                aria-hidden
+                            />
+                            <span className="relative flex-1 text-left">{label}</span>
+                            <span
+                                className={`relative px-2 py-0.5 rounded-md text-xs font-medium ${
+                                    isActive ? 'sidebar-count-active' : 'sidebar-count-idle'
+                                }`}
+                            >
+                                {count}
+                            </span>
+                        </button>
+                    );
+                })}
 
                 {/* Tag Categories Filter */}
                 {allTags.length > 0 && onTagFilterChange && (
-                    <div
-                        className="pt-3 border-t"
-                        style={{ borderColor: 'var(--sidebar-border)' }}
-                    >
+                    <div className="mt-4 pt-3 sidebar-divider">
                         <TagFilter
                             selectedTag={selectedTagFilter ?? null}
                             onSelect={onTagFilterChange}
@@ -217,57 +144,63 @@ export function Sidebar({
                 )}
             </nav>
 
-            {/* Bottom Actions */}
-            <div
-                className="p-2 border-t space-y-0.5"
-                style={{ borderColor: 'var(--sidebar-border)' }}
-            >
-                {/* Settings & Theme Toggle Row */}
-                <div className="flex items-center gap-1">
+            {/* Bottom section */}
+            <div className="mt-auto space-y-1 px-3 pb-3 sidebar-divider-top">
+                {/* Theme toggle */}
+                {onThemeToggle && (
                     <button
-                        onClick={onSettingsClick}
-                        className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                        style={{ color: 'var(--sidebar-text-secondary)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        type="button"
+                        onClick={onThemeToggle}
+                        className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
                     >
-                        <Settings className="w-[18px] h-[18px]" />
-                        <span>Settings</span>
+                        {theme === 'dark' ? (
+                            <Sun className="h-4 w-4" />
+                        ) : (
+                            <Moon className="h-4 w-4" />
+                        )}
+                        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                     </button>
+                )}
 
-                    {/* Dark Mode Toggle */}
-                    {onThemeToggle && (
-                        <button
-                            onClick={onThemeToggle}
-                            className="p-2.5 rounded-lg transition-colors shrink-0"
-                            style={{ color: 'var(--sidebar-text-secondary)' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                        >
-                            {theme === 'dark' ? (
-                                <Sun className="w-[18px] h-[18px]" />
-                            ) : (
-                                <Moon className="w-[18px] h-[18px]" />
-                            )}
-                        </button>
-                    )}
+                {/* Settings */}
+                <button
+                    onClick={onSettingsClick}
+                    className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                </button>
+
+                {/* User profile card */}
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 sidebar-user-card">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold sidebar-user-avatar">
+                        {initials}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium sidebar-ink">
+                            {userEmail?.split('@')[0] || 'User'}
+                        </span>
+                        <span className="block truncate text-[11px] sidebar-muted">
+                            {userEmail}
+                        </span>
+                    </span>
                 </div>
 
+                {/* Back to Generator */}
+                <button
+                    onClick={onClose}
+                    className="sidebar-btn-ghost w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Generator</span>
+                </button>
+
+                {/* Sign out */}
                 <button
                     onClick={onSignOut}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{ color: 'var(--sidebar-text-muted)' }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--sidebar-danger-hover-bg)';
-                        e.currentTarget.style.color = 'var(--sidebar-danger-text)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = 'var(--sidebar-text-muted)';
-                    }}
+                    className="sidebar-btn-danger w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
                 >
-                    <LogOut className="w-[18px] h-[18px]" />
+                    <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
                 </button>
             </div>
