@@ -16,6 +16,7 @@ import {
   Save,
   ChevronDown,
   SlidersHorizontal,
+  Brain,
   AlertCircle,
   Eye,
   EyeOff,
@@ -200,10 +201,10 @@ export default function HomePage() {
     masterInputRef.current?.focus();
   }, [resetFields]);
 
-  // Fine-tune summary
+  // Fine-tune / Memory Map summary
   const fineTuneSummary = algorithm === 'pbkdf2'
-    ? `${options.length} chars · rotation ${options.counter}`
-    : `shift ${memorizableOptions.shift} · number ${memorizableOptions.magicNumber}`;
+    ? `${options.length} chars · rotation ${options.counter || 1}`
+    : `shift ${memorizableOptions.shift || 1} · magic #${memorizableOptions.magicNumber || 0}`;
 
   const handleSaveProfile = async () => {
     if (!user || !generatedPassword) return;
@@ -440,9 +441,13 @@ export default function HomePage() {
               className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
               <span className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                <SlidersHorizontal className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-                Fine-tune
-                <span className="text-xs font-normal" style={{ color: 'var(--text-muted)' }}>
+                {algorithm === 'memorizable' ? (
+                  <Brain className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
+                ) : (
+                  <SlidersHorizontal className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
+                )}
+                {algorithm === 'memorizable' ? 'Memory Map' : 'Fine-tune'}
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>
                   {fineTuneSummary}
                 </span>
               </span>

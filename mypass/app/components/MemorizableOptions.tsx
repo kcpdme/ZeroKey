@@ -20,26 +20,34 @@ interface MemorizableOptionsProps {
 /**
  * Compact version for advanced options panel
  */
-const CompactOptions = memo<MemorizableOptionsProps>(({ options, onChange }) => (
+const CompactOptions = memo<MemorizableOptionsProps>(({ options }) => (
     <div className="space-y-4">
         {/* Formula Preview */}
-        <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-            <div className="text-xs text-slate-500 mb-1">Formula</div>
-            <div className="font-mono text-sm text-slate-300">
-                <span className="text-cyan-400">River1</span>
-                <span className="text-slate-500"> + </span>
-                <span className="text-cyan-400">River2</span>
-                <span className="text-slate-500"> + @ + (</span>
-                <span className="text-amber-400">M1</span>
-                <span className="text-slate-500"> × </span>
-                <span className="text-amber-400">M2</span>
-                <span className="text-slate-500"> + </span>
-                <span className="text-green-400">{options.magicNumber}</span>
-                <span className="text-slate-500">) + </span>
-                <span className="text-pink-400">checksum</span>
+        <div
+            className="p-3.5 rounded-xl border transition-colors"
+            style={{
+                background: 'var(--bg-primary)',
+                borderColor: 'var(--border-color)',
+            }}
+        >
+            <div className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                Formula
             </div>
-            <div className="text-xs text-slate-500 mt-2">
-                River2 from letter #{options.shift} of website (then +1)
+            <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                <span style={{ color: 'var(--color-cyan-500)' }}>River1</span>
+                <span style={{ color: 'var(--text-secondary)' }}> + </span>
+                <span style={{ color: 'var(--color-cyan-500)' }}>River2</span>
+                <span style={{ color: 'var(--text-secondary)' }}> + @ + (</span>
+                <span className="text-amber-500 font-semibold">M1</span>
+                <span style={{ color: 'var(--text-secondary)' }}> × </span>
+                <span className="text-amber-500 font-semibold">M2</span>
+                <span style={{ color: 'var(--text-secondary)' }}> + </span>
+                <span style={{ color: 'var(--color-cyan-500)' }}>{options.magicNumber || 0}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>) + </span>
+                <span className="text-pink-500 font-semibold">checksum</span>
+            </div>
+            <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+                River2 from letter #{options.shift || 1} of website (then +1)
             </div>
         </div>
     </div>
@@ -49,70 +57,101 @@ CompactOptions.displayName = 'CompactOptions';
 
 /**
  * Primary input fields version (shown alongside email/site)
- * Simple text inputs - no spinners
  */
 const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ options, onChange }) => (
-    <div className="space-y-4">
-        {/* Shift Position - simple text input */}
-        <div className="relative flex items-center">
-            <div className="absolute left-0 pl-4 text-slate-400">
-                <MoveHorizontal className="w-5 h-5" />
-            </div>
-            <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Shift Position (e.g., 3)"
-                value={options.shift === ('' as any) ? '' : options.shift}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const raw = e.target.value;
-                    if (raw === '') {
-                        onChange('shift', '' as any);
-                    } else {
-                        const val = parseInt(raw, 10);
-                        if (!isNaN(val)) {
-                            onChange('shift', val);
+    <div className="grid gap-4 sm:grid-cols-2">
+        {/* Shift Position */}
+        <div className="w-full">
+            <label
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--text-secondary)' }}
+            >
+                Shift Position
+            </label>
+            <div
+                className="zk-field flex items-center gap-2.5 rounded-xl border px-3.5 transition-colors"
+                style={{
+                    background: 'var(--bg-secondary)',
+                    borderColor: 'var(--border-color)',
+                }}
+            >
+                <MoveHorizontal className="h-4 w-4 shrink-0" style={{ color: 'var(--text-secondary)' }} />
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Shift position (e.g., 3)"
+                    value={options.shift === ('' as any) ? '' : options.shift}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        if (raw === '') {
+                            onChange('shift', '' as any);
+                        } else {
+                            const val = parseInt(raw, 10);
+                            if (!isNaN(val)) {
+                                onChange('shift', val);
+                            }
                         }
-                    }
-                }}
-                onBlur={() => {
-                    if (options.shift === ('' as any) || isNaN(Number(options.shift)) || Number(options.shift) < 1) {
-                        onChange('shift', 1);
-                    }
-                }}
-                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors text-white"
-                aria-label="Shift position - which letter of website to use"
-            />
+                    }}
+                    onBlur={() => {
+                        if (options.shift === ('' as any) || isNaN(Number(options.shift)) || Number(options.shift) < 1) {
+                            onChange('shift', 1);
+                        }
+                    }}
+                    className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+                    style={{ color: 'var(--text-primary)' }}
+                    aria-label="Shift position - which letter of website to use"
+                />
+            </div>
+            <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Letter position of website.
+            </p>
         </div>
 
-        {/* Magic Number - simple text input */}
-        <div className="relative flex items-center">
-            <div className="absolute left-0 pl-4 text-slate-400">
-                <Hash className="w-5 h-5" />
-            </div>
-            <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Magic Number (e.g., 23)"
-                value={options.magicNumber === ('' as any) ? '' : options.magicNumber}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const raw = e.target.value;
-                    if (raw === '') {
-                        onChange('magicNumber', '' as any);
-                    } else {
-                        const val = parseInt(raw, 10);
-                        if (!isNaN(val)) {
-                            onChange('magicNumber', val);
+        {/* Magic Number */}
+        <div className="w-full">
+            <label
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--text-secondary)' }}
+            >
+                Magic Number
+            </label>
+            <div
+                className="zk-field flex items-center gap-2.5 rounded-xl border px-3.5 transition-colors"
+                style={{
+                    background: 'var(--bg-secondary)',
+                    borderColor: 'var(--border-color)',
+                }}
+            >
+                <Hash className="h-4 w-4 shrink-0" style={{ color: 'var(--text-secondary)' }} />
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Magic number (e.g., 23)"
+                    value={options.magicNumber === ('' as any) ? '' : options.magicNumber}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const raw = e.target.value;
+                        if (raw === '') {
+                            onChange('magicNumber', '' as any);
+                        } else {
+                            const val = parseInt(raw, 10);
+                            if (!isNaN(val)) {
+                                onChange('magicNumber', val);
+                            }
                         }
-                    }
-                }}
-                onBlur={() => {
-                    if (options.magicNumber === ('' as any) || isNaN(Number(options.magicNumber))) {
-                        onChange('magicNumber', 0);
-                    }
-                }}
-                className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors text-white"
-                aria-label="Magic number - your secret number added to formula"
-            />
+                    }}
+                    onBlur={() => {
+                        if (options.magicNumber === ('' as any) || isNaN(Number(options.magicNumber))) {
+                            onChange('magicNumber', 0);
+                        }
+                    }}
+                    className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+                    style={{ color: 'var(--text-primary)' }}
+                    aria-label="Magic number - your secret number added to formula"
+                />
+            </div>
+            <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Secret number added to formula.
+            </p>
         </div>
     </div>
 ));
