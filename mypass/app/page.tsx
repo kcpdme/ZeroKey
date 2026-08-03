@@ -68,8 +68,8 @@ function LabeledField({
   return (
     <div className="w-full">
       <label
-        className="mb-1.5 block text-xs font-medium uppercase tracking-wide"
-        style={{ color: 'var(--text-muted)' }}
+        className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+        style={{ color: 'var(--text-secondary)' }}
       >
         {label}
       </label>
@@ -80,7 +80,7 @@ function LabeledField({
           borderColor: 'var(--border-color)',
         }}
       >
-        {icon && <span style={{ color: 'var(--text-muted)' }}>{icon}</span>}
+        {icon && <span style={{ color: 'var(--text-secondary)' }}>{icon}</span>}
         <input
           ref={inputRef}
           type={inputType}
@@ -97,7 +97,7 @@ function LabeledField({
             type="button"
             onClick={() => setRevealed((r) => !r)}
             className="rounded-md p-1 transition-colors shrink-0"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'var(--text-secondary)' }}
             aria-label={revealed ? 'Hide value' : 'Show value'}
           >
             {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -105,7 +105,7 @@ function LabeledField({
         )}
       </div>
       {hint && (
-        <p className="mt-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
           {hint}
         </p>
       )}
