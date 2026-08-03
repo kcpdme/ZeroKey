@@ -8,22 +8,23 @@ import {
   User,
   Globe,
   Hash,
-  ChevronsRight,
-  Settings,
+  AtSign,
   RefreshCw,
   Sparkles,
   Sun,
   Moon,
-  Save
+  Save,
+  ChevronDown,
+  SlidersHorizontal,
+  AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 import { ZeroKeyLogo } from './components/ui/ZeroKeyLogo';
 
 // Modular imports
 import {
-  FormInput,
-  Checkbox,
-  CounterInput,
   PasswordDisplay,
   AlgorithmSelector,
   MemorizableOptions,
@@ -34,6 +35,91 @@ import { TagSelector } from './components/dashboard/TagSelector';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
 import { useAuth } from './context/AuthContext';
 import { ProfileService } from './services/ProfileService';
+
+/* ─── Labeled Field (matching alt design) ─── */
+function LabeledField({
+  label,
+  hint,
+  icon,
+  revealable,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  inputMode,
+  autoComplete,
+  inputRef,
+}: {
+  label: string;
+  hint?: string;
+  icon?: React.ReactNode;
+  revealable?: boolean;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+  inputMode?: 'email' | 'url' | 'numeric' | 'text';
+  autoComplete?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
+}) {
+  const [revealed, setRevealed] = useState(false);
+  const inputType = revealable ? (revealed ? 'text' : 'password') : type;
+
+  return (
+    <div className="w-full">
+      <label
+        className="mb-1.5 block text-xs font-medium uppercase tracking-wide"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        {label}
+      </label>
+      <div
+        className="zk-field flex items-center gap-2.5 rounded-xl border px-3.5 transition-colors"
+        style={{
+          background: 'var(--bg-secondary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
+        {icon && <span style={{ color: 'var(--text-muted)' }}>{icon}</span>}
+        <input
+          ref={inputRef}
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          inputMode={inputMode}
+          autoComplete={autoComplete}
+          className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+          style={{ color: 'var(--text-primary)' }}
+        />
+        {revealable && (
+          <button
+            type="button"
+            onClick={() => setRevealed((r) => !r)}
+            className="rounded-md p-1 transition-colors shrink-0"
+            style={{ color: 'var(--text-muted)' }}
+            aria-label={revealed ? 'Hide value' : 'Show value'}
+          >
+            {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
+      {hint && (
+        <p className="mt-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ─── Charset pill toggles (matching alt design) ─── */
+const charsets: Array<{ key: string; label: string }> = [
+  { key: 'useLowercase', label: 'a-z' },
+  { key: 'useUppercase', label: 'A-Z' },
+  { key: 'useNumbers', label: '0-9' },
+  { key: 'useSymbols', label: '!@#' },
+];
 
 export default function HomePage() {
   // Theme
@@ -81,28 +167,25 @@ export default function HomePage() {
   } = usePasswordGenerator();
 
   // Ref for first input to focus on reset
-  const loginInputRef = useRef<HTMLInputElement>(null);
+  const masterInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-clean hook for security
   const { scheduleClearClipboard } = useAutoClean(
     useCallback(() => {
-      // Clear sensitive data on inactivity
       resetFields();
     }, [resetFields]),
     {
-      inactivityTimeout: 2 * 60 * 1000, // 2 minutes
-      clipboardTimeout: 30 * 1000, // 30 seconds
+      inactivityTimeout: 2 * 60 * 1000,
+      clipboardTimeout: 30 * 1000,
       clearOnBlur: false,
     }
   );
 
-  // Enhanced copy handler that also schedules clipboard clearing
   const handleCopyWithClear = useCallback(async () => {
     await handleCopy();
     scheduleClearClipboard();
   }, [handleCopy, scheduleClearClipboard]);
 
-  // Handle form submission (Enter key)
   const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (canGenerate) {
@@ -110,21 +193,17 @@ export default function HomePage() {
     }
   }, [canGenerate, handleGenerate]);
 
-  // Enhanced reset that focuses the first input
   const handleReset = useCallback(() => {
     resetFields();
     setSelectedTags([]);
     setEditingProfileId(null);
-    loginInputRef.current?.focus();
+    masterInputRef.current?.focus();
   }, [resetFields]);
 
-  // Get algorithm-specific description
-  const getDescription = () => {
-    if (algorithm === 'pbkdf2') {
-      return 'Cryptographically secure password generation.';
-    }
-    return 'Human-memorizable passwords using Indian rivers.';
-  };
+  // Fine-tune summary
+  const fineTuneSummary = algorithm === 'pbkdf2'
+    ? `${options.length} chars · rotation ${options.counter}`
+    : `shift ${memorizableOptions.shift} · number ${memorizableOptions.magicNumber}`;
 
   const handleSaveProfile = async () => {
     if (!user || !generatedPassword) return;
@@ -152,7 +231,6 @@ export default function HomePage() {
       });
     } finally {
       setIsSaving(false);
-      // Auto-clear status after 3 seconds
       setTimeout(() => setSaveStatus(null), 3000);
     }
   };
@@ -168,7 +246,6 @@ export default function HomePage() {
       if (profile.options.length) handleOptionChange('length', profile.options.length);
       if (profile.options.counter) handleOptionChange('counter', profile.options.counter);
       if (profile.options.userSalt) setUserSalt(profile.options.userSalt);
-      // options.useLowercase etc are not in the profile type yet but should be mapped if needed
     } else {
       setMemorizableOptions({
         shift: profile.options.shift,
@@ -177,32 +254,25 @@ export default function HomePage() {
     }
 
     setIsDashboardOpen(false);
-    // Focus master password field after loading
     setTimeout(() => {
-      const inputs = document.querySelectorAll('input');
-      // Find the master password input - it's usually the 3rd one if visible
-      const masterPassInput = Array.from(inputs).find(i => i.placeholder.includes('Master Password'));
-      if (masterPassInput) (masterPassInput as HTMLElement).focus();
+      masterInputRef.current?.focus();
     }, 100);
   }, [setSite, setLogin, setAlgorithm, handleOptionChange, setUserSalt, setMemorizableOptions]);
 
-  // Close dashboard and reset all form fields (when not editing)
   const handleCloseDashboard = useCallback(() => {
     setIsDashboardOpen(false);
-    // Reset all fields to ensure clean state
     resetFields();
     setSelectedTags([]);
     setEditingProfileId(null);
   }, [resetFields]);
 
-  // Prevent hydration mismatch
   if (!mounted) {
     return null;
   }
 
   return (
     <div
-      className="min-h-screen font-sans flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden"
+      className="min-h-screen font-sans flex items-start justify-center px-4 py-8 sm:px-6 lg:py-12 transition-colors duration-300"
       style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
     >
       <DashboardV2
@@ -216,35 +286,25 @@ export default function HomePage() {
         onClose={() => setIsAuthModalOpen(false)}
       />
 
-      {/* Auth & Theme Controls - Top Right */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 z-20">
-        {/* Theme Toggle Button */}
+      {/* Auth & Theme Controls */}
+      <div className="fixed top-4 right-4 sm:top-5 sm:right-6 flex items-center gap-2 z-20">
         <button
           onClick={toggleTheme}
-          className="flex items-center justify-center rounded-xl transition-all duration-300 hover:scale-105 shrink-0 sm:w-10 sm:h-10"
+          className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-200 hover:scale-105"
           style={{
-            width: '36px',
-            height: '36px',
-            minWidth: '36px',
-            minHeight: '36px',
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-color)',
-            color: 'var(--text-secondary)',
+            color: 'var(--text-muted)',
           }}
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {theme === 'dark' ? (
-            <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
-          ) : (
-            <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
-          )}
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* Auth Button */}
         {!user ? (
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium transition-all hover:scale-105"
+            className="h-9 sm:h-10 px-4 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
@@ -256,15 +316,11 @@ export default function HomePage() {
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}
-            className="flex items-center justify-center rounded-xl transition-all hover:scale-105 shrink-0"
+            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-200 hover:scale-105"
             style={{
-              width: '36px',
-              height: '36px',
-              minWidth: '36px',
-              minHeight: '36px',
               background: 'linear-gradient(135deg, var(--color-cyan-600), var(--color-cyan-500))',
               color: 'white',
-              boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
             }}
             title="My Vault"
           >
@@ -273,86 +329,91 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="w-full max-w-md mx-auto relative z-10 pt-14 sm:pt-4">
-        {/* Header - Seamless */}
-        <header className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2 sm:mb-3">
-            <ZeroKeyLogo 
-              className="w-8 h-8 sm:w-10 sm:h-10" 
-              style={{ color: 'var(--color-cyan-500)' }} 
+      <div className="w-full max-w-xl mx-auto">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-center gap-2.5 mb-1">
+            <ZeroKeyLogo
+              className="w-7 h-7"
+              style={{ color: 'var(--color-cyan-500)' }}
             />
             <h1
-              className="text-2xl sm:text-3xl font-bold tracking-tight"
+              className="text-2xl font-semibold tracking-tight sm:text-3xl"
               style={{ color: 'var(--text-primary)' }}
             >
               ZeroKey
             </h1>
           </div>
           <p
-            className="text-sm sm:text-base"
-            style={{ color: 'var(--text-secondary)' }}
+            className="mt-1.5 text-sm"
+            style={{ color: 'var(--text-muted)' }}
           >
-            {getDescription()}
+            Same three ingredients, same result — on any device, without storing a thing.
           </p>
         </header>
 
-        {/* Algorithm Selector */}
-        <AlgorithmSelector
-          algorithm={algorithm}
-          onChange={setAlgorithm}
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Algorithm Picker */}
+          <AlgorithmSelector
+            algorithm={algorithm}
+            onChange={setAlgorithm}
+          />
 
-        {/* Main Form - Seamless */}
-        <main className="mt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Common Fields: Login and Site */}
-            <FormInput
-              ref={loginInputRef}
-              type="text"
-              placeholder="Login (e.g., user@email.com)"
-              value={login}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setLogin(e.target.value)}
-              icon={<User className="w-5 h-5" aria-hidden="true" />}
-              label="Login email or username"
-              inputMode="email"
-              autoComplete="username"
-            />
-
-            <FormInput
-              type="text"
-              placeholder="Site (e.g., google.com)"
-              value={site}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSite(e.target.value)}
-              icon={<Globe className="w-5 h-5" aria-hidden="true" />}
-              label="Website or service name"
-              inputMode="url"
-              autoComplete="off"
-            />
-
-            {/* PBKDF2-specific Fields */}
+          {/* Primary Fields Card */}
+          <div
+            className="space-y-4 rounded-2xl p-5"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            {/* Master key + Salt row */}
             {algorithm === 'pbkdf2' && (
-              <>
-                <FormInput
-                  type="password"
-                  placeholder="Master Password"
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledField
+                  label="Master key"
+                  revealable
                   value={masterPassword}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setMasterPassword(e.target.value)}
-                  icon={<Shield className="w-5 h-5" aria-hidden="true" />}
-                  label="Master password"
+                  onChange={(e) => setMasterPassword(e.target.value)}
+                  placeholder="Secret password"
+                  icon={<KeyRound className="h-4 w-4" />}
+                  hint="Stays on this device for session."
                   autoComplete="current-password"
+                  inputRef={masterInputRef}
                 />
-
-                <FormInput
-                  type="text"
-                  placeholder="User Salt (optional, but recommended)"
+                <LabeledField
+                  label="Salt"
                   value={userSalt}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUserSalt(e.target.value)}
-                  icon={<Hash className="w-5 h-5" aria-hidden="true" />}
-                  label="User salt for additional security"
+                  onChange={(e) => setUserSalt(e.target.value)}
+                  placeholder="optional"
+                  icon={<Hash className="h-4 w-4" />}
+                  hint="User salt for extra security."
                   autoComplete="off"
                 />
-              </>
+              </div>
             )}
+
+            {/* Site + Login row */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <LabeledField
+                label="Site"
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                placeholder="github.com"
+                icon={<Globe className="h-4 w-4" />}
+                inputMode="url"
+                autoComplete="off"
+              />
+              <LabeledField
+                label="Login"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                placeholder="you@company.com"
+                icon={<AtSign className="h-4 w-4" />}
+                inputMode="email"
+                autoComplete="username"
+              />
+            </div>
 
             {/* Memorizable-specific Fields */}
             {algorithm === 'memorizable' && (
@@ -362,220 +423,244 @@ export default function HomePage() {
                 showAsFields={true}
               />
             )}
+          </div>
 
-            {/* Tags Selector - Only for logged in users */}
-            {user && (
-              <div
-                className="rounded-xl p-4 transition-all duration-300"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                <TagSelector
-                  selectedTags={selectedTags}
-                  onChange={setSelectedTags}
-                  showLabel={true}
-                  maxTags={3}
-                />
-              </div>
-            )}
-
-            {/* Advanced Options Panel */}
-            <div
-              className="rounded-xl p-4 transition-all duration-300"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)'
-              }}
+          {/* Fine-tune (Advanced Options) */}
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              aria-expanded={showAdvanced}
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex justify-between items-center w-full transition-colors"
-                style={{ color: 'var(--text-secondary)' }}
-                aria-expanded={showAdvanced}
-                aria-controls="advanced-options"
+              <span className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                <SlidersHorizontal className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+                Fine-tune
+                <span className="text-xs font-normal" style={{ color: 'var(--text-muted)' }}>
+                  {fineTuneSummary}
+                </span>
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`}
+                style={{ color: 'var(--text-muted)' }}
+              />
+            </button>
+
+            {showAdvanced && (
+              <div
+                className="space-y-5 px-4 pb-5"
+                style={{ borderTop: '1px solid var(--border-color)' }}
               >
-                <div className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" style={{ color: 'var(--color-cyan-500)' }} aria-hidden="true" />
-                  <span className="font-medium">
-                    {algorithm === 'pbkdf2' ? 'Advanced Options' : 'Generation Options'}
-                  </span>
-                </div>
-                <ChevronsRight
-                  className={`w-5 h-5 transition-transform duration-300 ${showAdvanced ? 'rotate-90' : ''}`}
-                  aria-hidden="true"
-                />
-              </button>
-
-              {showAdvanced && (
-                <div id="advanced-options" className="mt-6">
-                  {/* PBKDF2 Options */}
-                  {algorithm === 'pbkdf2' && (
-                    <div className="space-y-4">
-                      <CounterInput
-                        label="Counter (Version)"
-                        value={options.counter}
-                        onIncrement={() => handleOptionChange('counter', options.counter + 1)}
-                        onDecrement={() => handleOptionChange('counter', options.counter - 1)}
-                        min={1}
-                      />
-
+                <div className="pt-5">
+                  {algorithm === 'pbkdf2' ? (
+                    <>
+                      {/* Length slider */}
                       <div>
-                        <label
-                          htmlFor="length-slider"
-                          className="flex justify-between items-center mb-2"
-                          style={{ color: 'var(--text-secondary)' }}
-                        >
-                          <span>Length</span>
-                          <span className="font-mono text-lg" style={{ color: 'var(--color-cyan-500)' }} aria-live="polite">
+                        <div className="mb-2 flex items-center justify-between text-sm">
+                          <label htmlFor="length" className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                            Length
+                          </label>
+                          <span className="font-mono" style={{ color: 'var(--color-cyan-500)' }}>
                             {options.length}
                           </span>
+                        </div>
+                        <input
+                          id="length"
+                          type="range"
+                          min={8}
+                          max={48}
+                          value={options.length}
+                          onChange={(e) => handleOptionChange('length', parseInt(e.target.value, 10))}
+                          className="zk-range h-1.5 w-full cursor-pointer appearance-none rounded-full"
+                        />
+                      </div>
+
+                      {/* Character sets - pill toggles */}
+                      <div className="mt-5">
+                        <span className="mb-2 block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          Character sets
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {charsets.map((set) => {
+                            const active = Boolean((options as any)[set.key]);
+                            return (
+                              <button
+                                key={set.key}
+                                type="button"
+                                aria-pressed={active}
+                                onClick={() => handleOptionChange(set.key as any, !active)}
+                                className="rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors"
+                                style={{
+                                  borderColor: active ? 'rgba(16, 185, 129, 0.6)' : 'var(--border-color)',
+                                  background: active ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                                  color: active ? 'var(--color-cyan-500)' : 'var(--text-muted)',
+                                }}
+                              >
+                                {set.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Rotation */}
+                      <div className="mt-5">
+                        <label
+                          htmlFor="counter"
+                          className="mb-1.5 block text-sm font-medium"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Rotation
                         </label>
                         <input
-                          id="length-slider"
-                          type="range"
-                          min="8"
-                          max="64"
-                          value={options.length}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleOptionChange('length', parseInt(e.target.value, 10))
-                          }
-                          className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                          style={{ background: 'var(--bg-tertiary)' }}
-                          aria-valuemin={8}
-                          aria-valuemax={64}
-                          aria-valuenow={options.length}
+                          id="counter"
+                          type="number"
+                          min={1}
+                          value={options.counter}
+                          onChange={(e) => handleOptionChange('counter', Number(e.target.value) || 1)}
+                          className="zk-text-input h-10 w-full max-w-xs rounded-xl border px-3 font-mono text-sm focus:outline-none"
+                          style={{
+                            background: 'var(--bg-primary)',
+                            borderColor: 'var(--border-color)',
+                            color: 'var(--text-primary)',
+                          }}
                         />
+                        <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Bump this to retire a password.
+                        </p>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-2">
-                        <Checkbox
-                          id="lower"
-                          label="Lowercase (a-z)"
-                          checked={options.useLowercase}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleOptionChange('useLowercase', e.target.checked)
-                          }
-                        />
-                        <Checkbox
-                          id="upper"
-                          label="Uppercase (A-Z)"
-                          checked={options.useUppercase}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleOptionChange('useUppercase', e.target.checked)
-                          }
-                        />
-                        <Checkbox
-                          id="numbers"
-                          label="Numbers (0-9)"
-                          checked={options.useNumbers}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleOptionChange('useNumbers', e.target.checked)
-                          }
-                        />
-                        <Checkbox
-                          id="symbols"
-                          label="Symbols (!@#)"
-                          checked={options.useSymbols}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleOptionChange('useSymbols', e.target.checked)
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Memorizable Options */}
-                  {algorithm === 'memorizable' && (
+                    </>
+                  ) : (
+                    /* Memorizable fine-tune */
                     <MemorizableOptions
                       options={memorizableOptions}
                       onChange={handleMemorizableOptionChange}
                     />
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Generate Button */}
-            <div className="pt-4 space-y-3">
-              <button
-                type="submit"
-                disabled={!canGenerate}
-                className="btn-primary w-full flex items-center justify-center gap-3"
-                aria-describedby="generate-hint"
-              >
-                <Sparkles className="w-5 h-5" aria-hidden="true" />
-                {isLoading ? 'Generating...' : 'Generate Password'}
-              </button>
-
-              {/* Save Profile Button (Only if generated and logged in) */}
-              {generatedPassword && user && (
-                <button
-                  type="button"
-                  onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium transition-colors hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg text-cyan-600 dark:text-cyan-400"
-                >
-                  {isSaving ? (
-                    <span>Saving...</span>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save to Vault
-                    </>
-                  )}
-                </button>
-              )}
-
-              {/* Save Status Feedback */}
-              {saveStatus && (
-                <div
-                  className={`text-center text-sm py-2 px-4 rounded-lg ${saveStatus.type === 'success'
-                    ? 'text-green-600 bg-green-500/10'
-                    : 'text-red-500 bg-red-500/10'
-                    }`}
-                >
-                  {saveStatus.message}
-                </div>
-              )}
-
-              <span id="generate-hint" className="sr-only">
-                Press Enter or click to generate password
-              </span>
-            </div>
-          </form>
-
-          {/* Password Display */}
-          <PasswordDisplay
-            password={generatedPassword}
-            isLoading={isLoading}
-            error={error}
-            isVisible={isPasswordVisible}
-            onToggleVisibility={() => setIsPasswordVisible(!isPasswordVisible)}
-            onCopy={handleCopyWithClear}
-            isCopied={isCopied}
-          />
-
-          {/* Reset Button */}
-          <div className="flex justify-center pt-4">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
-              style={{ color: 'var(--text-muted)' }}
-              aria-label="Reset all fields"
-            >
-              <RefreshCw className="w-4 h-4" aria-hidden="true" />
-              <span>Reset</span>
-            </button>
+              </div>
+            )}
           </div>
-        </main>
+
+          {/* Tags Selector - Only for logged in users */}
+          {user && (
+            <div
+              className="rounded-2xl p-4"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)'
+              }}
+            >
+              <TagSelector
+                selectedTags={selectedTags}
+                onChange={setSelectedTags}
+                showLabel={true}
+                maxTags={3}
+              />
+            </div>
+          )}
+
+          {/* Error display */}
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-xl px-3.5 py-3 text-sm"
+              style={{
+                border: '1px solid rgba(220, 38, 38, 0.3)',
+                background: 'rgba(220, 38, 38, 0.1)',
+                color: '#f87171',
+              }}
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {/* Generate Button */}
+          <button
+            type="submit"
+            disabled={!canGenerate}
+            className="btn-primary w-full flex items-center justify-center gap-2.5 h-12 text-base font-medium rounded-xl"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {isLoading ? 'Generating...' : generatedPassword ? 'Generate again' : 'Generate password'}
+          </button>
+        </form>
+
+        {/* Password Result + Save */}
+        {(generatedPassword || isLoading) && (
+          <div className="mt-4">
+            <PasswordDisplay
+              password={generatedPassword}
+              isLoading={isLoading}
+              error={null}
+              isVisible={isPasswordVisible}
+              onToggleVisibility={() => setIsPasswordVisible(!isPasswordVisible)}
+              onCopy={handleCopyWithClear}
+              isCopied={isCopied}
+            />
+
+            {/* Save Profile Button */}
+            {generatedPassword && user && (
+              <button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-colors"
+                style={{
+                  color: 'var(--color-cyan-500)',
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                }}
+              >
+                {isSaving ? (
+                  <span>Saving...</span>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save to Vault
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Save Status Feedback */}
+            {saveStatus && (
+              <div
+                className={`mt-2 text-center text-sm py-2 px-4 rounded-lg ${saveStatus.type === 'success'
+                  ? 'text-green-600 bg-green-500/10'
+                  : 'text-red-500 bg-red-500/10'
+                  }`}
+              >
+                {saveStatus.message}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reset */}
+        <div className="flex justify-center pt-6">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            aria-label="Reset all fields"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Reset</span>
+          </button>
+        </div>
 
         {/* Footer */}
         <p
-          className="text-center text-xs mt-8"
+          className="text-center text-xs mt-6 pb-4"
           style={{ color: 'var(--text-muted)' }}
         >
           {user

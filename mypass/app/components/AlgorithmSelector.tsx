@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Shield, Brain } from 'lucide-react';
+import { ShieldCheck, Waves } from 'lucide-react';
 import { GeneratorType, GENERATORS } from '../lib/generators';
 
 interface AlgorithmSelectorProps {
@@ -9,46 +9,77 @@ interface AlgorithmSelectorProps {
     onChange: (algorithm: GeneratorType) => void;
 }
 
+const modes: Array<{
+    id: GeneratorType;
+    label: string;
+    blurb: string;
+    icon: React.ReactNode;
+}> = [
+    {
+        id: 'pbkdf2',
+        label: 'Maximum strength',
+        blurb: 'Long random-looking string',
+        icon: <ShieldCheck className="h-4 w-4" />,
+    },
+    {
+        id: 'memorizable',
+        label: 'Easy to say',
+        blurb: 'River words you can read aloud',
+        icon: <Waves className="h-4 w-4" />,
+    },
+];
+
 export const AlgorithmSelector = memo<AlgorithmSelectorProps>(({
     algorithm,
     onChange
-}) => {
-    const algorithms: GeneratorType[] = ['pbkdf2', 'memorizable'];
-
-    return (
-        <div
-            className="flex gap-2 p-1 rounded-xl mb-6"
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-            role="tablist"
-            aria-label="Password generation method"
-        >
-            {algorithms.map((alg) => {
-                const info = GENERATORS[alg];
-                const isActive = algorithm === alg;
-                const Icon = alg === 'pbkdf2' ? Shield : Brain;
-
-                return (
-                    <button
-                        key={alg}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => onChange(alg)}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200"
-                        style={{
-                            background: isActive ? 'var(--color-cyan-500)' : 'transparent',
-                            color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                            boxShadow: isActive ? '0 4px 12px rgba(6, 182, 212, 0.3)' : 'none'
-                        }}
-                    >
-                        <Icon className="w-5 h-5" aria-hidden="true" />
-                        <span>{info.name}</span>
-                    </button>
-                );
-            })}
-        </div>
-    );
-});
+}) => (
+    <div
+        role="radiogroup"
+        aria-label="Password style"
+        className="grid grid-cols-2 gap-2 rounded-2xl p-1.5"
+        style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+        }}
+    >
+        {modes.map((mode) => {
+            const active = algorithm === mode.id;
+            return (
+                <button
+                    key={mode.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => onChange(mode.id)}
+                    className="relative rounded-xl px-3 py-2.5 text-left transition-all duration-200"
+                    style={active ? {
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        boxShadow: 'inset 0 0 0 1px rgba(16, 185, 129, 0.4)',
+                    } : {}}
+                >
+                    <span className="flex items-center gap-2">
+                        <span style={{ color: active ? 'var(--color-cyan-500)' : 'var(--text-muted)' }}>
+                            {mode.icon}
+                        </span>
+                        <span>
+                            <span
+                                className="block text-sm font-medium"
+                                style={{ color: active ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                            >
+                                {mode.label}
+                            </span>
+                            <span
+                                className="hidden text-xs sm:block"
+                                style={{ color: 'var(--text-muted)' }}
+                            >
+                                {mode.blurb}
+                            </span>
+                        </span>
+                    </span>
+                </button>
+            );
+        })}
+    </div>
+));
 
 AlgorithmSelector.displayName = 'AlgorithmSelector';
-

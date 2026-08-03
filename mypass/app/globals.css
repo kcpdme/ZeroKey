@@ -17,12 +17,12 @@ html.dark {
   --text-muted: #64748b;
 
   --border-color: rgba(148, 163, 184, 0.2);
-  --border-focus: #06b6d4;
+  --border-focus: #10b981;
 
-  /* Cyan accent palette */
-  --color-cyan-400: #22d3ee;
-  --color-cyan-500: #06b6d4;
-  --color-cyan-600: #0891b2;
+  /* Emerald Green accent palette */
+  --color-cyan-400: #34d399;
+  --color-cyan-500: #10b981;
+  --color-cyan-600: #059669;
 
   /* Slate neutral palette */
   --color-slate-300: #cbd5e1;
@@ -35,10 +35,10 @@ html.dark {
   --color-slate-950: #020617;
 
   /* Premium gradient colors */
-  --gradient-1: #667eea;
-  --gradient-2: #764ba2;
-  --gradient-3: #06b6d4;
-  --gradient-4: #10b981;
+  --gradient-1: #10b981;
+  --gradient-2: #059669;
+  --gradient-3: #10b981;
+  --gradient-4: #34d399;
 
   /* Glass effect */
   --glass-bg: rgba(15, 23, 42, 0.7);
@@ -56,18 +56,18 @@ html.dark {
   --sidebar-text-secondary: #94a3b8;
   --sidebar-text-muted: #64748b;
   --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
-  --sidebar-item-active-bg: rgba(6, 182, 212, 0.12);
+  --sidebar-item-active-bg: rgba(16, 185, 129, 0.12);
   --sidebar-item-active-text: #ffffff;
-  --sidebar-active-indicator: linear-gradient(180deg, #06b6d4, #6366f1);
+  --sidebar-active-indicator: linear-gradient(180deg, #10b981, #059669);
   --sidebar-count-bg: rgba(255, 255, 255, 0.06);
   --sidebar-count-active-bg: rgba(255, 255, 255, 0.15);
   --sidebar-count-active-text: #ffffff;
-  --sidebar-logo-gradient: linear-gradient(135deg, #06b6d4, #6366f1);
-  --sidebar-logo-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
-  --sidebar-avatar-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --sidebar-logo-gradient: linear-gradient(135deg, #10b981, #059669);
+  --sidebar-logo-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  --sidebar-avatar-gradient: linear-gradient(135deg, #10b981, #059669);
   --sidebar-danger-hover-bg: rgba(239, 68, 68, 0.1);
   --sidebar-danger-text: #f87171;
-  --sidebar-accent-cyan: #22d3ee;
+  --sidebar-accent-cyan: #34d399;
   --sidebar-accent-purple: #a855f7;
   --sidebar-accent-yellow: #facc15;
 
@@ -81,12 +81,12 @@ html.dark {
   --card-bg-hover: rgba(255, 255, 255, 0.05);
   --card-border: rgba(255, 255, 255, 0.05);
   --card-border-hover: rgba(255, 255, 255, 0.1);
-  --card-border-selected: rgba(6, 182, 212, 0.4);
-  --card-bg-selected: rgba(6, 182, 212, 0.08);
+  --card-border-selected: rgba(16, 185, 129, 0.4);
+  --card-bg-selected: rgba(16, 185, 129, 0.08);
 
   /* Action Buttons */
-  --btn-primary-gradient: linear-gradient(135deg, #06b6d4, #6366f1);
-  --btn-primary-shadow: 0 4px 20px rgba(6, 182, 212, 0.25);
+  --btn-primary-gradient: linear-gradient(135deg, #10b981, #059669);
+  --btn-primary-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
 }
 
 /* Light Theme */
@@ -104,16 +104,16 @@ html.light {
 
   /* Borders - more visible */
   --border-color: #cbd5e1;
-  --border-focus: #0891b2;
+  --border-focus: #059669;
 
   /* Input specific */
   --input-border: #94a3b8;
   --input-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
-  /* Cyan accent - slightly darker for light mode */
-  --color-cyan-400: #06b6d4;
-  --color-cyan-500: #0891b2;
-  --color-cyan-600: #0e7490;
+  /* Emerald accent - slightly darker for light mode */
+  --color-cyan-400: #10b981;
+  --color-cyan-500: #059669;
+  --color-cyan-600: #047857;
 
   /* Slate - adjusted for light mode contrast */
   --color-slate-300: #334155;
@@ -141,18 +141,18 @@ html.light {
   --sidebar-text-secondary: #475569;
   --sidebar-text-muted: #64748b;
   --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
-  --sidebar-item-active-bg: rgba(6, 182, 212, 0.1);
+  --sidebar-item-active-bg: rgba(16, 185, 129, 0.1);
   --sidebar-item-active-text: #0f172a;
-  --sidebar-active-indicator: linear-gradient(180deg, #0891b2, #4f46e5);
+  --sidebar-active-indicator: linear-gradient(180deg, #059669, #047857);
   --sidebar-count-bg: rgba(0, 0, 0, 0.06);
-  --sidebar-count-active-bg: rgba(6, 182, 212, 0.2);
+  --sidebar-count-active-bg: rgba(16, 185, 129, 0.2);
   --sidebar-count-active-text: #0f172a;
-  --sidebar-logo-gradient: linear-gradient(135deg, #0891b2, #4f46e5);
-  --sidebar-logo-shadow: 0 4px 20px rgba(6, 182, 212, 0.2);
-  --sidebar-avatar-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --sidebar-logo-gradient: linear-gradient(135deg, #059669, #047857);
+  --sidebar-logo-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+  --sidebar-avatar-gradient: linear-gradient(135deg, #059669, #047857);
   --sidebar-danger-hover-bg: rgba(239, 68, 68, 0.1);
   --sidebar-danger-text: #dc2626;
-  --sidebar-accent-cyan: #0891b2;
+  --sidebar-accent-cyan: #059669;
   --sidebar-accent-purple: #7c3aed;
   --sidebar-accent-yellow: #ca8a04;
 
@@ -166,12 +166,12 @@ html.light {
   --card-bg-hover: rgba(255, 255, 255, 0.9);
   --card-border: #e2e8f0;
   --card-border-hover: #cbd5e1;
-  --card-border-selected: rgba(6, 182, 212, 0.5);
-  --card-bg-selected: rgba(6, 182, 212, 0.08);
+  --card-border-selected: rgba(16, 185, 129, 0.5);
+  --card-bg-selected: rgba(16, 185, 129, 0.08);
 
   /* Action Buttons */
-  --btn-primary-gradient: linear-gradient(135deg, #0891b2, #4f46e5);
-  --btn-primary-shadow: 0 4px 20px rgba(6, 182, 212, 0.2);
+  --btn-primary-gradient: linear-gradient(135deg, #059669, #047857);
+  --btn-primary-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
 }
 
 @theme inline {
@@ -494,6 +494,10 @@ body {
    Focus Visible Styles
    ============================================ */
 :focus-visible {
+  outline: none;
+}
+button:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--color-cyan-500);
   outline-offset: 2px;
 }
@@ -717,5 +721,87 @@ input[type="range"]::-moz-range-thumb {
 
 .field-box:focus-within {
   border-color: var(--color-cyan-500) !important;
-  box-shadow: 0 0 0 1px var(--color-cyan-500) !important;
+}
+
+/* ============================================
+   ZeroKey Alt-Design Field Styles
+   ============================================ */
+.zk-field {
+  transition: border-color 0.15s ease;
+}
+
+.zk-field:focus-within {
+  border-color: var(--color-cyan-500) !important;
+}
+
+.zk-input,
+.zk-input:focus,
+.zk-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.zk-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.zk-text-input:focus,
+.zk-text-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--color-cyan-500) !important;
+}
+
+.zk-text-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Alt-design thin range slider */
+.zk-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border-color);
+}
+
+.zk-range::-webkit-slider-runnable-track {
+  background: var(--border-color);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.zk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--color-cyan-500);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s;
+}
+
+.zk-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.zk-range::-moz-range-track {
+  background: var(--border-color);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.zk-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--color-cyan-500);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
