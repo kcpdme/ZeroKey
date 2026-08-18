@@ -1,8 +1,6 @@
 // types/index.ts
 // Type Definitions for the Password Generator
 
-import { ReactNode, ChangeEvent } from 'react';
-
 // Re-export generator types
 export type { GeneratorType } from '../lib/generators';
 
@@ -26,26 +24,6 @@ export interface OptionsState {
     useNumbers: boolean;
     useUppercase: boolean;
     useLowercase: boolean;
-}
-
-export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    icon: ReactNode;
-    label: string;
-}
-
-export interface CheckboxProps {
-    id: string;
-    label: string;
-    checked: boolean;
-    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}
-
-export interface CounterInputProps {
-    label: string;
-    value: number;
-    onIncrement: () => void;
-    onDecrement: () => void;
-    min?: number;
 }
 
 export interface PasswordDisplayProps {

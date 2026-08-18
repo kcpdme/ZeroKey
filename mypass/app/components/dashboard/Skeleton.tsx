@@ -78,29 +78,3 @@ export function ProfileListSkeleton({ count = 5 }: { count?: number }) {
         </div>
     );
 }
-
-// Stats Skeleton
-export function StatsSkeleton() {
-    return (
-        <div className="flex items-center gap-4 px-6 py-3" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-            {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-2">
-                    <Skeleton variant="circular" width={32} height={32} />
-                    <div className="space-y-1">
-                        <Skeleton variant="text" width={40} height={20} />
-                        <Skeleton variant="text" width={60} height={12} />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// Search Skeleton
-export function SearchSkeleton() {
-    return (
-        <div className="px-6 py-4">
-            <Skeleton variant="rectangular" width="100%" height={44} className="rounded-xl" />
-        </div>
-    );
-}

@@ -3,7 +3,6 @@
 
 import { useCallback, useRef, useState, ChangeEvent, FormEvent } from 'react';
 import {
-  Shield,
   KeyRound,
   User,
   Globe,
@@ -385,6 +384,28 @@ export default function HomePage() {
               border: '1px solid var(--border-color)',
             }}
           >
+            {/* Site + Login row */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <LabeledField
+                label="Site"
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                placeholder="github.com"
+                icon={<Globe className="h-4 w-4" />}
+                inputMode="url"
+                autoComplete="off"
+              />
+              <LabeledField
+                label="Login"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                placeholder="you@company.com"
+                icon={<AtSign className="h-4 w-4" />}
+                inputMode="email"
+                autoComplete="username"
+              />
+            </div>
+
             {/* Master key + Salt row */}
             {algorithm === 'pbkdf2' && (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -410,28 +431,6 @@ export default function HomePage() {
                 />
               </div>
             )}
-
-            {/* Site + Login row */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <LabeledField
-                label="Site"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-                placeholder="github.com"
-                icon={<Globe className="h-4 w-4" />}
-                inputMode="url"
-                autoComplete="off"
-              />
-              <LabeledField
-                label="Login"
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                placeholder="you@company.com"
-                icon={<AtSign className="h-4 w-4" />}
-                inputMode="email"
-                autoComplete="username"
-              />
-            </div>
 
             {/* Memorizable-specific Fields */}
             {algorithm === 'memorizable' && (
