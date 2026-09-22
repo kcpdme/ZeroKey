@@ -68,7 +68,7 @@ function LabeledField({
   return (
     <div className="w-full">
       <label
-        className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+        className="mb-1.5 block text-sm font-semibold uppercase tracking-wide"
         style={{ color: 'var(--text-secondary)' }}
       >
         {label}
@@ -89,12 +89,13 @@ function LabeledField({
           placeholder={placeholder}
           inputMode={inputMode}
           autoComplete={autoComplete}
-          className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+          className="zk-input h-11 w-full bg-transparent text-base font-normal tracking-normal focus:outline-none"
           style={{ color: 'var(--text-primary)' }}
         />
         {revealable && (
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => setRevealed((r) => !r)}
             className="rounded-md p-1 transition-colors shrink-0"
             style={{ color: 'var(--text-secondary)' }}
@@ -105,7 +106,7 @@ function LabeledField({
         )}
       </div>
       {hint && (
-        <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+        <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {hint}
         </p>
       )}
@@ -305,7 +306,7 @@ export default function HomePage() {
           <>
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="h-9 sm:h-10 px-4 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
+              className="h-9 sm:h-10 px-4 rounded-xl text-base font-medium transition-all duration-200 hover:scale-105"
               style={{
                 background: 'var(--bg-secondary)',
                 color: 'var(--text-primary)',
@@ -355,14 +356,14 @@ export default function HomePage() {
               style={{ color: 'var(--color-cyan-500)' }}
             />
             <h1
-              className="text-2xl font-semibold tracking-tight sm:text-3xl"
+              className="text-3xl font-semibold tracking-tight sm:text-4xl"
               style={{ color: 'var(--text-primary)' }}
             >
               ZeroKey
             </h1>
           </div>
           <p
-            className="mt-1.5 text-sm"
+            className="mt-1.5 text-base"
             style={{ color: 'var(--text-muted)' }}
           >
             Same three ingredients, same result — on any device, without storing a thing.
@@ -456,14 +457,14 @@ export default function HomePage() {
               aria-expanded={showAdvanced}
               className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
-              <span className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              <span className="flex items-center gap-2 text-base font-medium" style={{ color: 'var(--text-primary)' }}>
                 {algorithm === 'memorizable' ? (
                   <Brain className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                 ) : (
                   <SlidersHorizontal className="h-4 w-4" style={{ color: 'var(--text-secondary)' }} />
                 )}
                 {algorithm === 'memorizable' ? 'Memory Map' : 'Fine-tune'}
-                <span className="text-xs font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>
+                <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-secondary)' }}>
                   {fineTuneSummary}
                 </span>
               </span>
@@ -483,7 +484,7 @@ export default function HomePage() {
                     <>
                       {/* Length slider */}
                       <div>
-                        <div className="mb-2 flex items-center justify-between text-sm">
+                        <div className="mb-2 flex items-center justify-between text-base">
                           <label htmlFor="length" className="font-medium" style={{ color: 'var(--text-primary)' }}>
                             Length
                           </label>
@@ -504,7 +505,7 @@ export default function HomePage() {
 
                       {/* Character sets - pill toggles */}
                       <div className="mt-5">
-                        <span className="mb-2 block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                        <span className="mb-2 block text-base font-medium" style={{ color: 'var(--text-primary)' }}>
                           Character sets
                         </span>
                         <div className="flex flex-wrap gap-2">
@@ -516,7 +517,7 @@ export default function HomePage() {
                                 type="button"
                                 aria-pressed={active}
                                 onClick={() => handleOptionChange(set.key as any, !active)}
-                                className="rounded-lg border px-3 py-1.5 font-mono text-xs transition-colors"
+                                className="rounded-lg border px-3 py-1.5 font-mono text-sm transition-colors"
                                 style={{
                                   borderColor: active ? 'rgba(16, 185, 129, 0.6)' : 'var(--border-color)',
                                   background: active ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
@@ -534,7 +535,7 @@ export default function HomePage() {
                       <div className="mt-5">
                         <label
                           htmlFor="counter"
-                          className="mb-1.5 block text-sm font-medium"
+                          className="mb-1.5 block text-base font-medium"
                           style={{ color: 'var(--text-primary)' }}
                         >
                           Rotation
@@ -560,14 +561,14 @@ export default function HomePage() {
                               handleOptionChange('counter', 1);
                             }
                           }}
-                          className="zk-text-input h-10 w-full max-w-xs rounded-xl border px-3 font-mono text-sm focus:outline-none"
+                          className="zk-text-input h-10 w-full max-w-xs rounded-xl border px-3 font-mono text-base focus:outline-none"
                           style={{
                             background: 'var(--bg-primary)',
                             borderColor: 'var(--border-color)',
                             color: 'var(--text-primary)',
                           }}
                         />
-                        <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
                           Bump this to retire a password.
                         </p>
                       </div>
@@ -606,7 +607,7 @@ export default function HomePage() {
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-2 rounded-xl px-3.5 py-3 text-sm"
+              className="flex items-start gap-2 rounded-xl px-3.5 py-3 text-base"
               style={{
                 border: '1px solid rgba(220, 38, 38, 0.3)',
                 background: 'rgba(220, 38, 38, 0.1)',
@@ -648,7 +649,7 @@ export default function HomePage() {
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={isSaving}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-xl transition-colors"
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-base font-medium rounded-xl transition-colors"
                 style={{
                   color: 'var(--color-cyan-500)',
                   background: 'rgba(16, 185, 129, 0.08)',
@@ -669,7 +670,7 @@ export default function HomePage() {
             {/* Save Status Feedback */}
             {saveStatus && (
               <div
-                className={`mt-2 text-center text-sm py-2 px-4 rounded-lg ${saveStatus.type === 'success'
+                className={`mt-2 text-center text-base py-2 px-4 rounded-lg ${saveStatus.type === 'success'
                   ? 'text-green-600 bg-green-500/10'
                   : 'text-red-500 bg-red-500/10'
                   }`}
@@ -685,7 +686,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-base transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Reset all fields"
           >
@@ -696,7 +697,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <p
-          className="text-center text-xs mt-6 pb-4"
+          className="text-center text-sm mt-6 pb-4"
           style={{ color: 'var(--text-muted)' }}
         >
           {user

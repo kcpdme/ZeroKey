@@ -30,10 +30,10 @@ const CompactOptions = memo<MemorizableOptionsProps>(({ options }) => (
                 borderColor: 'var(--border-color)',
             }}
         >
-            <div className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+            <div className="text-sm font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                 Formula
             </div>
-            <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+            <div className="font-mono text-base" style={{ color: 'var(--text-primary)' }}>
                 <span style={{ color: 'var(--color-cyan-500)' }}>River1</span>
                 <span style={{ color: 'var(--text-secondary)' }}> + </span>
                 <span style={{ color: 'var(--color-cyan-500)' }}>River2</span>
@@ -46,7 +46,7 @@ const CompactOptions = memo<MemorizableOptionsProps>(({ options }) => (
                 <span style={{ color: 'var(--text-secondary)' }}>) + </span>
                 <span className="text-pink-500 font-semibold">checksum</span>
             </div>
-            <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+            <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
                 River2 from letter #{options.shift || 1} of website (then +1)
             </div>
         </div>
@@ -63,7 +63,7 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
         {/* Shift Position */}
         <div className="w-full">
             <label
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+                className="mb-1.5 block text-sm font-semibold uppercase tracking-wide"
                 style={{ color: 'var(--text-secondary)' }}
             >
                 Shift Position
@@ -97,12 +97,12 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
                             onChange('shift', 1);
                         }
                     }}
-                    className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+                    className="zk-input h-11 w-full bg-transparent text-base font-normal tracking-normal focus:outline-none"
                     style={{ color: 'var(--text-primary)' }}
                     aria-label="Shift position - which letter of website to use"
                 />
             </div>
-            <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Letter position of website.
             </p>
         </div>
@@ -110,7 +110,7 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
         {/* Magic Number */}
         <div className="w-full">
             <label
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide"
+                className="mb-1.5 block text-sm font-semibold uppercase tracking-wide"
                 style={{ color: 'var(--text-secondary)' }}
             >
                 Magic Number
@@ -144,12 +144,12 @@ const FieldInputs = memo<Omit<MemorizableOptionsProps, 'showAsFields'>>(({ optio
                             onChange('magicNumber', 0);
                         }
                     }}
-                    className="zk-input h-11 w-full bg-transparent text-sm font-normal tracking-normal focus:outline-none"
+                    className="zk-input h-11 w-full bg-transparent text-base font-normal tracking-normal focus:outline-none"
                     style={{ color: 'var(--text-primary)' }}
                     aria-label="Magic number - your secret number added to formula"
                 />
             </div>
-            <p className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Secret number added to formula.
             </p>
         </div>

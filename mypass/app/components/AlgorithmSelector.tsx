@@ -63,13 +63,13 @@ export const AlgorithmSelector = memo<AlgorithmSelectorProps>(({
                         </span>
                         <span>
                             <span
-                                className="block text-sm font-medium"
+                                className="block text-base font-medium"
                                 style={{ color: active ? 'var(--text-primary)' : 'var(--text-muted)' }}
                             >
                                 {mode.label}
                             </span>
                             <span
-                                className="hidden text-xs sm:block"
+                                className="hidden text-sm sm:block"
                                 style={{ color: 'var(--text-muted)' }}
                             >
                                 {mode.blurb}
