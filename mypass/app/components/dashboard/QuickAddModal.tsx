@@ -6,6 +6,8 @@ import { X, Shield, Sparkles, Eye, EyeOff, Copy, Check, RefreshCw } from 'lucide
 import { ProfileService } from '../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../services/SettingsService';
 import { generatePBKDF2Password, generateMemorizablePassword } from '../../lib/generators';
+import { assertPbkdf2Generatable } from '../../lib/pbkdf2-preflight';
+import { normalizeLogin, normalizeSiteForAlgorithm } from '../../lib/normalize-input';
 import { TagSelector } from './TagSelector';
 
 interface QuickAddModalProps {
@@ -14,9 +16,11 @@ interface QuickAddModalProps {
     userId: string;
     userSettings: UserSettings | null;
     onSuccess: () => void;
+    /** Seconds before the copied password is cleared. 0 keeps it. */
+    clearClipboardAfter?: number;
 }
 
-export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess }: QuickAddModalProps) {
+export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess, clearClipboardAfter = 30 }: QuickAddModalProps) {
     const [site, setSite] = useState('');
     const [login, setLogin] = useState('');
     const [type, setType] = useState<'pbkdf2' | 'memorizable'>('pbkdf2');
@@ -26,6 +30,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const siteInputRef = useRef<HTMLInputElement>(null);
 
     // Focus on open
@@ -52,8 +57,11 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
         if (type === 'pbkdf2' && !masterPass) return;
 
         setSaving(true);
+        setError(null);
         try {
             const settings = userSettings || SettingsService.getDefaultSettings();
+            const normalizedSite = normalizeSiteForAlgorithm(site, type);
+            const normalizedLogin = normalizeLogin(login);
             let password: string;
             let options: any;
 
@@ -67,11 +75,12 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                     useSymbols: settings.pbkdf2.useSymbols,
                     userSalt: settings.pbkdf2.defaultSalt,
                 };
+                assertPbkdf2Generatable(options);
 
                 password = await generatePBKDF2Password({
                     masterPassword: masterPass,
-                    site,
-                    login,
+                    site: normalizedSite,
+                    login: normalizedLogin,
                     ...options,
                 });
             } else {
@@ -81,26 +90,28 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                 };
 
                 password = generateMemorizablePassword(
-                    { login, site },
+                    { login: normalizedLogin, site: normalizedSite },
                     options
                 );
             }
 
-            // Save to database
             await ProfileService.saveProfile({
                 userId,
-                site,
-                login,
+                site: normalizedSite,
+                login: normalizedLogin,
                 algorithm: type,
                 options,
                 ...(selectedTags.length > 0 && { tags: selectedTags }),
             });
+            setSite(normalizedSite);
+            setLogin(normalizedLogin);
 
             setGeneratedPassword(password);
             onSuccess();
 
-        } catch (error) {
-            console.error('Quick add failed:', error);
+        } catch (err) {
+            console.error('Quick add failed:', err);
+            setError(err instanceof Error ? err.message : 'Failed to generate password');
         } finally {
             setSaving(false);
         }
@@ -111,6 +122,11 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
         await navigator.clipboard.writeText(generatedPassword);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        if (clearClipboardAfter > 0) {
+            window.setTimeout(() => {
+                navigator.clipboard.writeText('').catch(() => { });
+            }, clearClipboardAfter * 1000);
+        }
     };
 
     const reset = () => {
@@ -120,6 +136,7 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
         setGeneratedPassword('');
         setPasswordVisible(false);
         setSelectedTags([]);
+        setError(null);
     };
 
     const handleClose = () => {
@@ -226,6 +243,10 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                                 showLabel={true}
                                 maxTags={3}
                             />
+
+                            {error && (
+                                <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>
+                            )}
 
                             {/* Generate Button */}
                             <button

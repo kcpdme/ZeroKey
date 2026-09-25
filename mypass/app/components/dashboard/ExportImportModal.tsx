@@ -4,6 +4,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Download, Upload, Check, AlertTriangle, FileJson } from 'lucide-react';
 import { ProfileService, PasswordProfile } from '../../services/ProfileService';
+import { buildBackup, parseBackup } from '../../lib/backup';
 
 interface ExportImportModalProps {
     isOpen: boolean;
@@ -26,18 +27,10 @@ export function ExportImportModal({
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const exportableCount = profiles.filter((profile) => !profile.id?.startsWith('seed-')).length;
+
     const handleExport = () => {
-        const exportData = {
-            version: '1.0',
-            exportedAt: new Date().toISOString(),
-            profiles: profiles.map(p => ({
-                site: p.site,
-                login: p.login,
-                algorithm: p.algorithm,
-                options: p.options,
-                favorite: p.favorite || false,
-            })),
-        };
+        const exportData = buildBackup(profiles);
 
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -61,23 +54,14 @@ export function ExportImportModal({
         try {
             const text = await file.text();
             const data = JSON.parse(text);
-
-            if (!data.profiles || !Array.isArray(data.profiles)) {
-                throw new Error('Invalid backup file format');
-            }
+            const parsed = parseBackup(data);
 
             let success = 0;
-            let failed = 0;
+            let failed = parsed.invalid;
 
-            for (const profile of data.profiles) {
+            for (const profile of parsed.profiles) {
                 try {
-                    await ProfileService.saveProfile({
-                        userId,
-                        site: profile.site,
-                        login: profile.login,
-                        algorithm: profile.algorithm,
-                        options: profile.options,
-                    });
+                    await ProfileService.importProfile(userId, profile);
                     success++;
                 } catch {
                     failed++;
@@ -153,7 +137,7 @@ export function ExportImportModal({
                                 Export Passwords
                             </h3>
                             <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                                Download a JSON backup of your {profiles.length} saved profiles.
+                                Download a JSON backup of your {exportableCount} saved profiles.
                                 <br /><strong>Note:</strong> Master password is never stored or exported.
                             </p>
                             <button

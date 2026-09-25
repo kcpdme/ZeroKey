@@ -9,6 +9,9 @@ import {
 } from '../lib/generators';
 import { OptionsState } from '../types';
 import { MemorizableOptionsState } from '../components/MemorizableOptions';
+import { normalizeLogin, normalizeSiteForAlgorithm } from '../lib/normalize-input';
+import { assertPbkdf2Generatable } from '../lib/pbkdf2-preflight';
+import { UserSettings } from '../services/SettingsService';
 
 interface UsePasswordGeneratorReturn {
     // Algorithm selection
@@ -49,9 +52,10 @@ interface UsePasswordGeneratorReturn {
     isCopied: boolean;
 
     // Actions
-    handleGenerate: () => Promise<void>;
+    handleGenerate: () => Promise<string>;
     handleCopy: () => Promise<void>;
     resetFields: () => void;
+    applyDefaults: (settings: UserSettings) => void;
 
     // UI state
     showAdvanced: boolean;
@@ -120,42 +124,68 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         setMemorizableOptions(prev => ({ ...prev, [key]: value }));
     }, []);
 
-    // Generate password based on selected algorithm
-    const handleGenerate = useCallback(async () => {
-        // Clear previous state
+    const applyDefaults = useCallback((settings: UserSettings) => {
+        setAlgorithm(settings.preferences.defaultAlgorithm);
+        setUserSalt(settings.pbkdf2.defaultSalt || '');
+        setOptions({
+            counter: settings.pbkdf2.defaultCounter,
+            length: settings.pbkdf2.defaultLength,
+            useSymbols: settings.pbkdf2.useSymbols,
+            useNumbers: settings.pbkdf2.useNumbers,
+            useUppercase: settings.pbkdf2.useUppercase,
+            useLowercase: settings.pbkdf2.useLowercase,
+        });
+        setMemorizableOptions({
+            shift: settings.memorizable.defaultShift,
+            magicNumber: settings.memorizable.defaultMagicNumber,
+        });
+    }, []);
+
+    // Generate password based on selected algorithm.
+    // Site and login are normalized with the same rules the generator uses,
+    // then written back so a later save stores that exact string.
+    const handleGenerate = useCallback(async (): Promise<string> => {
         setIsLoading(true);
         setGeneratedPassword('');
         setError(null);
 
         try {
+            const normalizedSite = normalizeSiteForAlgorithm(site, algorithm);
+            const normalizedLogin = normalizeLogin(login);
+            if (normalizedSite !== site) setSite(normalizedSite);
+            if (normalizedLogin !== login) setLogin(normalizedLogin);
+
             let password: string;
 
             if (algorithm === 'pbkdf2') {
-                // PBKDF2 requires master password
-                if (!masterPassword || !site || !login) {
+                if (!masterPassword || !normalizedSite || !normalizedLogin) {
                     setGeneratedPassword('');
                     setIsLoading(false);
-                    return;
+                    return '';
                 }
+
+                const pbkdf2Options = {
+                    ...options,
+                    counter: Number(options.counter) || 1,
+                };
+                assertPbkdf2Generatable(pbkdf2Options);
 
                 password = await generatePBKDF2Password({
                     masterPassword,
-                    site,
-                    login,
+                    site: normalizedSite,
+                    login: normalizedLogin,
                     userSalt,
-                    ...options,
-                    counter: Number(options.counter) || 1,
+                    ...pbkdf2Options,
                 });
             } else {
-                // Memorizable - no master password needed
-                if (!site || !login) {
+                if (!normalizedSite || !normalizedLogin) {
                     setGeneratedPassword('');
                     setIsLoading(false);
-                    return;
+                    return '';
                 }
 
                 password = generateMemorizablePassword(
-                    { login, site },
+                    { login: normalizedLogin, site: normalizedSite },
                     {
                         shift: Number(memorizableOptions.shift) || 1,
                         magicNumber: Number(memorizableOptions.magicNumber) || 0,
@@ -165,9 +195,11 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
 
             setGeneratedPassword(password);
             setIsPasswordVisible(false);
+            return password;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to generate password');
             setGeneratedPassword('');
+            return '';
         } finally {
             setIsLoading(false);
         }
@@ -259,6 +291,7 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         handleGenerate,
         handleCopy,
         resetFields,
+        applyDefaults,
 
         // UI state
         showAdvanced,

@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import { useCallback, useRef, useState, ChangeEvent, FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, ChangeEvent, FormEvent } from 'react';
 import {
   KeyRound,
   User,
@@ -34,7 +34,9 @@ import { AuthModal } from './components/auth';
 import { TagSelector } from './components/dashboard/TagSelector';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
 import { useAuth } from './context/AuthContext';
-import { ProfileService } from './services/ProfileService';
+import { ProfileService, PasswordProfile } from './services/ProfileService';
+import { SettingsService, UserSettings } from './services/SettingsService';
+import { MemorableMemoryCard } from './components/MemorableMemoryCard';
 
 /* ─── Labeled Field (matching alt design) ─── */
 function LabeledField({
@@ -162,6 +164,7 @@ export default function HomePage() {
     handleGenerate,
     handleCopy,
     resetFields,
+    applyDefaults,
     showAdvanced,
     setShowAdvanced,
     canGenerate,
@@ -169,15 +172,72 @@ export default function HomePage() {
 
   // Ref for first input to focus on reset
   const masterInputRef = useRef<HTMLInputElement>(null);
+  const settingsRef = useRef<UserSettings | null>(null);
+  const formRef = useRef({ site: '', login: '', master: '', editing: null as string | null, generated: '' });
+  const [clipboardSeconds, setClipboardSeconds] = useState(30);
+  const [autoCopy, setAutoCopy] = useState(false);
+  const [vaultProfiles, setVaultProfiles] = useState<PasswordProfile[]>([]);
 
-  // Auto-clean hook for security
+  formRef.current = {
+    site,
+    login,
+    master: masterPassword,
+    editing: editingProfileId,
+    generated: generatedPassword,
+  };
+
+  useEffect(() => {
+    if (!user) {
+      settingsRef.current = null;
+      setVaultProfiles([]);
+      return;
+    }
+
+    let cancelled = false;
+    SettingsService.getSettings(user.uid)
+      .then((settings) => {
+        if (cancelled) return;
+        settingsRef.current = settings;
+        setClipboardSeconds(settings.preferences.clearClipboardAfter);
+        setAutoCopy(settings.preferences.autoCopyOnGenerate);
+        const form = formRef.current;
+        if (!form.site && !form.login && !form.master && !form.generated && !form.editing) {
+          applyDefaults(settings);
+        }
+      })
+      .catch(() => { });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, applyDefaults]);
+
+  useEffect(() => {
+    if (!user || algorithm !== 'memorizable') return;
+
+    let cancelled = false;
+    ProfileService.getUserProfiles(user.uid)
+      .then((profiles) => {
+        if (!cancelled) setVaultProfiles(profiles);
+      })
+      .catch(() => { });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, algorithm]);
+
+  // Auto-clean hook for security. 0 seconds means never clear the clipboard.
   const { scheduleClearClipboard } = useAutoClean(
     useCallback(() => {
       resetFields();
-    }, [resetFields]),
+      if (settingsRef.current) {
+        applyDefaults(settingsRef.current);
+      }
+    }, [resetFields, applyDefaults]),
     {
       inactivityTimeout: 2 * 60 * 1000,
-      clipboardTimeout: 30 * 1000,
+      clipboardTimeout: clipboardSeconds * 1000,
       clearOnBlur: false,
     }
   );
@@ -187,19 +247,29 @@ export default function HomePage() {
     scheduleClearClipboard();
   }, [handleCopy, scheduleClearClipboard]);
 
-  const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (canGenerate) {
-      handleGenerate();
+    if (!canGenerate) return;
+    const password = await handleGenerate();
+    if (password && autoCopy) {
+      try {
+        await navigator.clipboard.writeText(password);
+        scheduleClearClipboard();
+      } catch {
+        // Clipboard permission can be denied; generation still succeeded.
+      }
     }
-  }, [canGenerate, handleGenerate]);
+  }, [canGenerate, handleGenerate, autoCopy, scheduleClearClipboard]);
 
   const handleReset = useCallback(() => {
     resetFields();
     setSelectedTags([]);
     setEditingProfileId(null);
+    if (settingsRef.current) {
+      applyDefaults(settingsRef.current);
+    }
     masterInputRef.current?.focus();
-  }, [resetFields]);
+  }, [resetFields, applyDefaults]);
 
   // Fine-tune / Memory Map summary
   const fineTuneSummary = algorithm === 'pbkdf2'
@@ -212,7 +282,7 @@ export default function HomePage() {
     setSaveStatus(null);
 
     try {
-      await ProfileService.saveProfile({
+      const saved = await ProfileService.saveProfile({
         userId: user.uid,
         site,
         login,
@@ -222,8 +292,12 @@ export default function HomePage() {
           : { ...options, ...memorizableOptions } as any,
         tags: selectedTags,
       });
-      setSaveStatus({ type: 'success', message: editingProfileId ? 'Updated in vault!' : 'Saved to vault!' });
-      setEditingProfileId(null);
+      setSaveStatus({ type: 'success', message: saved.updated ? 'Updated in vault!' : 'Saved to vault!' });
+      setEditingProfileId(saved.id);
+      if (typeof saved.options?.counter === 'number') {
+        handleOptionChange('counter', saved.options.counter);
+      }
+      ProfileService.getUserProfiles(user.uid).then(setVaultProfiles).catch(() => { });
     } catch (error: any) {
       console.error(error);
       setSaveStatus({
@@ -236,36 +310,43 @@ export default function HomePage() {
     }
   };
 
-  const handleLoadProfile = useCallback((profile: any) => {
+  const handleLoadProfile = useCallback((profile: PasswordProfile) => {
     setSite(profile.site);
     setLogin(profile.login);
     setAlgorithm(profile.algorithm);
     setSelectedTags(profile.tags || []);
     setEditingProfileId(profile.id || null);
 
-    if (profile.algorithm === 'pbkdf2') {
-      if (profile.options.length) handleOptionChange('length', profile.options.length);
-      if (profile.options.counter) handleOptionChange('counter', profile.options.counter);
-      if (profile.options.userSalt) setUserSalt(profile.options.userSalt);
-    } else {
-      setMemorizableOptions({
-        shift: profile.options.shift,
-        magicNumber: profile.options.magicNumber
-      });
-    }
+    const saved = profile.options || ({} as PasswordProfile['options']);
+    setOptions({
+      length: typeof saved.length === 'number' ? saved.length : 16,
+      counter: typeof saved.counter === 'number' ? saved.counter : 1,
+      useLowercase: saved.useLowercase !== false,
+      useUppercase: saved.useUppercase !== false,
+      useNumbers: saved.useNumbers !== false,
+      useSymbols: saved.useSymbols !== false,
+    });
+    setUserSalt(saved.userSalt ?? '');
+    setMemorizableOptions({
+      shift: typeof saved.shift === 'number' ? saved.shift : 1,
+      magicNumber: typeof saved.magicNumber === 'number' ? saved.magicNumber : 0,
+    });
 
     setIsDashboardOpen(false);
     setTimeout(() => {
       masterInputRef.current?.focus();
     }, 100);
-  }, [setSite, setLogin, setAlgorithm, handleOptionChange, setUserSalt, setMemorizableOptions]);
+  }, [setSite, setLogin, setAlgorithm, setOptions, setUserSalt, setMemorizableOptions]);
 
   const handleCloseDashboard = useCallback(() => {
     setIsDashboardOpen(false);
     resetFields();
     setSelectedTags([]);
     setEditingProfileId(null);
-  }, [resetFields]);
+    if (settingsRef.current) {
+      applyDefaults(settingsRef.current);
+    }
+  }, [resetFields, applyDefaults]);
 
   if (!mounted) {
     return null;
@@ -418,7 +499,7 @@ export default function HomePage() {
                   placeholder="Secret password"
                   icon={<KeyRound className="h-4 w-4" />}
                   hint="Stays on this device for session."
-                  autoComplete="current-password"
+                  autoComplete="off"
                   inputRef={masterInputRef}
                 />
                 <LabeledField
@@ -442,6 +523,17 @@ export default function HomePage() {
               />
             )}
           </div>
+
+          {algorithm === 'memorizable' && (
+            <MemorableMemoryCard
+              login={login}
+              site={site}
+              shift={Number(memorizableOptions.shift) || 1}
+              magicNumber={Number(memorizableOptions.magicNumber) || 0}
+              editingProfileId={editingProfileId}
+              profiles={vaultProfiles}
+            />
+          )}
 
           {/* Fine-tune (Advanced Options) */}
           <div

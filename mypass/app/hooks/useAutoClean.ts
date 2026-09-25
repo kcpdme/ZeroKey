@@ -59,6 +59,7 @@ export function useAutoClean(
 
     // Schedule clipboard clearing
     const scheduleClearClipboard = useCallback(() => {
+        if (clipboardTimeout <= 0) return;
         if (clipboardTimerRef.current) {
             clearTimeout(clipboardTimerRef.current);
         }

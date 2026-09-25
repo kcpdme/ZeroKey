@@ -5,6 +5,7 @@ import {
     query,
     where,
     getDocs,
+    getDoc,
     doc,
     updateDoc,
     deleteDoc,
@@ -12,6 +13,15 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GeneratorType } from '../lib/generators';
+import { normalizeLogin, normalizeSiteForAlgorithm } from '../lib/normalize-input';
+import {
+    nextRotatedOptions,
+    recipeOutputChanged,
+    snapshotRecipe,
+    withMemorableVersionBump,
+    RecipeOptions,
+} from '../lib/recipe-history';
+import { BackupProfile } from '../lib/backup';
 
 export interface VersionHistoryEntry {
     version: number;           // The counter/version value
@@ -20,6 +30,13 @@ export interface VersionHistoryEntry {
     expiresAt?: any;           // When this password should expire
     length?: number;           // Password length at this version (for secure)
     notes?: string;            // Any notes about this version
+    shift?: number;            // Memorable shift at this version
+    magicNumber?: number;      // Memorable magic number at this version
+    useLowercase?: boolean;
+    useUppercase?: boolean;
+    useNumbers?: boolean;
+    useSymbols?: boolean;
+    userSalt?: string;
 }
 
 export interface PasswordPolicy {
@@ -82,20 +99,41 @@ function removeUndefined<T extends Record<string, any>>(obj: T): T {
     ) as T;
 }
 
-// Helper: Normalize site URL (lowercase, remove protocol, www, trailing slashes)
-function normalizeSite(site: string): string {
-    return site
-        .toLowerCase()
-        .trim()
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .replace(/\/+$/, '')
-        .replace(/\?.*$/, '');
+function isoToTimestamp(value: unknown): Timestamp | undefined {
+    if (!value || typeof value !== 'string') return undefined;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return Timestamp.fromDate(date);
 }
 
-// Helper: Normalize login/email (lowercase, trim)
-function normalizeLogin(login: string): string {
-    return login.toLowerCase().trim();
+function historyFromBackup(entries: BackupProfile['versionHistory']): VersionHistoryEntry[] | undefined {
+    if (!entries?.length) return undefined;
+    return entries.map((entry) => removeUndefined({
+        version: entry.version,
+        changedAt: isoToTimestamp(entry.changedAt),
+        expiresAt: isoToTimestamp(entry.expiresAt),
+        reason: entry.reason,
+        notes: entry.notes,
+        length: entry.length,
+        shift: entry.shift,
+        magicNumber: entry.magicNumber,
+        useLowercase: entry.useLowercase,
+        useUppercase: entry.useUppercase,
+        useNumbers: entry.useNumbers,
+        useSymbols: entry.useSymbols,
+        userSalt: entry.userSalt,
+    }));
+}
+
+function policyFromBackup(policy: BackupProfile['passwordPolicy']): PasswordPolicy | undefined {
+    if (!policy) return undefined;
+    return removeUndefined({
+        expiryDays: policy.expiryDays,
+        autoRemind: policy.autoRemind,
+        reminderDays: policy.reminderDays,
+        lastRotatedAt: isoToTimestamp(policy.lastRotatedAt),
+        nextExpiryAt: isoToTimestamp(policy.nextExpiryAt),
+    });
 }
 
 // Helper: Wrap operation with timeout
@@ -149,11 +187,11 @@ async function withRetry<T>(
 
 export const ProfileService = {
     // Save or Update a profile with timeout and retry (tracks version history automatically)
-    saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ id: string; updated: boolean; options: PasswordProfile['options'] }> => {
         return withRetry(async () => {
             return withTimeout(async () => {
-                // Normalize site and login for consistent storage
-                const normalizedSite = normalizeSite(profile.site);
+                // Use the same normalizer as the generator that will rebuild this password.
+                const normalizedSite = normalizeSiteForAlgorithm(profile.site, profile.algorithm);
                 const normalizedLogin = normalizeLogin(profile.login);
 
                 // Check if duplicate exists (same user, site, login, algorithm)
@@ -175,32 +213,42 @@ export const ProfileService = {
                     const docId = existingDoc.id;
                     const ref = doc(db, COLLECTION_NAME, docId);
 
-                    // Check if version (counter) changed - if so, add to history
-                    const oldVersion = existingData.options?.counter || 1;
-                    const newVersion = profile.options?.counter || 1;
-                    let versionHistory = existingData.versionHistory || [];
+                    const previousOptions = (existingData.options || {}) as RecipeOptions;
+                    let nextOptions = { ...profile.options } as PasswordProfile['options'];
+                    if (profile.algorithm === 'memorizable') {
+                        nextOptions = withMemorableVersionBump(previousOptions, nextOptions);
+                    }
 
-                    if (newVersion !== oldVersion) {
-                        // Add the OLD version to history before updating
+                    let versionHistory = existingData.versionHistory || [];
+                    if (recipeOutputChanged(profile.algorithm, previousOptions, nextOptions)) {
+                        const snap = snapshotRecipe(
+                            previousOptions,
+                            (previousOptions.counter ?? 1) !== (nextOptions.counter ?? 1)
+                                && (previousOptions.shift ?? 1) === (nextOptions.shift ?? 1)
+                                && (previousOptions.magicNumber ?? 0) === (nextOptions.magicNumber ?? 0)
+                                ? 'Version rotated'
+                                : 'Options updated'
+                        );
                         versionHistory = [
                             ...versionHistory,
                             {
-                                version: oldVersion,
-                                changedAt: existingData.updatedAt || existingData.createdAt,
-                                length: existingData.options?.length,
-                                reason: 'Version rotated',
+                                ...snap,
+                                changedAt: existingData.updatedAt || existingData.createdAt || timestamp,
                             }
                         ];
                     }
 
                     await updateDoc(ref, removeUndefined({
-                        options: profile.options,
+                        options: nextOptions,
                         tags: profile.tags,
+                        notes: profile.notes,
+                        customFields: profile.customFields,
+                        favorite: profile.favorite,
                         versionHistory: versionHistory.length > 0 ? versionHistory : undefined,
                         passwordPolicy: profile.passwordPolicy,
                         updatedAt: timestamp
                     }));
-                    return docId;
+                    return { id: docId, updated: true, options: nextOptions };
                 } else {
                     // Create new profile - DON'T add initial version to history
                     // History should only contain PAST versions (rotated away from)
@@ -213,8 +261,55 @@ export const ProfileService = {
                         createdAt: timestamp,
                         updatedAt: timestamp
                     }));
-                    return docRef.id;
+                    return { id: docRef.id, updated: false, options: profile.options };
                 }
+            }, TIMEOUT_MS);
+        });
+    },
+
+    // Restore one profile from a backup. Replaces history instead of appending a new row.
+    importProfile: async (userId: string, profile: BackupProfile): Promise<string> => {
+        return withRetry(async () => {
+            return withTimeout(async () => {
+                const normalizedSite = normalizeSiteForAlgorithm(profile.site, profile.algorithm);
+                const normalizedLogin = normalizeLogin(profile.login);
+                const q = query(
+                    collection(db, COLLECTION_NAME),
+                    where("userId", "==", userId),
+                    where("site", "==", normalizedSite),
+                    where("login", "==", normalizedLogin),
+                    where("algorithm", "==", profile.algorithm)
+                );
+                const querySnapshot = await getDocs(q);
+                const timestamp = Timestamp.now();
+                const versionHistory = historyFromBackup(profile.versionHistory);
+                const passwordPolicy = policyFromBackup(profile.passwordPolicy);
+                const payload = removeUndefined({
+                    userId,
+                    site: normalizedSite,
+                    login: normalizedLogin,
+                    algorithm: profile.algorithm,
+                    options: profile.options,
+                    favorite: profile.favorite || false,
+                    tags: profile.tags || [],
+                    notes: profile.notes || '',
+                    customFields: profile.customFields || [],
+                    versionHistory: versionHistory || [],
+                    passwordPolicy,
+                    updatedAt: timestamp,
+                });
+
+                if (!querySnapshot.empty) {
+                    const ref = doc(db, COLLECTION_NAME, querySnapshot.docs[0].id);
+                    await updateDoc(ref, payload);
+                    return ref.id;
+                }
+
+                const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+                    ...payload,
+                    createdAt: timestamp,
+                });
+                return docRef.id;
             }, TIMEOUT_MS);
         });
     },
@@ -297,36 +392,35 @@ export const ProfileService = {
         return withRetry(async () => {
             return withTimeout(async () => {
                 const ref = doc(db, COLLECTION_NAME, id);
-                const docSnap = await getDocs(query(
-                    collection(db, COLLECTION_NAME),
-                    where("__name__", "==", id)
-                ));
+                const docSnap = await getDoc(ref);
 
-                if (docSnap.empty) {
+                if (!docSnap.exists()) {
                     throw new Error('Profile not found');
                 }
 
-                const existingData = docSnap.docs[0].data() as PasswordProfile;
+                const existingData = docSnap.data() as PasswordProfile;
                 const timestamp = Timestamp.now();
-                const oldVersion = existingData.options?.counter || 1;
-                const newVersion = oldVersion + 1;
+                const previousOptions = (existingData.options || {}) as RecipeOptions;
+                const rotated = nextRotatedOptions(existingData.algorithm, previousOptions);
+                const snap = snapshotRecipe(previousOptions, reason);
 
-                // Add current version to history
                 const historyEntry: VersionHistoryEntry = {
-                    version: oldVersion,
+                    ...snap,
                     changedAt: existingData.updatedAt || existingData.createdAt || timestamp,
-                    length: existingData.options?.length || 16,
-                    reason: reason,
                 };
 
                 const versionHistory = [...(existingData.versionHistory || []), historyEntry];
 
                 // Build update object - only include fields that have values
                 const updateData: Record<string, any> = {
-                    'options.counter': newVersion,
+                    'options.counter': rotated.counter,
                     versionHistory: versionHistory,
                     updatedAt: timestamp
                 };
+
+                if (existingData.algorithm === 'memorizable') {
+                    updateData['options.magicNumber'] = rotated.magicNumber;
+                }
 
                 // Build password policy object
                 const newPolicy: Record<string, any> = {
@@ -346,7 +440,7 @@ export const ProfileService = {
 
                 await updateDoc(ref, updateData);
 
-                return { newVersion };
+                return { newVersion: rotated.counter ?? 1 };
             }, TIMEOUT_MS);
         });
     },
@@ -381,16 +475,13 @@ export const ProfileService = {
     getVersionHistory: async (id: string): Promise<VersionHistoryEntry[]> => {
         return withRetry(async () => {
             return withTimeout(async () => {
-                const docSnap = await getDocs(query(
-                    collection(db, COLLECTION_NAME),
-                    where("__name__", "==", id)
-                ));
+                const docSnap = await getDoc(doc(db, COLLECTION_NAME, id));
 
-                if (docSnap.empty) {
+                if (!docSnap.exists()) {
                     return [];
                 }
 
-                const data = docSnap.docs[0].data() as PasswordProfile;
+                const data = docSnap.data() as PasswordProfile;
                 return data.versionHistory || [];
             }, TIMEOUT_MS);
         });

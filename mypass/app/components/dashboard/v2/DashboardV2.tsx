@@ -281,6 +281,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     userId={user.uid}
                     userSettings={userSettings}
                     onSuccess={loadProfiles}
+                    clearClipboardAfter={userSettings?.preferences.clearClipboardAfter ?? 30}
                 />
             )}
 
@@ -299,6 +300,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
             <GenerateModal
                 profile={selectedProfile}
                 onClose={() => setSelectedProfile(null)}
+                clearClipboardAfter={userSettings?.preferences.clearClipboardAfter ?? 30}
             />
 
             {/* Delete Modal */}

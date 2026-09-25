@@ -4,7 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, History, Clock, RotateCcw, Shield, Sparkles, AlertTriangle, ChevronRight, KeyRound } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { PasswordProfile, VersionHistoryEntry, ProfileService } from '../../services/ProfileService';
+import { PasswordProfile, ProfileService } from '../../services/ProfileService';
+import { optionsForHistoryEntry } from '../../lib/recipe-history';
 
 interface VersionHistoryModalProps {
     profile: PasswordProfile | null;
@@ -99,13 +100,12 @@ export function VersionHistoryModal({
     };
 
     const handleRegenerateOldVersion = (version: number) => {
-        // Create a modified profile with the old version's counter
+        const entry = [...history].reverse().find((item) => item.version === version);
         const modifiedProfile = {
             ...profile,
-            options: {
-                ...profile.options,
-                counter: version
-            }
+            options: entry
+                ? optionsForHistoryEntry(profile.options, entry)
+                : { ...profile.options, counter: version }
         };
         onRegenerateVersion(modifiedProfile, version);
     };
@@ -230,6 +230,11 @@ export function VersionHistoryModal({
                             {isSecure && (
                                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                     {profile.options.length} chars
+                                </span>
+                            )}
+                            {!isSecure && (
+                                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    shift {profile.options.shift ?? 1} · magic {profile.options.magicNumber ?? 0}
                                 </span>
                             )}
                         </div>
@@ -404,7 +409,9 @@ export function VersionHistoryModal({
                                             </p>
                                             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                                 {formatDate(entry.changedAt)}
-                                                {entry.length && ` • ${entry.length} chars`}
+                                                {isSecure && entry.length ? ` • ${entry.length} chars` : ''}
+                                                {!isSecure && entry.shift !== undefined ? ` • shift ${entry.shift}` : ''}
+                                                {!isSecure && entry.magicNumber !== undefined ? ` • magic ${entry.magicNumber}` : ''}
                                             </p>
                                         </div>
                                     </div>

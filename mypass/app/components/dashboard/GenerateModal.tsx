@@ -5,32 +5,35 @@ import React, { useState } from 'react';
 import { X, Globe, User, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { PasswordProfile } from '../../services/ProfileService';
 import { generatePBKDF2Password, generateMemorizablePassword } from '../../lib/generators';
+import { assertPbkdf2Generatable } from '../../lib/pbkdf2-preflight';
+import { normalizeLogin, normalizeSiteForAlgorithm } from '../../lib/normalize-input';
 
 interface GenerateModalProps {
     profile: PasswordProfile | null;
     onClose: () => void;
+    /** Seconds before the copied password is cleared. 0 keeps it. */
+    clearClipboardAfter?: number;
 }
 
-export function GenerateModal({ profile, onClose }: GenerateModalProps) {
+export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: GenerateModalProps) {
     const [masterPassword, setMasterPassword] = useState('');
     const [generatedPassword, setGeneratedPassword] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     if (!profile) return null;
 
     const handleGenerate = async () => {
         setIsGenerating(true);
+        setError(null);
         try {
             let password: string;
 
             if (profile.algorithm === 'pbkdf2') {
                 if (!masterPassword) return;
-                password = await generatePBKDF2Password({
-                    masterPassword,
-                    site: profile.site,
-                    login: profile.login,
+                const pbkdf2Options = {
                     userSalt: profile.options.userSalt || '',
                     counter: profile.options.counter,
                     length: profile.options.length,
@@ -38,18 +41,29 @@ export function GenerateModal({ profile, onClose }: GenerateModalProps) {
                     useNumbers: profile.options.useNumbers,
                     useUppercase: profile.options.useUppercase,
                     useLowercase: profile.options.useLowercase,
+                };
+                assertPbkdf2Generatable(pbkdf2Options);
+                password = await generatePBKDF2Password({
+                    masterPassword,
+                    site: normalizeSiteForAlgorithm(profile.site, 'pbkdf2'),
+                    login: normalizeLogin(profile.login),
+                    ...pbkdf2Options,
                 });
             } else {
                 password = generateMemorizablePassword(
-                    { login: profile.login, site: profile.site },
+                    {
+                        login: normalizeLogin(profile.login),
+                        site: normalizeSiteForAlgorithm(profile.site, 'memorizable'),
+                    },
                     { shift: profile.options.shift, magicNumber: profile.options.magicNumber }
                 );
             }
 
             setGeneratedPassword(password);
             setPasswordVisible(false);
-        } catch (error) {
-            console.error('Generation failed:', error);
+        } catch (err) {
+            console.error('Generation failed:', err);
+            setError(err instanceof Error ? err.message : 'Failed to generate password');
         } finally {
             setIsGenerating(false);
         }
@@ -60,6 +74,11 @@ export function GenerateModal({ profile, onClose }: GenerateModalProps) {
         await navigator.clipboard.writeText(generatedPassword);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        if (clearClipboardAfter > 0) {
+            window.setTimeout(() => {
+                navigator.clipboard.writeText('').catch(() => { });
+            }, clearClipboardAfter * 1000);
+        }
     };
 
     const handleClose = () => {
@@ -153,6 +172,10 @@ export function GenerateModal({ profile, onClose }: GenerateModalProps) {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {error && (
+                    <p className="mb-4 text-sm" style={{ color: '#f87171' }}>{error}</p>
                 )}
 
                 {/* Actions */}

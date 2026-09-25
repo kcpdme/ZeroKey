@@ -31,19 +31,33 @@ To deploy this application on Vercel or any other hosting provider, you must set
 
 ## Firestore Security Rules
 
-Make sure your Firestore rules are set:
+Rules live in [`firestore.rules`](firestore.rules). Deploy them with:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Updates must keep `userId` equal to the signed-in user, so a profile cannot be reassigned to someone else:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /password_profiles/{document} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    function signedIn() {
+      return request.auth != null;
     }
-    
+
+    match /password_profiles/{document} {
+      allow read: if signedIn() && request.auth.uid == resource.data.userId;
+      allow create: if signedIn() && request.auth.uid == request.resource.data.userId;
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.userId
+        && request.auth.uid == request.resource.data.userId;
+      allow delete: if signedIn() && request.auth.uid == resource.data.userId;
+    }
+
     match /user_settings/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if signedIn() && request.auth.uid == userId;
     }
   }
 }
