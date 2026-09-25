@@ -1,0 +1,1304 @@
+@import "tailwindcss";
+
+/* ============================================
+   Premium Design System - ZeroKey
+   ============================================ */
+
+/* Dark Theme (default) */
+:root,
+html.dark {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #151d2a;
+  --bg-tertiary: #1e293b;
+  --bg-input: #1e2a3c;
+
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+
+  --border-color: rgba(255, 255, 255, 0.16);
+  --border-focus: #10b981;
+
+  /* Emerald Green accent palette */
+  --color-cyan-400: #34d399;
+  --color-cyan-500: #10b981;
+  --color-cyan-600: #059669;
+
+  /* Slate neutral palette */
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  /* Premium gradient colors */
+  --gradient-1: #10b981;
+  --gradient-2: #059669;
+  --gradient-3: #10b981;
+  --gradient-4: #34d399;
+
+  /* Glass effect */
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(148, 163, 184, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* ============================================
+     Dashboard V2 - Proton Pass Style Variables
+     ============================================ */
+
+  /* Sidebar */
+  --sidebar-bg: linear-gradient(180deg, #0d1424 0%, #111827 100%);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-text-primary: #f8fafc;
+  --sidebar-text-secondary: #94a3b8;
+  --sidebar-text-muted: #64748b;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-item-active-bg: rgba(16, 185, 129, 0.12);
+  --sidebar-item-active-text: #ffffff;
+  --sidebar-active-indicator: linear-gradient(180deg, #10b981, #059669);
+  --sidebar-count-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-count-active-bg: rgba(255, 255, 255, 0.15);
+  --sidebar-count-active-text: #ffffff;
+  --sidebar-logo-gradient: linear-gradient(135deg, #10b981, #059669);
+  --sidebar-logo-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  --sidebar-avatar-gradient: linear-gradient(135deg, #10b981, #059669);
+  --sidebar-danger-hover-bg: rgba(239, 68, 68, 0.1);
+  --sidebar-danger-text: #f87171;
+  --sidebar-accent-cyan: #34d399;
+  --sidebar-accent-purple: #a855f7;
+  --sidebar-accent-yellow: #facc15;
+
+  /* Dashboard Main */
+  --dashboard-bg: linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #111827 100%);
+  --dashboard-header-bg: rgba(15, 23, 42, 0.8);
+  --dashboard-header-border: rgba(255, 255, 255, 0.06);
+
+  /* Password Cards */
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --card-bg-hover: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.05);
+  --card-border-hover: rgba(255, 255, 255, 0.1);
+  --card-border-selected: rgba(16, 185, 129, 0.4);
+  --card-bg-selected: rgba(16, 185, 129, 0.08);
+
+  /* Action Buttons */
+  --btn-primary-gradient: linear-gradient(135deg, #10b981, #059669);
+  --btn-primary-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+}
+
+/* Light Theme */
+html.light {
+  /* Backgrounds - soft grays instead of pure white */
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --bg-input: #ffffff;
+
+  /* Text - strong contrast */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
+  /* Borders - more visible */
+  --border-color: #cbd5e1;
+  --border-focus: #059669;
+
+  /* Input specific */
+  --input-border: #94a3b8;
+  --input-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Emerald accent - slightly darker for light mode */
+  --color-cyan-400: #10b981;
+  --color-cyan-500: #059669;
+  --color-cyan-600: #047857;
+
+  /* Slate - adjusted for light mode contrast */
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* Glass effect - light version with more depth */
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #cbd5e1;
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  /* ============================================
+     Dashboard V2 - Light Theme Variables
+     ============================================ */
+
+  /* Sidebar */
+  --sidebar-bg: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --sidebar-border: #e2e8f0;
+  --sidebar-text-primary: #0f172a;
+  --sidebar-text-secondary: #475569;
+  --sidebar-text-muted: #64748b;
+  --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+  --sidebar-item-active-bg: rgba(16, 185, 129, 0.1);
+  --sidebar-item-active-text: #0f172a;
+  --sidebar-active-indicator: linear-gradient(180deg, #059669, #047857);
+  --sidebar-count-bg: rgba(0, 0, 0, 0.06);
+  --sidebar-count-active-bg: rgba(16, 185, 129, 0.2);
+  --sidebar-count-active-text: #0f172a;
+  --sidebar-logo-gradient: linear-gradient(135deg, #059669, #047857);
+  --sidebar-logo-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+  --sidebar-avatar-gradient: linear-gradient(135deg, #059669, #047857);
+  --sidebar-danger-hover-bg: rgba(239, 68, 68, 0.1);
+  --sidebar-danger-text: #dc2626;
+  --sidebar-accent-cyan: #059669;
+  --sidebar-accent-purple: #7c3aed;
+  --sidebar-accent-yellow: #ca8a04;
+
+  /* Dashboard Main */
+  --dashboard-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  --dashboard-header-bg: rgba(255, 255, 255, 0.9);
+  --dashboard-header-border: #e2e8f0;
+
+  /* Password Cards */
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-bg-hover: rgba(255, 255, 255, 0.9);
+  --card-border: #e2e8f0;
+  --card-border-hover: #cbd5e1;
+  --card-border-selected: rgba(16, 185, 129, 0.5);
+  --card-bg-selected: rgba(16, 185, 129, 0.08);
+
+  /* Action Buttons */
+  --btn-primary-gradient: linear-gradient(135deg, #059669, #047857);
+  --btn-primary-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ============================================
+   Animated Gradient Background
+   ============================================ */
+.animated-gradient-bg {
+  background: linear-gradient(-45deg,
+      var(--color-slate-950),
+      var(--color-slate-900),
+      #0c1929,
+      #0a1628);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-gradient-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(102, 126, 234, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(6, 182, 212, 0.1), transparent),
+    radial-gradient(ellipse 50% 30% at 40% 80%, rgba(118, 75, 162, 0.1), transparent);
+  pointer-events: none;
+  animation: orbFloat 20s ease-in-out infinite alternate;
+}
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes orbFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(20px, -20px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Glassmorphism Card
+   ============================================ */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      transparent 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================
+   Premium Button Styles
+   ============================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-cyan-500) 0%, var(--color-cyan-600) 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 15px rgba(6, 182, 212, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 25px rgba(6, 182, 212, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: var(--color-slate-600);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.btn-primary:hover::after {
+  transform: translateX(100%);
+}
+
+/* ============================================
+   Premium Input Styles  
+   ============================================ */
+.input-glass {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  color: white;
+  font-size: 1rem;
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-glass:focus {
+  outline: none;
+  border-color: var(--color-cyan-500);
+  box-shadow:
+    0 0 0 3px rgba(6, 182, 212, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.input-glass::placeholder {
+  color: var(--color-slate-400);
+}
+
+/* ============================================
+   Fade-in Animations
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animation-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+/* ============================================
+   Base Body Styles
+   ============================================ */
+body {
+  background: var(--color-slate-950);
+  color: #fff;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ============================================
+   Screen Reader Only Utility
+   ============================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================
+   Loading Spinner Animation
+   ============================================ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   Skeleton Loading Animation
+   ============================================ */
+@keyframes skeletonPulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes skeletonWave {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-skeleton-pulse {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.animate-skeleton-wave {
+  background: linear-gradient(90deg,
+      var(--bg-tertiary) 25%,
+      var(--bg-secondary) 50%,
+      var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: skeletonWave 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Pulse Glow Effect
+   ============================================ */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.5);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Focus Visible Styles
+   ============================================ */
+:focus-visible {
+  outline: none;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-cyan-500);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Custom Range Slider
+   ============================================ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, var(--color-cyan-600), var(--color-cyan-400));
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(6, 182, 212, 0.2);
+  transition: all 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 5px rgba(6, 182, 212, 0.3);
+}
+
+input[type="range"]::-moz-range-track {
+  background: linear-gradient(90deg, var(--color-cyan-600), var(--color-cyan-400));
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Checkbox Premium Styles
+   ============================================ */
+.checkbox-premium {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-slate-500);
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.checkbox-premium:checked {
+  background: linear-gradient(135deg, var(--color-cyan-500), var(--color-cyan-600));
+  border-color: var(--color-cyan-500);
+}
+
+.checkbox-premium:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-premium:hover {
+  border-color: var(--color-cyan-400);
+}
+
+/* ============================================
+   Password Display Box
+   ============================================ */
+.password-display {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 12px;
+  font-family: var(--font-mono, monospace);
+  position: relative;
+  overflow: hidden;
+}
+
+.password-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-cyan-400), transparent);
+}
+
+/* ============================================
+   Mobile Touch Target Sizing
+   ============================================ */
+@media (max-width: 640px) {
+
+  button,
+  input,
+  [role="button"] {
+    min-height: 48px;
+  }
+
+  .glass-card {
+    border-radius: 20px;
+  }
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-slate-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-600);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-500);
+}
+
+/* ============================================
+   Auth Modal - Alt Design Animations
+   ============================================ */
+@keyframes authModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authContentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authPointSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.auth-modal-enter {
+  animation: authModalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-content-enter {
+  animation: authContentFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.auth-point-enter {
+  opacity: 0;
+  animation: authPointSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Auth modal input placeholder styling */
+.auth-modal-enter input::placeholder,
+.auth-fullscreen input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Auth Fullscreen Focus & Input Styles */
+.auth-input,
+.auth-input:focus,
+.auth-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: normal;
+}
+
+.field-box:focus-within {
+  border-color: var(--color-cyan-500) !important;
+}
+
+/* ============================================
+   ZeroKey Alt-Design Field Styles
+   ============================================ */
+.zk-field {
+  transition: border-color 0.15s ease;
+}
+
+.zk-field:focus-within {
+  border-color: var(--color-cyan-500) !important;
+}
+
+.zk-input,
+.zk-input:focus,
+.zk-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.zk-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.zk-text-input:focus,
+.zk-text-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--color-cyan-500) !important;
+}
+
+.zk-text-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+/* Alt-design thin range slider */
+.zk-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border-color);
+}
+
+.zk-range::-webkit-slider-runnable-track {
+  background: var(--border-color);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.zk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--color-cyan-500);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s;
+}
+
+.zk-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.zk-range::-moz-range-track {
+  background: var(--border-color);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.zk-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--color-cyan-500);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   Dashboard V2 – Alt Design System
+   ============================================ */
+
+/* — Shell — */
+.dashboard-shell {
+  background: rgb(var(--c-bg, 8 12 20));
+  font-family: 'Inter', var(--font-sans, system-ui, sans-serif);
+}
+
+.dashboard-main {
+  background: rgb(var(--c-bg, 8 12 20));
+}
+
+/* — Sidebar — */
+.sidebar-alt {
+  background: rgb(var(--c-surface, 15 22 35));
+  border-right: 1px solid rgb(var(--c-line, 38 50 71));
+}
+
+.sidebar-ink {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sidebar-muted {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.sidebar-logo-badge {
+  background: rgb(var(--c-accent, 45 212 191) / 0.15);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+.sidebar-divider {
+  border-top: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.sidebar-divider-top {
+  border-top: 1px solid rgb(var(--c-line, 38 50 71));
+  padding-top: 0.75rem;
+}
+
+/* Nav items */
+.sidebar-nav-active {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sidebar-nav-idle {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-nav-idle:hover {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.sidebar-nav-bg {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+
+.sidebar-icon-active {
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+/* Counts */
+.sidebar-count-active {
+  background: rgb(var(--c-accent, 45 212 191) / 0.18);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+.sidebar-count-idle {
+  background: rgb(var(--c-line, 38 50 71) / 0.5);
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* Ghost button */
+.sidebar-btn-ghost {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-btn-ghost:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+/* Danger button */
+.sidebar-btn-danger {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-btn-danger:hover {
+  background: rgb(var(--c-danger, 248 113 113) / 0.1);
+  color: rgb(var(--c-danger, 248 113 113));
+}
+
+/* User card */
+.sidebar-user-card {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+.sidebar-user-avatar {
+  background: rgb(var(--c-accent, 45 212 191) / 0.15);
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+.sidebar-action-icon {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-action-icon:hover {
+  background: rgb(var(--c-surface, 15 22 35));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.sidebar-action-icon-danger {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sidebar-action-icon-danger:hover {
+  background: rgb(var(--c-danger, 248 113 113) / 0.15);
+  color: rgb(var(--c-danger, 248 113 113));
+}
+
+/* — Dashboard Header — */
+.dashboard-header {
+  border-bottom: 1px solid rgb(var(--c-line, 38 50 71));
+  background: rgb(var(--c-surface, 15 22 35));
+}
+.dashboard-title {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.dashboard-subtitle {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.dashboard-search-btn {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.dashboard-search-btn:hover {
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.5);
+}
+.dashboard-search-icon {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.dashboard-search-text {
+  color: rgb(var(--c-muted, 141 157 181) / 0.7);
+}
+.dashboard-kbd {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.dashboard-action-btn {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.dashboard-action-btn:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.dashboard-btn-primary {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px -12px rgb(0 0 0 / 0.25);
+}
+.dashboard-btn-primary:hover {
+  filter: brightness(1.1);
+}
+.dashboard-btn-primary:active {
+  filter: brightness(0.95);
+}
+
+/* — Recipe Row (PasswordCard) — */
+.recipe-row {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+  cursor: pointer;
+}
+.recipe-row:hover {
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.5);
+}
+.recipe-row--selected {
+  background: rgb(var(--c-accent, 45 212 191) / 0.06);
+  border-color: rgb(var(--c-accent, 45 212 191) / 0.4);
+}
+
+.recipe-ink {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.recipe-muted {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+.recipe-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* Star */
+.recipe-star-active {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+.recipe-star-idle {
+  color: rgb(var(--c-muted, 141 157 181));
+  opacity: 0;
+}
+.group:hover .recipe-star-idle {
+  opacity: 1;
+}
+.recipe-star-idle:hover {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+
+.recipe-star-count {
+  color: rgb(var(--c-warn, 250 204 21));
+}
+
+/* Action buttons */
+.recipe-action-btn-primary {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+}
+.recipe-action-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.recipe-action-btn {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.recipe-action-btn:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+
+.recipe-action-btn-danger {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.recipe-action-btn-danger:hover {
+  background: rgb(var(--c-danger, 248 113 113) / 0.1);
+  color: rgb(var(--c-danger, 248 113 113));
+}
+
+/* Mobile bottom sheet */
+.recipe-mobile-sheet {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.recipe-mobile-action-bg {
+  background: rgb(var(--c-elevated, 23 32 48));
+}
+
+/* Bulk delete */
+.recipe-bulk-delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+/* Toast */
+.recipe-toast {
+  background: rgb(var(--c-accent, 45 212 191));
+  color: rgb(var(--c-accent-ink, 4 20 22));
+  box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.4);
+}
+
+/* — Empty State — */
+.empty-state {
+  border-color: rgb(var(--c-line, 38 50 71));
+}
+.empty-state-icon {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-accent, 45 212 191));
+}
+.empty-state-title {
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.empty-state-desc {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+
+/* — Sort Dropdown — */
+.sort-dropdown {
+  background: rgb(var(--c-surface, 15 22 35));
+  border: 1px solid rgb(var(--c-line, 38 50 71));
+}
+.sort-option {
+  color: rgb(var(--c-muted, 141 157 181));
+}
+.sort-option:hover {
+  background: rgb(var(--c-elevated, 23 32 48));
+  color: rgb(var(--c-ink, 232 240 252));
+}
+.sort-option--active {
+  color: rgb(var(--c-accent, 45 212 191));
+}
+
+/* ============================================
+   Alt Design Dashboard — Light Mode Overrides
+   ============================================ */
+html.light .dashboard-shell {
+  background: rgb(247 249 252);
+}
+html.light .dashboard-main {
+  background: rgb(247 249 252);
+}
+html.light .sidebar-alt {
+  background: rgb(255 255 255);
+  border-right-color: rgb(226 232 240);
+}
+html.light .sidebar-ink {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-muted {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-logo-badge {
+  background: rgb(13 148 136 / 0.12);
+  color: rgb(13 148 136);
+}
+html.light .sidebar-divider,
+html.light .sidebar-divider-top {
+  border-color: rgb(226 232 240);
+}
+html.light .sidebar-nav-active {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-nav-idle {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-nav-idle:hover {
+  color: rgb(15 23 42);
+}
+html.light .sidebar-nav-bg {
+  background: rgb(241 245 249);
+}
+html.light .sidebar-icon-active {
+  color: rgb(13 148 136);
+}
+html.light .sidebar-count-active {
+  background: rgb(13 148 136 / 0.15);
+  color: rgb(13 148 136);
+}
+html.light .sidebar-count-idle {
+  background: rgb(0 0 0 / 0.05);
+  color: rgb(100 116 139);
+}
+html.light .sidebar-btn-ghost {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-btn-ghost:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .sidebar-btn-danger:hover {
+  background: rgb(220 38 38 / 0.08);
+  color: rgb(220 38 38);
+}
+html.light .sidebar-user-card {
+  background: rgb(241 245 249);
+}
+html.light .sidebar-user-avatar {
+  background: rgb(13 148 136 / 0.12);
+  color: rgb(13 148 136);
+}
+html.light .sidebar-action-icon {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-action-icon:hover {
+  background: rgb(226 232 240);
+  color: rgb(15 23 42);
+}
+html.light .sidebar-action-icon-danger {
+  color: rgb(100 116 139);
+}
+html.light .sidebar-action-icon-danger:hover {
+  background: rgb(220 38 38 / 0.1);
+  color: rgb(220 38 38);
+}
+
+html.light .dashboard-header {
+  border-bottom-color: rgb(226 232 240);
+  background: rgb(255 255 255);
+}
+html.light .dashboard-title {
+  color: rgb(15 23 42);
+}
+html.light .dashboard-subtitle {
+  color: rgb(100 116 139);
+}
+html.light .dashboard-search-btn {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .dashboard-search-btn:hover {
+  border-color: rgb(13 148 136 / 0.5);
+}
+html.light .dashboard-search-icon,
+html.light .dashboard-search-text {
+  color: rgb(100 116 139);
+}
+html.light .dashboard-kbd {
+  background: rgb(241 245 249);
+  color: rgb(100 116 139);
+}
+html.light .dashboard-action-btn {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+  color: rgb(100 116 139);
+}
+html.light .dashboard-action-btn:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .dashboard-btn-primary {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+
+html.light .recipe-row {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .recipe-row:hover {
+  border-color: rgb(13 148 136 / 0.5);
+}
+html.light .recipe-row--selected {
+  background: rgb(13 148 136 / 0.05);
+  border-color: rgb(13 148 136 / 0.4);
+}
+html.light .recipe-ink {
+  color: rgb(15 23 42);
+}
+html.light .recipe-muted {
+  color: rgb(100 116 139);
+}
+html.light .recipe-badge {
+  background: rgb(241 245 249);
+  color: rgb(100 116 139);
+}
+html.light .recipe-star-active {
+  color: rgb(202 138 4);
+}
+html.light .recipe-star-idle:hover {
+  color: rgb(202 138 4);
+}
+html.light .recipe-star-count {
+  color: rgb(202 138 4);
+}
+html.light .recipe-action-btn-primary {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+html.light .recipe-action-btn {
+  color: rgb(100 116 139);
+}
+html.light .recipe-action-btn:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .recipe-action-btn-danger:hover {
+  background: rgb(220 38 38 / 0.08);
+  color: rgb(220 38 38);
+}
+html.light .recipe-mobile-sheet {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .recipe-mobile-action-bg {
+  background: rgb(241 245 249);
+}
+html.light .recipe-toast {
+  background: rgb(13 148 136);
+  color: rgb(255 255 255);
+}
+html.light .empty-state {
+  border-color: rgb(226 232 240);
+}
+html.light .empty-state-icon {
+  background: rgb(241 245 249);
+  color: rgb(13 148 136);
+}
+html.light .empty-state-title {
+  color: rgb(15 23 42);
+}
+html.light .empty-state-desc {
+  color: rgb(100 116 139);
+}
+html.light .sort-dropdown {
+  background: rgb(255 255 255);
+  border-color: rgb(226 232 240);
+}
+html.light .sort-option {
+  color: rgb(100 116 139);
+}
+html.light .sort-option:hover {
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+html.light .sort-option--active {
+  color: rgb(13 148 136);
+}
