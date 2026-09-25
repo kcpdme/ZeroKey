@@ -13,7 +13,9 @@ The web app lives in [`Web/`](Web/). An Android client is planned and will live 
 
 Do not change [`Web/app/lib/generators/pbkdf2-generator.ts`](Web/app/lib/generators/pbkdf2-generator.ts) or [`Web/app/lib/generators/memorizable-generator.ts`](Web/app/lib/generators/memorizable-generator.ts). People already use the passwords those functions produce.
 
-## Run the web app
+## Get started
+
+You can generate a password without an account. Sign-in, saved profiles, and backup need your own Firebase project. ZeroKey does not read a `google-services.json` or a service-account file. Configuration is environment variables only.
 
 ```bash
 cd Web
@@ -22,7 +24,35 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Fill `.env.local` from your own Firebase project before signing in. Variable names are listed in [Web/DEPLOYMENT.md](Web/DEPLOYMENT.md).
+Open [http://localhost:3000](http://localhost:3000).
+
+### Firebase
+
+1. Create a project in the [Firebase console](https://console.firebase.google.com/).
+2. Add a **Web** app. Project settings → General → Your apps shows the config object.
+3. Copy those values into `Web/.env.local`. Leave this file on your machine. It is gitignored.
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+4. Authentication → Sign-in method: enable **Email/Password** and **Google**. Firebase already authorizes `localhost`.
+5. Firestore → Create database. The app uses the database id `default`.
+6. Deploy [Web/firestore.rules](Web/firestore.rules) so one user cannot read another user's recipes:
+
+```bash
+cd Web
+npx firebase-tools deploy --only firestore:rules
+```
+
+Restart `npm run dev` after you edit `.env.local`.
+
+`NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is optional. It turns on App Check. The reCAPTCHA **secret** stays in the Firebase App Check console. It is not an env var in this app. Hosting steps are in [Web/DEPLOYMENT.md](Web/DEPLOYMENT.md). If you deploy on Vercel, set the project Root Directory to `Web`.
 
 ```bash
 npm run test:run

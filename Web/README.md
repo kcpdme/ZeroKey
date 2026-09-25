@@ -15,4 +15,4 @@ npm run dev
 | `npm run lint` | Lint |
 | `npm run build` | Production build |
 
-Firebase setup is in [DEPLOYMENT.md](DEPLOYMENT.md).
+First-time Firebase setup is in the [repository README](../README.md#firebase). Hosting steps are in [DEPLOYMENT.md](DEPLOYMENT.md).
