@@ -1,15 +1,19 @@
 package top.kcpd.zerokey
 
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.PopupMenu
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.ListPopupWindow
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.os.Bundle
+import android.text.TextPaint
 import android.text.TextUtils
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -37,11 +41,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlin.math.ceil
 
 class VaultActivity : AppActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var operation: Job? = null
-    private var overflowMenu: PopupMenu? = null
+    private var overflowMenu: ListPopupWindow? = null
     private var cloud: Cloud? = null
     private var owner: String? = null
     private var renderedAccount: Cloud.Account? = null
@@ -489,15 +494,16 @@ class VaultActivity : AppActivity() {
         val service = requireNotNull(cloud)
         if (profile.userId != service.auth.uid || appLocked) return
         val entries = listOf(
-            RecipeAction("Generate", R.drawable.ic_key) { select(profile) },
-            RecipeAction("Rotate", R.drawable.ic_rotate) { rotationActions(profile) },
-            RecipeAction("Edit", R.drawable.ic_edit) { editRecipe(profile) },
+            RecipeAction("Generate", R.drawable.ic_key, accent) { select(profile) },
+            RecipeAction("Rotate", R.drawable.ic_rotate, getColor(R.color.recipe_action_rotate)) { rotationActions(profile) },
+            RecipeAction("Edit", R.drawable.ic_edit, getColor(R.color.recipe_action_edit)) { editRecipe(profile) },
             RecipeAction(if (profile.favorite) "Unstar" else "Star",
-                if (profile.favorite) R.drawable.ic_star_small else R.drawable.ic_star_outline) {
+                if (profile.favorite) R.drawable.ic_star_small else R.drawable.ic_star_outline,
+                getColor(R.color.recipe_action_star)) {
                 write(profile, "Updating favorite…") { service.vault.favorite(profile.id, !profile.favorite) }
             },
-            RecipeAction("Category", R.drawable.ic_tag) { editCategories(profile) },
-            RecipeAction("Delete", R.drawable.ic_delete) {
+            RecipeAction("Category", R.drawable.ic_tag, getColor(R.color.recipe_action_category)) { editCategories(profile) },
+            RecipeAction("Delete", R.drawable.ic_delete, errorColor) {
                 showProtectedDialog(AlertDialog.Builder(this).setTitle("Delete ${profile.site}?")
                     .setMessage("This removes the recipe and its version history from your vault.")
                     .setPositiveButton("Delete") { _, _ ->
@@ -506,25 +512,63 @@ class VaultActivity : AppActivity() {
             },
         )
         overflowMenu?.dismiss()
-        val popup = PopupMenu(this, anchor, Gravity.END)
-        popup.setForceShowIcon(true)
-        entries.forEachIndexed { index, action ->
-            val icon = getDrawable(action.icon)?.mutate()
-            icon?.setTint(if (action.icon == R.drawable.ic_delete) errorColor else muted)
-            popup.menu.add(0, index + 1, index, action.label).icon = icon
-        }
-        popup.setOnMenuItemClickListener { item ->
+        val popup = buildRecipeMenu(anchor, entries)
+        popup.setOnItemClickListener { _, _, position, _ ->
+            popup.dismiss()
             if (profile.userId == service.auth.uid && !appLocked) {
-                entries[item.itemId - 1].run()
+                entries[position].run()
             }
-            true
         }
         popup.setOnDismissListener { if (overflowMenu === popup) overflowMenu = null }
         overflowMenu = popup
         popup.show()
     }
 
-    private data class RecipeAction(val label: String, val icon: Int, val run: () -> Unit)
+    private fun buildRecipeMenu(anchor: View, entries: List<RecipeAction>): ListPopupWindow {
+        val sidePadding = dp(12)
+        val iconSize = dp(20)
+        val iconGap = dp(10)
+        val labelSize = 15f
+        val labelTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        val paint = TextPaint().apply {
+            typeface = labelTypeface
+            textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, labelSize, resources.displayMetrics)
+        }
+        val labelWidth = ceil(entries.maxOf { paint.measureText(it.label) }).toInt()
+        val frame = Rect().also(anchor::getWindowVisibleDisplayFrame)
+        val menuWidth = (2 * sidePadding + iconSize + iconGap + labelWidth).coerceAtMost(frame.width())
+        val rows = object : ArrayAdapter<RecipeAction>(this, 0, entries) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val action = requireNotNull(getItem(position))
+                val row = convertView as? TextView ?: text("", labelSize, inkColor).apply {
+                    typeface = labelTypeface
+                    gravity = Gravity.CENTER_VERTICAL
+                    minimumHeight = dp(48)
+                    setPaddingRelative(sidePadding, 0, sidePadding, 0)
+                    compoundDrawablePadding = iconGap
+                    maxLines = 1
+                    ellipsize = TextUtils.TruncateAt.END
+                }
+                row.text = action.label
+                val icon = AppCompatResources.getDrawable(this@VaultActivity, action.icon)?.mutate()
+                icon?.setTint(action.tint)
+                icon?.setBounds(0, 0, iconSize, iconSize)
+                row.setCompoundDrawablesRelative(icon, null, null, null)
+                return row
+            }
+        }
+        return ListPopupWindow(this).apply {
+            anchorView = anchor
+            setDropDownGravity(Gravity.END)
+            isModal = true
+            inputMethodMode = ListPopupWindow.INPUT_METHOD_NOT_NEEDED
+            setBackgroundDrawable(rounded(surface, 14, strokeColor))
+            setContentWidth(menuWidth)
+            setAdapter(rows)
+        }
+    }
+
+    private data class RecipeAction(val label: String, val icon: Int, val tint: Int, val run: () -> Unit)
 
     private fun history(profile: VaultStore.Profile) {
         val entries = profile.history.withIndex().reversed()

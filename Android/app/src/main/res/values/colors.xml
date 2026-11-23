@@ -10,5 +10,9 @@
     <color name="action_container">#E2ECFF</color>
     <color name="on_action">#FFFFFF</color>
     <color name="error_text">#A02534</color>
+    <color name="recipe_action_rotate">#167583</color>
+    <color name="recipe_action_edit">#764AB5</color>
+    <color name="recipe_action_star">#946105</color>
+    <color name="recipe_action_category">#A54379</color>
     <bool name="light_system_bars">true</bool>
 </resources>
