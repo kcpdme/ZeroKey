@@ -39,5 +39,8 @@
     <item name="account_email" type="id" />
     <item name="account_password" type="id" />
     <item name="email_sign_in" type="id" />
+    <item name="account_progress_title" type="id" />
+    <item name="account_progress_spinner" type="id" />
+    <item name="vault_progress_spinner" type="id" />
     <item name="confirm_version" type="id" />
 </resources>

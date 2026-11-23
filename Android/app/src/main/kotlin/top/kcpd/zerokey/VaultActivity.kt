@@ -2,7 +2,6 @@ package top.kcpd.zerokey
 
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -26,33 +25,36 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 class VaultActivity : AppActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private var observe: Job? = null
     private var operation: Job? = null
     private var overflowMenu: PopupMenu? = null
-    private val authListener = FirebaseAuth.AuthStateListener { render(it.currentUser) }
     private var cloud: Cloud? = null
     private var owner: String? = null
+    private var renderedAccount: Cloud.Account? = null
     private lateinit var status: TextView
     private lateinit var sync: TextView
+    private lateinit var emptyMark: View
+    private lateinit var emptySpinner: View
     private lateinit var emptyTitle: TextView
     private lateinit var emptyDetail: TextView
     private lateinit var openGenerator: View
     private lateinit var adapter: RecipeAdapter
     private var syncState = Cloud.Sync.CONNECTING
+    private var cacheLoaded = false
     private var profiles = emptyList<VaultStore.Profile>()
     private var search = ""
     private var category: String? = null
@@ -62,28 +64,33 @@ class VaultActivity : AppActivity() {
     private var renderedCategories = emptyList<RecipeCategory>()
     private var useSiteIcons = false
     private val visibleIcons = mutableSetOf<Job>()
-    private val signIn = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        render(cloud?.auth?.currentUser)
-    }
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        cloud = Cloud.get(this)
+        val service = Cloud.get(this)
+        cloud = service
         if (Build.VERSION.SDK_INT >= 34) {
             overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, R.anim.tab_enter, R.anim.tab_exit)
             overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, R.anim.tab_enter, R.anim.tab_exit)
+        }
+        render(service?.account?.value)
+        if (service != null) lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                service.account.collectLatest { account ->
+                    render(account)
+                    if (account is Cloud.Account.SignedIn) observeRecipes(service, account.uid)
+                }
+            }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        render(cloud?.auth?.currentUser)
-        if (!isFinishing) cloud?.auth?.addAuthStateListener(authListener)
+        useSiteIcons = AppPreferences.icons(this)
+        render(cloud?.account?.value)
     }
 
     override fun onStop() {
-        cloud?.auth?.removeAuthStateListener(authListener)
-        observe?.cancel()
         cancelIcons()
         dismissProtectedDialog()
         overflowMenu?.dismiss()
@@ -104,21 +111,26 @@ class VaultActivity : AppActivity() {
         super.onDestroy()
     }
 
-    private fun render(user: FirebaseUser?) {
-        val uid = user?.uid
-        if (hasRendered && owner == uid && (uid == null || observe?.isActive == true)) return
+    private fun render(session: Cloud.Account?) {
+        val sessionUid = (session as? Cloud.Account.SignedIn)?.uid
+        val account = if (session != null && cloud?.auth?.uid != sessionUid) {
+            Cloud.Account.Restoring
+        } else session
+        if (hasRendered && renderedAccount == account) return
+        val uid = (account as? Cloud.Account.SignedIn)?.uid
         if (owner != uid) {
             search = ""
             category = null
         }
         hasRendered = true
+        renderedAccount = account
         owner = uid
-        observe?.cancel()
         cancelIcons()
         dismissProtectedDialog()
         overflowMenu?.dismiss()
         profiles = emptyList()
         syncState = Cloud.Sync.CONNECTING
+        cacheLoaded = false
         useSiteIcons = AppPreferences.icons(this)
         val fab = iconButton(R.drawable.ic_add, "New recipe", ::newRecipe).apply {
             id = R.id.new_recipe
@@ -148,10 +160,9 @@ class VaultActivity : AppActivity() {
         }
         add(ui, searchBox, 10)
         if (uid == null) {
-            addSignedOutState(ui)
+            addAccountStatus(ui, account)
             return
         }
-        val service = requireNotNull(cloud)
         chips = LinearLayout(this)
         renderedCategories = emptyList()
         add(ui, HorizontalScrollView(this).apply {
@@ -170,23 +181,23 @@ class VaultActivity : AppActivity() {
         addRecipes(ui)
         updateChips()
         filter()
+    }
 
-        observe = scope.launch {
-            service.cache.observe(uid).combine(service.sync) { rows, state -> rows to state }.collect { (cached, state) ->
+    private suspend fun observeRecipes(service: Cloud, uid: String) {
+        service.sync.collectLatest { state ->
+            // A new sync state starts with a fresh Room read after the server transaction commits.
+            service.cache.observe(uid).collect { cached ->
                 if (service.auth.uid != uid || owner != uid) return@collect
+                cacheLoaded = true
                 profiles = cached.map(RecipeRow::profile)
                 syncState = state
-                sync.text = when (state) {
-                    Cloud.Sync.CONNECTING -> "Connecting to vault…"
-                    Cloud.Sync.ONLINE -> ""
-                    Cloud.Sync.OFFLINE -> if (profiles.isEmpty()) "Offline" else "Offline · Last synced recipes"
-                    Cloud.Sync.UNAVAILABLE -> "Could not sync your vault"
+                sync.text = when {
+                    profiles.isEmpty() -> ""
+                    state == Cloud.Sync.OFFLINE -> "Offline · Last synced recipes"
+                    state == Cloud.Sync.UNAVAILABLE -> "Could not sync your vault"
+                    else -> ""
                 }
-                sync.setTextColor(when (state) {
-                    Cloud.Sync.ONLINE -> accent
-                    Cloud.Sync.UNAVAILABLE -> errorColor
-                    else -> muted
-                })
+                sync.setTextColor(if (state == Cloud.Sync.UNAVAILABLE) errorColor else muted)
                 sync.visibility = shown(sync.text.isNotEmpty())
                 updateChips()
                 filter()
@@ -194,18 +205,28 @@ class VaultActivity : AppActivity() {
         }
     }
 
-    private fun addSignedOutState(ui: LinearLayout) {
-        val canSignIn = cloud != null
+    private fun addAccountStatus(ui: LinearLayout, account: Cloud.Account?) {
+        val title = when (account) {
+            Cloud.Account.Restoring -> "Opening Vault…"
+            Cloud.Account.SignedOut -> "Sign in to your vault"
+            else -> "Vault unavailable"
+        }
         val empty = column().apply {
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(16), dp(12), dp(16))
-            add(this, heading(if (canSignIn) "Sign in to your vault" else "Vault unavailable", 23f).apply {
+            if (account == Cloud.Account.Restoring) {
+                addView(busyIndicator(), LinearLayout.LayoutParams(dp(34), dp(34)).apply { bottomMargin = dp(16) })
+            }
+            add(this, heading(title, 23f).apply {
                 gravity = Gravity.CENTER
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             })
-            add(this, text(if (canSignIn) "Sign in to sync and open your saved recipes."
-                else "You can still generate passwords on this device.").apply { gravity = Gravity.CENTER }, 8)
-            if (canSignIn) addView(primaryButton("Sign in") {
-                signIn.launch(Intent(this@VaultActivity, SignInActivity::class.java))
+            if (account != Cloud.Account.Restoring) {
+                add(this, text(if (account == Cloud.Account.SignedOut) "Sign in to sync and open your saved recipes."
+                    else "You can still generate passwords on this device.").apply { gravity = Gravity.CENTER }, 8)
+            }
+            if (account == Cloud.Account.SignedOut) addView(primaryButton("Sign in") {
+                startActivity(Intent(this@VaultActivity, SignInActivity::class.java))
             }.apply { id = R.id.vault_sign_in }, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(18) })
         }
         ui.addView(empty, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -231,12 +252,19 @@ class VaultActivity : AppActivity() {
         val empty = column().apply {
             gravity = Gravity.CENTER
             setPadding(dp(18), dp(18), dp(18), dp(18))
-            val mark = icon(R.drawable.ic_vault, accent).apply {
+            emptyMark = icon(R.drawable.ic_vault, accent).apply {
                 setPadding(dp(12), dp(12), dp(12), dp(12))
                 background = rounded(accentSurface, 15)
             }
-            addView(mark, LinearLayout.LayoutParams(dp(48), dp(48)))
-            emptyTitle = heading("", 20f).apply { gravity = Gravity.CENTER }
+            emptySpinner = busyIndicator().apply { id = R.id.vault_progress_spinner }
+            addView(FrameLayout(this@VaultActivity).apply {
+                addView(emptyMark, FrameLayout.LayoutParams(-1, -1))
+                addView(emptySpinner, FrameLayout.LayoutParams(dp(34), dp(34), Gravity.CENTER))
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+            emptyTitle = heading("", 20f).apply {
+                gravity = Gravity.CENTER
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            }
             add(this, emptyTitle, 13)
             emptyDetail = text("").apply { gravity = Gravity.CENTER }
             add(this, emptyDetail, 6)
@@ -338,17 +366,23 @@ class VaultActivity : AppActivity() {
         }
         val filtered = query.isNotEmpty() || category != null
         val emptyVault = profiles.isEmpty() && syncState == Cloud.Sync.ONLINE && !filtered
+        val firstSync = profiles.isEmpty() && syncState == Cloud.Sync.CONNECTING
+        val waiting = !cacheLoaded || firstSync
+        emptySpinner.visibility = shown(waiting)
+        emptyMark.visibility = shown(!waiting)
         emptyTitle.text = when {
+            !cacheLoaded -> "Opening Vault…"
+            firstSync -> "Syncing recipes…"
             filtered -> "No matching recipes"
-            syncState == Cloud.Sync.CONNECTING -> "Checking your recipes"
             emptyVault -> "No saved recipes"
-            else -> "Vault unavailable"
+            syncState == Cloud.Sync.OFFLINE -> "No saved recipes on this device"
+            else -> "Could not sync your vault"
         }
         emptyDetail.text = when {
+            waiting -> ""
             filtered -> "Change your search or category."
             emptyVault -> "Generate a password to save your first recipe."
-            syncState == Cloud.Sync.CONNECTING -> ""
-            else -> "Reconnect to sync your saved recipes."
+            else -> "Connect to the internet to sync your vault."
         }
         openGenerator.visibility = shown(emptyVault)
     }
