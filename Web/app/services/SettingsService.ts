@@ -84,7 +84,7 @@ export const SettingsService = {
                 memorizable: { ...currentSettings.memorizable, ...settings.memorizable },
                 preferences: { ...currentSettings.preferences, ...settings.preferences },
             };
-            await setDoc(docRef, mergedSettings);
+            await setDoc(docRef, mergedSettings, { merge: true });
         } catch (error) {
             console.error('Failed to save settings:', error);
             throw error;

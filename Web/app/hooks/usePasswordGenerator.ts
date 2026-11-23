@@ -9,9 +9,15 @@ import {
 } from '../lib/generators';
 import { OptionsState } from '../types';
 import { MemorizableOptionsState } from '../components/MemorizableOptions';
-import { normalizeLogin, normalizeSiteForAlgorithm } from '../lib/normalize-input';
+import { normalizeLogin, normalizeSiteForAlgorithm, siteForSavedRecipe } from '../lib/normalize-input';
 import { assertPbkdf2Generatable } from '../lib/pbkdf2-preflight';
+import type { RecipeOptions } from '../lib/recipe-history';
 import { UserSettings } from '../services/SettingsService';
+
+interface GenerationResult {
+    password: string;
+    recipeOptions: RecipeOptions;
+}
 
 interface UsePasswordGeneratorReturn {
     // Algorithm selection
@@ -52,7 +58,7 @@ interface UsePasswordGeneratorReturn {
     isCopied: boolean;
 
     // Actions
-    handleGenerate: () => Promise<string>;
+    handleGenerate: () => Promise<GenerationResult | null>;
     handleCopy: () => Promise<void>;
     resetFields: () => void;
     applyDefaults: (settings: UserSettings) => void;
@@ -144,7 +150,7 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
     // Generate password based on selected algorithm.
     // Site and login are normalized with the same rules the generator uses,
     // then written back so a later save stores that exact string.
-    const handleGenerate = useCallback(async (): Promise<string> => {
+    const handleGenerate = useCallback(async (): Promise<GenerationResult | null> => {
         setIsLoading(true);
         setGeneratedPassword('');
         setError(null);
@@ -152,21 +158,25 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
         try {
             const normalizedSite = normalizeSiteForAlgorithm(site, algorithm);
             const normalizedLogin = normalizeLogin(login);
-            if (normalizedSite !== site) setSite(normalizedSite);
+            const savedSite = siteForSavedRecipe(site, algorithm);
+            if (savedSite !== site) setSite(savedSite);
             if (normalizedLogin !== login) setLogin(normalizedLogin);
 
             let password: string;
+            let recipeOptions: RecipeOptions;
+            const counter = Number(options.counter) || 1;
 
             if (algorithm === 'pbkdf2') {
                 if (!masterPassword || !normalizedSite || !normalizedLogin) {
                     setGeneratedPassword('');
                     setIsLoading(false);
-                    return '';
+                    return null;
                 }
 
                 const pbkdf2Options = {
                     ...options,
-                    counter: Number(options.counter) || 1,
+                    counter,
+                    userSalt,
                 };
                 assertPbkdf2Generatable(pbkdf2Options);
 
@@ -174,32 +184,31 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
                     masterPassword,
                     site: normalizedSite,
                     login: normalizedLogin,
-                    userSalt,
                     ...pbkdf2Options,
                 });
+                recipeOptions = pbkdf2Options;
             } else {
                 if (!normalizedSite || !normalizedLogin) {
                     setGeneratedPassword('');
                     setIsLoading(false);
-                    return '';
+                    return null;
                 }
 
-                password = generateMemorizablePassword(
-                    { login: normalizedLogin, site: normalizedSite },
-                    {
-                        shift: Number(memorizableOptions.shift) || 1,
-                        magicNumber: Number(memorizableOptions.magicNumber) || 0,
-                    }
-                );
+                const memorableOptions = {
+                    shift: Number(memorizableOptions.shift) || 1,
+                    magicNumber: Number(memorizableOptions.magicNumber) || 0,
+                };
+                password = generateMemorizablePassword({ login: normalizedLogin, site: normalizedSite }, memorableOptions);
+                recipeOptions = { ...memorableOptions, counter };
             }
 
             setGeneratedPassword(password);
             setIsPasswordVisible(false);
-            return password;
+            return password ? { password, recipeOptions } : null;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to generate password');
             setGeneratedPassword('');
-            return '';
+            return null;
         } finally {
             setIsLoading(false);
         }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { generateMemorizablePassword } from '../app/lib/generators/memorizable-generator';
 import { generatePBKDF2Password } from '../app/lib/generators/pbkdf2-generator';
-import { normalizeLogin, normalizeSiteForAlgorithm } from '../app/lib/normalize-input';
+import { normalizeLogin, normalizeSiteForAlgorithm, siteForSavedRecipe } from '../app/lib/normalize-input';
 import { assertPbkdf2Generatable } from '../app/lib/pbkdf2-preflight';
 import {
     nextRotatedOptions,
@@ -65,6 +65,17 @@ describe('edge normalizers match the generators', () => {
         expect(fromRaw).toBe(fromNormalized);
         expect(fromRaw).toBe('UlhasHooghly@358');
     });
+
+    it('round-trips a site when a second normalization would change the password', async () => {
+        const raw = ' HTTPS://WWW.WWW.WWW.EXAMPLE.COM/ ';
+        const site = normalizeSiteForAlgorithm(raw, 'pbkdf2');
+        const stored = siteForSavedRecipe(raw, 'pbkdf2');
+        const vaultSite = normalizeSiteForAlgorithm(stored, 'pbkdf2');
+
+        expect(normalizeSiteForAlgorithm(site, 'pbkdf2')).not.toBe(site);
+        const original = await generatePBKDF2Password({ ...pbkdf2Base, site });
+        await expect(generatePBKDF2Password({ ...pbkdf2Base, site: vaultSite })).resolves.toBe(original);
+    });
 });
 
 describe('PBKDF2 preflight', () => {
@@ -103,6 +114,13 @@ describe('recipe history', () => {
         const next = nextRotatedOptions('pbkdf2', { counter: 2, length: 16, magicNumber: 7 });
         expect(next.counter).toBe(3);
         expect(next.magicNumber).toBe(7);
+    });
+
+    it('avoids reusing a generation after an older recipe was made current', () => {
+        const history = [{ version: 8, magicNumber: 12 }];
+        expect(nextRotatedOptions('pbkdf2', { counter: 3 }, history)).toEqual({ counter: 9 });
+        expect(nextRotatedOptions('memorizable', { counter: 3, shift: 2, magicNumber: 5 }, history))
+            .toEqual({ counter: 9, shift: 2, magicNumber: 13 });
     });
 
     it('snapshots shift and magic so an old memorable password can be rebuilt', () => {

@@ -1,25 +1,30 @@
 // app/services/ProfileService.ts
 import {
     collection,
-    addDoc,
     query,
     where,
     getDocs,
+    getDocsFromServer,
     getDoc,
+    getDocFromServer,
     doc,
     updateDoc,
     deleteDoc,
+    deleteField,
+    runTransaction,
+    serverTimestamp,
+    type DocumentReference,
+    type Transaction,
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GeneratorType } from '../lib/generators';
-import { normalizeLogin, normalizeSiteForAlgorithm } from '../lib/normalize-input';
+import { normalizeLogin, normalizeSiteForAlgorithm, siteForSavedRecipe } from '../lib/normalize-input';
 import {
     nextRotatedOptions,
     recipeOutputChanged,
     snapshotRecipe,
-    withMemorableVersionBump,
-    RecipeOptions,
+    type RecipeOptions,
 } from '../lib/recipe-history';
 import { BackupProfile } from '../lib/backup';
 
@@ -81,8 +86,25 @@ export interface PasswordProfile {
 
     // Version History & Password Policy
     versionHistory?: VersionHistoryEntry[];
+    pendingVersion?: PendingVersion;
+    lastConfirmedDraftId?: string;
     passwordPolicy?: PasswordPolicy;
 }
+
+interface PendingVersion {
+    id: string;
+    options: PasswordProfile['options'];
+    reason: string;
+    expiryDays?: number;
+}
+
+type NewProfile = Pick<PasswordProfile, 'userId' | 'site' | 'login' | 'algorithm' | 'tags'> & {
+    options: RecipeOptions;
+};
+
+type CreateProfileResult =
+    | { status: 'created'; profile: PasswordProfile }
+    | { status: 'exists'; profiles: PasswordProfile[] };
 
 const COLLECTION_NAME = 'password_profiles';
 const TIMEOUT_MS = 10000; // 10 seconds
@@ -185,134 +207,113 @@ async function withRetry<T>(
     throw lastError;
 }
 
+async function findAccountProfiles(userId: string, site: string, login: string): Promise<PasswordProfile[]> {
+    const accountQuery = query(
+        collection(db, COLLECTION_NAME),
+        where('userId', '==', userId),
+        where('login', '==', normalizeLogin(login)),
+    );
+    const snapshots = await getDocsFromServer(accountQuery);
+    return snapshots.docs
+        .map(snapshot => ({ ...snapshot.data(), id: snapshot.id }) as PasswordProfile)
+        .filter(profile => {
+            const normalized = normalizeSiteForAlgorithm(site, profile.algorithm);
+            return profile.site === normalized || normalizeSiteForAlgorithm(profile.site, profile.algorithm) === normalized;
+        });
+}
+
+function withProfileCreationLock<T>(
+    userId: string,
+    operation: (transaction: Transaction, guard: DocumentReference) => Promise<T>,
+): Promise<T> {
+    const guard = doc(db, 'user_settings', userId);
+    return runTransaction(db, async transaction => {
+        // Web transactions can only read documents by ID. Read the per-user guard
+        // before the server-side account query so competing creations retry.
+        await transaction.get(guard);
+        return operation(transaction, guard);
+    });
+}
+
+async function readProfile(transaction: Transaction, ref: DocumentReference): Promise<PasswordProfile> {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('This vault recipe no longer exists.');
+    return { ...snapshot.data(), id: ref.id } as PasswordProfile;
+}
+
 export const ProfileService = {
-    // Save or Update a profile with timeout and retry (tracks version history automatically)
-    saveProfile: async (profile: Omit<PasswordProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ id: string; updated: boolean; options: PasswordProfile['options'] }> => {
-        return withRetry(async () => {
-            return withTimeout(async () => {
-                // Use the same normalizer as the generator that will rebuild this password.
-                const normalizedSite = normalizeSiteForAlgorithm(profile.site, profile.algorithm);
-                const normalizedLogin = normalizeLogin(profile.login);
+    findAccountProfiles: (userId: string, site: string, login: string): Promise<PasswordProfile[]> =>
+        withTimeout(() => findAccountProfiles(userId, site, login), TIMEOUT_MS),
 
-                // Check if duplicate exists (same user, site, login, algorithm)
-                const q = query(
-                    collection(db, COLLECTION_NAME),
-                    where("userId", "==", profile.userId),
-                    where("site", "==", normalizedSite),
-                    where("login", "==", normalizedLogin),
-                    where("algorithm", "==", profile.algorithm)
-                );
+    createProfile: (profile: NewProfile): Promise<CreateProfileResult> =>
+        withProfileCreationLock(profile.userId, async (transaction, guard) => {
+            const profiles = await findAccountProfiles(profile.userId, profile.site, profile.login);
+            if (profiles.length > 0) return { status: 'exists', profiles };
 
-                const querySnapshot = await getDocs(q);
-                const timestamp = Timestamp.now();
+            const timestamp = Timestamp.now();
+            const saved = removeUndefined({
+                userId: profile.userId,
+                site: siteForSavedRecipe(profile.site, profile.algorithm),
+                login: normalizeLogin(profile.login),
+                algorithm: profile.algorithm,
+                options: removeUndefined(profile.options),
+                tags: profile.tags,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+            const ref = doc(collection(db, COLLECTION_NAME));
+            transaction.set(ref, saved);
+            transaction.set(guard, { lastProfileCreatedAt: serverTimestamp() }, { merge: true });
+            return { status: 'created', profile: { ...saved, id: ref.id } as PasswordProfile };
+        }),
 
-                if (!querySnapshot.empty) {
-                    // Update existing profile
-                    const existingDoc = querySnapshot.docs[0];
-                    const existingData = existingDoc.data() as PasswordProfile;
-                    const docId = existingDoc.id;
-                    const ref = doc(db, COLLECTION_NAME, docId);
+    // Import is an explicit restore. Keep its existing per-algorithm matching.
+    importProfile: (userId: string, profile: BackupProfile): Promise<string> =>
+        withProfileCreationLock(userId, async (transaction, guard) => {
+            const matches = await findAccountProfiles(userId, profile.site, profile.login);
+            const existing = matches.find(match => match.algorithm === profile.algorithm);
+            const timestamp = Timestamp.now();
+            const payload = removeUndefined({
+                userId,
+                site: siteForSavedRecipe(profile.site, profile.algorithm),
+                login: normalizeLogin(profile.login),
+                algorithm: profile.algorithm,
+                options: profile.options,
+                favorite: profile.favorite || false,
+                tags: profile.tags || [],
+                notes: profile.notes || '',
+                customFields: profile.customFields || [],
+                versionHistory: historyFromBackup(profile.versionHistory) || [],
+                passwordPolicy: policyFromBackup(profile.passwordPolicy),
+                updatedAt: timestamp,
+            });
 
-                    const previousOptions = (existingData.options || {}) as RecipeOptions;
-                    let nextOptions = { ...profile.options } as PasswordProfile['options'];
-                    if (profile.algorithm === 'memorizable') {
-                        nextOptions = withMemorableVersionBump(previousOptions, nextOptions);
-                    }
-
-                    let versionHistory = existingData.versionHistory || [];
-                    if (recipeOutputChanged(profile.algorithm, previousOptions, nextOptions)) {
-                        const snap = snapshotRecipe(
-                            previousOptions,
-                            (previousOptions.counter ?? 1) !== (nextOptions.counter ?? 1)
-                                && (previousOptions.shift ?? 1) === (nextOptions.shift ?? 1)
-                                && (previousOptions.magicNumber ?? 0) === (nextOptions.magicNumber ?? 0)
-                                ? 'Version rotated'
-                                : 'Options updated'
-                        );
-                        versionHistory = [
-                            ...versionHistory,
-                            {
-                                ...snap,
-                                changedAt: existingData.updatedAt || existingData.createdAt || timestamp,
-                            }
-                        ];
-                    }
-
-                    await updateDoc(ref, removeUndefined({
-                        options: nextOptions,
-                        tags: profile.tags,
-                        notes: profile.notes,
-                        customFields: profile.customFields,
-                        favorite: profile.favorite,
-                        versionHistory: versionHistory.length > 0 ? versionHistory : undefined,
-                        passwordPolicy: profile.passwordPolicy,
-                        updatedAt: timestamp
-                    }));
-                    return { id: docId, updated: true, options: nextOptions };
-                } else {
-                    // Create new profile - DON'T add initial version to history
-                    // History should only contain PAST versions (rotated away from)
-                    // The initial version is tracked by createdAt timestamp
-                    const docRef = await addDoc(collection(db, COLLECTION_NAME), removeUndefined({
-                        ...profile,
-                        site: normalizedSite,
-                        login: normalizedLogin,
-                        // versionHistory starts empty - populated only on rotation
-                        createdAt: timestamp,
-                        updatedAt: timestamp
-                    }));
-                    return { id: docRef.id, updated: false, options: profile.options };
-                }
-            }, TIMEOUT_MS);
-        });
-    },
-
-    // Restore one profile from a backup. Replaces history instead of appending a new row.
-    importProfile: async (userId: string, profile: BackupProfile): Promise<string> => {
-        return withRetry(async () => {
-            return withTimeout(async () => {
-                const normalizedSite = normalizeSiteForAlgorithm(profile.site, profile.algorithm);
-                const normalizedLogin = normalizeLogin(profile.login);
-                const q = query(
-                    collection(db, COLLECTION_NAME),
-                    where("userId", "==", userId),
-                    where("site", "==", normalizedSite),
-                    where("login", "==", normalizedLogin),
-                    where("algorithm", "==", profile.algorithm)
-                );
-                const querySnapshot = await getDocs(q);
-                const timestamp = Timestamp.now();
-                const versionHistory = historyFromBackup(profile.versionHistory);
-                const passwordPolicy = policyFromBackup(profile.passwordPolicy);
-                const payload = removeUndefined({
-                    userId,
-                    site: normalizedSite,
-                    login: normalizedLogin,
-                    algorithm: profile.algorithm,
-                    options: profile.options,
-                    favorite: profile.favorite || false,
-                    tags: profile.tags || [],
-                    notes: profile.notes || '',
-                    customFields: profile.customFields || [],
-                    versionHistory: versionHistory || [],
-                    passwordPolicy,
-                    updatedAt: timestamp,
-                });
-
-                if (!querySnapshot.empty) {
-                    const ref = doc(db, COLLECTION_NAME, querySnapshot.docs[0].id);
-                    await updateDoc(ref, payload);
-                    return ref.id;
-                }
-
-                const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+            if (existing?.id) {
+                const ref = doc(db, COLLECTION_NAME, existing.id);
+                await readProfile(transaction, ref);
+                transaction.update(ref, {
                     ...payload,
-                    createdAt: timestamp,
+                    pendingVersion: deleteField(),
+                    lastConfirmedDraftId: deleteField(),
                 });
-                return docRef.id;
-            }, TIMEOUT_MS);
-        });
-    },
+                return ref.id;
+            }
+
+            const ref = doc(collection(db, COLLECTION_NAME));
+            transaction.set(ref, { ...payload, createdAt: timestamp });
+            transaction.set(guard, { lastProfileCreatedAt: serverTimestamp() }, { merge: true });
+            return ref.id;
+        }),
+
+    getCurrentProfile: (id: string): Promise<PasswordProfile> =>
+        withTimeout(async () => {
+            const snapshot = await getDocFromServer(doc(db, COLLECTION_NAME, id));
+            if (!snapshot.exists()) throw new Error('This vault recipe no longer exists.');
+            return { ...snapshot.data(), id: snapshot.id } as PasswordProfile;
+        }, TIMEOUT_MS),
+
+    saveTags: (id: string, tags: string[]): Promise<void> =>
+        updateDoc(doc(db, COLLECTION_NAME, id), { tags, updatedAt: Timestamp.now() }),
 
     // Get all profiles for a user with timeout
     getUserProfiles: async (userId: string): Promise<PasswordProfile[]> => {
@@ -383,65 +384,73 @@ export const ProfileService = {
         return { success, failed };
     },
 
-    // Rotate password to next version with reason tracking
-    rotatePassword: async (
-        id: string,
-        reason: string = 'Password rotated',
-        expiryDays?: number
-    ): Promise<{ newVersion: number }> => {
-        return withRetry(async () => {
-            return withTimeout(async () => {
-                const ref = doc(db, COLLECTION_NAME, id);
-                const docSnap = await getDoc(ref);
+    prepareVersion: (id: string, reason = 'Password changed', expiryDays?: number): Promise<PasswordProfile> => {
+        const draftId = doc(collection(db, COLLECTION_NAME)).id;
+        const ref = doc(db, COLLECTION_NAME, id);
+        return runTransaction(db, async transaction => {
+            const profile = await readProfile(transaction, ref);
+            if (profile.pendingVersion) return profile;
 
-                if (!docSnap.exists()) {
-                    throw new Error('Profile not found');
-                }
+            const options = nextRotatedOptions(profile.algorithm, profile.options, profile.versionHistory);
+            if (!Number.isSafeInteger(options.counter)
+                || (profile.algorithm === 'memorizable' && !Number.isSafeInteger(options.magicNumber))) {
+                throw new Error('This recipe has reached its version limit.');
+            }
+            const pendingVersion = removeUndefined({ id: draftId, options, reason, expiryDays });
+            transaction.update(ref, { pendingVersion });
+            return { ...profile, pendingVersion };
+        });
+    },
 
-                const existingData = docSnap.data() as PasswordProfile;
-                const timestamp = Timestamp.now();
-                const previousOptions = (existingData.options || {}) as RecipeOptions;
-                const rotated = nextRotatedOptions(existingData.algorithm, previousOptions);
-                const snap = snapshotRecipe(previousOptions, reason);
+    confirmVersion: (id: string, draftId: string): Promise<PasswordProfile> => {
+        const ref = doc(db, COLLECTION_NAME, id);
+        return runTransaction(db, async transaction => {
+            const profile = await readProfile(transaction, ref);
+            if (profile.lastConfirmedDraftId === draftId) return profile;
 
-                const historyEntry: VersionHistoryEntry = {
-                    ...snap,
-                    changedAt: existingData.updatedAt || existingData.createdAt || timestamp,
-                };
+            const draft = profile.pendingVersion;
+            if (draft?.id !== draftId) throw new Error('This draft has changed. Reopen the recipe to continue.');
+            const expected = nextRotatedOptions(profile.algorithm, profile.options, profile.versionHistory);
+            if (recipeOutputChanged(profile.algorithm, expected, draft.options)) {
+                throw new Error('The current recipe has changed. Discard this draft and start again.');
+            }
 
-                const versionHistory = [...(existingData.versionHistory || []), historyEntry];
+            const timestamp = Timestamp.now();
+            const passwordPolicy: PasswordPolicy = { ...profile.passwordPolicy, lastRotatedAt: timestamp };
+            const days = draft.expiryDays ?? passwordPolicy.expiryDays;
+            if (days && days > 0) {
+                const expiryDate = timestamp.toDate();
+                expiryDate.setDate(expiryDate.getDate() + days);
+                passwordPolicy.expiryDays = days;
+                passwordPolicy.nextExpiryAt = Timestamp.fromDate(expiryDate);
+            }
 
-                // Build update object - only include fields that have values
-                const updateData: Record<string, any> = {
-                    'options.counter': rotated.counter,
-                    versionHistory: versionHistory,
-                    updatedAt: timestamp
-                };
+            const versionHistory = [...(profile.versionHistory ?? []), {
+                ...snapshotRecipe(profile.options, draft.reason),
+                changedAt: profile.passwordPolicy?.lastRotatedAt ?? profile.updatedAt ?? profile.createdAt ?? timestamp,
+            }];
+            const active = {
+                options: draft.options,
+                versionHistory,
+                passwordPolicy,
+                updatedAt: timestamp,
+                lastConfirmedDraftId: draftId,
+            };
+            transaction.update(ref, { ...active, pendingVersion: deleteField() });
+            return { ...profile, ...active, pendingVersion: undefined };
+        });
+    },
 
-                if (existingData.algorithm === 'memorizable') {
-                    updateData['options.magicNumber'] = rotated.magicNumber;
-                }
-
-                // Build password policy object
-                const newPolicy: Record<string, any> = {
-                    ...(existingData.passwordPolicy || {}),
-                    lastRotatedAt: timestamp,
-                };
-
-                // Only add expiry if set
-                if (expiryDays && expiryDays > 0) {
-                    const expiryDate = new Date();
-                    expiryDate.setDate(expiryDate.getDate() + expiryDays);
-                    newPolicy.nextExpiryAt = Timestamp.fromDate(expiryDate);
-                    newPolicy.expiryDays = expiryDays;
-                }
-
-                updateData.passwordPolicy = newPolicy;
-
-                await updateDoc(ref, updateData);
-
-                return { newVersion: rotated.counter ?? 1 };
-            }, TIMEOUT_MS);
+    discardVersion: (id: string, draftId: string): Promise<PasswordProfile> => {
+        const ref = doc(db, COLLECTION_NAME, id);
+        return runTransaction(db, async transaction => {
+            const profile = await readProfile(transaction, ref);
+            if (!profile.pendingVersion) return profile;
+            if (profile.pendingVersion.id !== draftId) {
+                throw new Error('This draft has changed. Reopen the recipe to continue.');
+            }
+            transaction.update(ref, { pendingVersion: deleteField() });
+            return { ...profile, pendingVersion: undefined };
         });
     },
 

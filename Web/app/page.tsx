@@ -12,7 +12,6 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Save,
   ChevronDown,
   SlidersHorizontal,
   Brain,
@@ -31,12 +30,14 @@ import {
   DashboardV2
 } from './components';
 import { AuthModal } from './components/auth';
+import { DraftPasswordModal, GenerateModal } from './components/dashboard/GenerateModal';
 import { TagSelector } from './components/dashboard/TagSelector';
 import { usePasswordGenerator, useAutoClean, useTheme } from './hooks';
 import { useAuth } from './context/AuthContext';
 import { ProfileService, PasswordProfile } from './services/ProfileService';
 import { SettingsService, UserSettings } from './services/SettingsService';
 import { MemorableMemoryCard } from './components/MemorableMemoryCard';
+import { normalizeLogin, normalizeSiteForAlgorithm } from './lib/normalize-input';
 
 /* ─── Labeled Field (matching alt design) ─── */
 function LabeledField({
@@ -129,13 +130,20 @@ export default function HomePage() {
   const { theme, toggleTheme, mounted } = useTheme();
 
   // Auth
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const userIdRef = useRef(user?.uid);
+  userIdRef.current = user?.uid;
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState<PasswordProfile | null>(null);
+  const [matchingProfiles, setMatchingProfiles] = useState<PasswordProfile[]>([]);
+  const [draftProfile, setDraftProfile] = useState<PasswordProfile | null>(null);
+  const [savedPreview, setSavedPreview] = useState<PasswordProfile | null>(null);
+  const [resultReady, setResultReady] = useState(false);
+  const editingProfileId = editingProfile?.id ?? null;
 
   // Use custom hook for all password generator state
   const {
@@ -190,6 +198,12 @@ export default function HomePage() {
     if (!user) {
       settingsRef.current = null;
       setVaultProfiles([]);
+      setMatchingProfiles([]);
+      setDraftProfile(null);
+      setSavedPreview(null);
+      setEditingProfile(null);
+      setSaveStatus(null);
+      setResultReady(false);
       return;
     }
 
@@ -227,14 +241,23 @@ export default function HomePage() {
     };
   }, [user, algorithm]);
 
+  const clearResult = useCallback(() => {
+    setResultReady(false);
+    setMatchingProfiles([]);
+    setSaveStatus(null);
+  }, []);
+
   // Auto-clean hook for security. 0 seconds means never clear the clipboard.
   const { scheduleClearClipboard } = useAutoClean(
     useCallback(() => {
       resetFields();
+      clearResult();
+      setDraftProfile(null);
+      setSavedPreview(null);
       if (settingsRef.current) {
         applyDefaults(settingsRef.current);
       }
-    }, [resetFields, applyDefaults]),
+    }, [resetFields, applyDefaults, clearResult]),
     {
       inactivityTimeout: 2 * 60 * 1000,
       clipboardTimeout: clipboardSeconds * 1000,
@@ -247,75 +270,133 @@ export default function HomePage() {
     scheduleClearClipboard();
   }, [handleCopy, scheduleClearClipboard]);
 
-  const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canGenerate) return;
-    const password = await handleGenerate();
-    if (password && autoCopy) {
-      try {
-        await navigator.clipboard.writeText(password);
-        scheduleClearClipboard();
-      } catch {
-        // Clipboard permission can be denied; generation still succeeded.
+    if (!canGenerate || isSaving || authLoading || matchingProfiles.length) return;
+    clearResult();
+    setIsSaving(true);
+    const userId = user?.uid;
+
+    try {
+      if (userId) {
+        const existing = await ProfileService.findAccountProfiles(userId, site, login);
+        if (userId !== userIdRef.current) return;
+        if (existing.length) {
+          setMatchingProfiles(existing);
+          return;
+        }
       }
+
+      const generated = await handleGenerate();
+      if (!generated || userId !== userIdRef.current) return;
+      if (userId) {
+        const saved = await ProfileService.createProfile({
+          userId,
+          site,
+          login,
+          algorithm,
+          options: generated.recipeOptions,
+          tags: selectedTags,
+        });
+        if (userId !== userIdRef.current) return;
+        if (saved.status === 'exists') {
+          setMatchingProfiles(saved.profiles);
+          return;
+        }
+        setSaveStatus({ type: 'success', message: 'Recipe saved to vault.' });
+        setVaultProfiles(profiles => [...profiles, saved.profile]);
+      }
+
+      setResultReady(true);
+      if (autoCopy) {
+        try {
+          await navigator.clipboard.writeText(generated.password);
+          scheduleClearClipboard();
+        } catch {
+          // Generation and autosave succeeded even if clipboard access is denied.
+        }
+      }
+    } catch {
+      if (userId === userIdRef.current) {
+        setSaveStatus({ type: 'error', message: 'Could not check or save the recipe. Try generating again.' });
+      }
+    } finally {
+      setIsSaving(false);
     }
-  }, [canGenerate, handleGenerate, autoCopy, scheduleClearClipboard]);
+  };
 
   const handleReset = useCallback(() => {
     resetFields();
+    clearResult();
     setSelectedTags([]);
-    setEditingProfileId(null);
+    setEditingProfile(null);
     if (settingsRef.current) {
       applyDefaults(settingsRef.current);
     }
     masterInputRef.current?.focus();
-  }, [resetFields, applyDefaults]);
+  }, [resetFields, clearResult, applyDefaults]);
 
-  // Fine-tune / Memory Map summary
+  const handlePrepareVersion = async (profile: PasswordProfile) => {
+    if (!profile.id || isSaving) return;
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      const latest = await ProfileService.prepareVersion(profile.id);
+      if (latest.userId !== userIdRef.current) return;
+      setMatchingProfiles(profiles => profiles.map(item => item.id === latest.id ? latest : item));
+      setDraftProfile(latest);
+    } catch (err) {
+      setSaveStatus({ type: 'error', message: err instanceof Error ? err.message : 'Could not prepare the new version.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleGenerateSaved = async (profile: PasswordProfile) => {
+    if (!profile.id || isSaving) return;
+    setIsSaving(true);
+    setSaveStatus(null);
+    try {
+      const current = await ProfileService.getCurrentProfile(profile.id);
+      if (current.userId !== userIdRef.current) return;
+      setMatchingProfiles(profiles => profiles.map(item => item.id === current.id ? current : item));
+      setSavedPreview(current);
+    } catch {
+      setSaveStatus({ type: 'error', message: 'Could not check the current recipe. Try again.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const canEditTags = editingProfile?.id
+    && !editingProfile.id.startsWith('seed-')
+    && normalizeSiteForAlgorithm(editingProfile.site, editingProfile.algorithm) === normalizeSiteForAlgorithm(site, editingProfile.algorithm)
+    && editingProfile.login === normalizeLogin(login);
+
+  const handleSaveTags = async () => {
+    if (!canEditTags || !editingProfile?.id || isSaving) return;
+    setIsSaving(true);
+    try {
+      await ProfileService.saveTags(editingProfile.id, selectedTags);
+      setSaveStatus({ type: 'success', message: 'Tags saved.' });
+    } catch {
+      setSaveStatus({ type: 'error', message: 'Could not save tags. Try again.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const fineTuneSummary = algorithm === 'pbkdf2'
     ? `${options.length} chars · rotation ${options.counter || 1}`
     : `shift ${memorizableOptions.shift || 1} · magic #${memorizableOptions.magicNumber || 0}`;
 
-  const handleSaveProfile = async () => {
-    if (!user || !generatedPassword) return;
-    setIsSaving(true);
-    setSaveStatus(null);
-
-    try {
-      const saved = await ProfileService.saveProfile({
-        userId: user.uid,
-        site,
-        login,
-        algorithm,
-        options: algorithm === 'pbkdf2'
-          ? { ...options, userSalt }
-          : { ...options, ...memorizableOptions } as any,
-        tags: selectedTags,
-      });
-      setSaveStatus({ type: 'success', message: saved.updated ? 'Updated in vault!' : 'Saved to vault!' });
-      setEditingProfileId(saved.id);
-      if (typeof saved.options?.counter === 'number') {
-        handleOptionChange('counter', saved.options.counter);
-      }
-      ProfileService.getUserProfiles(user.uid).then(setVaultProfiles).catch(() => { });
-    } catch (error: any) {
-      console.error(error);
-      setSaveStatus({
-        type: 'error',
-        message: error.message || 'Failed to save. Please try again.'
-      });
-    } finally {
-      setIsSaving(false);
-      setTimeout(() => setSaveStatus(null), 3000);
-    }
-  };
-
   const handleLoadProfile = useCallback((profile: PasswordProfile) => {
+    clearResult();
     setSite(profile.site);
     setLogin(profile.login);
     setAlgorithm(profile.algorithm);
     setSelectedTags(profile.tags || []);
-    setEditingProfileId(profile.id || null);
+    setEditingProfile(profile);
 
     const saved = profile.options || ({} as PasswordProfile['options']);
     setOptions({
@@ -336,17 +417,18 @@ export default function HomePage() {
     setTimeout(() => {
       masterInputRef.current?.focus();
     }, 100);
-  }, [setSite, setLogin, setAlgorithm, setOptions, setUserSalt, setMemorizableOptions]);
+  }, [clearResult, setSite, setLogin, setAlgorithm, setOptions, setUserSalt, setMemorizableOptions]);
 
   const handleCloseDashboard = useCallback(() => {
     setIsDashboardOpen(false);
     resetFields();
+    clearResult();
     setSelectedTags([]);
-    setEditingProfileId(null);
+    setEditingProfile(null);
     if (settingsRef.current) {
       applyDefaults(settingsRef.current);
     }
-  }, [resetFields, applyDefaults]);
+  }, [resetFields, clearResult, applyDefaults]);
 
   if (!mounted) {
     return null;
@@ -362,6 +444,29 @@ export default function HomePage() {
         onClose={handleCloseDashboard}
         onLoadProfile={handleLoadProfile}
       />
+
+      {user && draftProfile && (
+        <DraftPasswordModal
+          profile={draftProfile}
+          initialMasterPassword={masterPassword}
+          clearClipboardAfter={clipboardSeconds}
+          onClose={() => setDraftProfile(null)}
+          onConfirmed={profile => {
+            setMatchingProfiles(profiles => profiles.map(item => item.id === profile.id ? profile : item));
+            setVaultProfiles(profiles => profiles.map(item => item.id === profile.id ? profile : item));
+            setSaveStatus({ type: 'success', message: `v${profile.options.counter} is now current.` });
+          }}
+        />
+      )}
+
+      {user && savedPreview && (
+        <GenerateModal
+          profile={savedPreview}
+          initialMasterPassword={masterPassword}
+          clearClipboardAfter={clipboardSeconds}
+          onClose={() => setSavedPreview(null)}
+        />
+      )}
 
       <AuthModal
         isOpen={isAuthModalOpen}
@@ -447,11 +552,12 @@ export default function HomePage() {
             className="mt-1.5 text-base"
             style={{ color: 'var(--text-muted)' }}
           >
-            Same three ingredients, same result — on any device, without storing a thing.
+            {user ? 'New recipes are saved to your vault. Your master key stays on this device.' : 'Use the same inputs to generate the same password on any device.'}
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} aria-busy={isSaving} onChange={() => setResultReady(false)}>
+          <fieldset disabled={isSaving} className="min-w-0 space-y-4">
           {/* Algorithm Picker */}
           <AlgorithmSelector
             algorithm={algorithm}
@@ -471,7 +577,7 @@ export default function HomePage() {
               <LabeledField
                 label="Site"
                 value={site}
-                onChange={(e) => setSite(e.target.value)}
+                onChange={(e) => { setSite(e.target.value); clearResult(); }}
                 placeholder="github.com"
                 icon={<Globe className="h-4 w-4" />}
                 inputMode="url"
@@ -480,7 +586,7 @@ export default function HomePage() {
               <LabeledField
                 label="Login"
                 value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                onChange={(e) => { setLogin(e.target.value); clearResult(); }}
                 placeholder="you@company.com"
                 icon={<AtSign className="h-4 w-4" />}
                 inputMode="email"
@@ -692,6 +798,11 @@ export default function HomePage() {
                 showLabel={true}
                 maxTags={3}
               />
+              {canEditTags && (
+                <button type="button" className="mt-2 text-sm font-medium" onClick={handleSaveTags}>
+                  Save tags
+                </button>
+              )}
             </div>
           )}
 
@@ -711,66 +822,66 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Generate Button */}
-          <button
-            type="submit"
-            disabled={!canGenerate}
-            className="btn-primary w-full flex items-center justify-center gap-2.5 h-12 text-base font-medium rounded-xl"
-          >
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            {isLoading ? 'Generating...' : generatedPassword ? 'Generate again' : 'Generate password'}
-          </button>
+          {matchingProfiles.length > 0 ? (
+            <div className="space-y-3 rounded-xl border p-4" style={{ borderColor: 'var(--border-color)' }}>
+              <p className="font-medium">You already have a saved recipe for this account.</p>
+              {matchingProfiles.map(profile => (
+                <div key={profile.id} className="space-y-2">
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {profile.algorithm === 'pbkdf2' ? 'Maximum strength' : 'Easy to say'}
+                    {' · '}v{profile.options.counter ?? 1} current
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="btn-primary rounded-xl px-3 py-2 text-sm font-medium"
+                      onClick={() => handlePrepareVersion(profile)}>
+                      {profile.pendingVersion ? 'Resume new version' : 'Create new version'}
+                    </button>
+                    <button type="button" className="rounded-xl border px-3 py-2 text-sm font-medium"
+                      style={{ borderColor: 'var(--border-color)' }}
+                      onClick={() => handleGenerateSaved(profile)}>
+                      Generate saved password
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={!canGenerate || isSaving || authLoading}
+              className="btn-primary w-full flex items-center justify-center gap-2.5 h-12 text-base font-medium rounded-xl"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              {isLoading ? 'Generating...' : isSaving ? 'Checking and saving…' : resultReady ? 'Generate again' : 'Generate password'}
+            </button>
+          )}
+          </fieldset>
         </form>
 
-        {/* Password Result + Save */}
-        {(generatedPassword || isLoading) && (
+        {resultReady && generatedPassword && (
           <div className="mt-4">
             <PasswordDisplay
               password={generatedPassword}
-              isLoading={isLoading}
+              isLoading={false}
               error={null}
               isVisible={isPasswordVisible}
               onToggleVisibility={() => setIsPasswordVisible(!isPasswordVisible)}
               onCopy={handleCopyWithClear}
               isCopied={isCopied}
             />
-
-            {/* Save Profile Button */}
-            {generatedPassword && user && (
-              <button
-                type="button"
-                onClick={handleSaveProfile}
-                disabled={isSaving}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-base font-medium rounded-xl transition-colors"
-                style={{
-                  color: 'var(--color-cyan-500)',
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                }}
-              >
-                {isSaving ? (
-                  <span>Saving...</span>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save to Vault
-                  </>
-                )}
-              </button>
-            )}
-
-            {/* Save Status Feedback */}
-            {saveStatus && (
-              <div
-                className={`mt-2 text-center text-base py-2 px-4 rounded-lg ${saveStatus.type === 'success'
-                  ? 'text-green-600 bg-green-500/10'
-                  : 'text-red-500 bg-red-500/10'
-                  }`}
-              >
-                {saveStatus.message}
-              </div>
-            )}
           </div>
+        )}
+
+        {saveStatus && (
+          <p
+            role={saveStatus.type === 'error' ? 'alert' : 'status'}
+            className={`mt-2 rounded-lg px-4 py-2 text-center text-base ${saveStatus.type === 'success'
+              ? 'text-green-600 bg-green-500/10'
+              : 'text-red-500 bg-red-500/10'
+              }`}
+          >
+            {saveStatus.message}
+          </p>
         )}
 
         {/* Reset */}
@@ -778,6 +889,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={handleReset}
+            disabled={isSaving}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-base transition-colors"
             style={{ color: 'var(--text-muted)' }}
             aria-label="Reset all fields"

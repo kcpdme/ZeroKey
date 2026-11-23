@@ -76,20 +76,21 @@ export function snapshotRecipe(
 
 /**
  * Options to store after an explicit rotate.
- * PBKDF2: counter + 1 (this is what the generator reads).
- * Memorable: counter + 1 for the version label, and magicNumber + 1 so the
- * existing formula actually yields a new password.
+ * Advance beyond the current and archived counters. Memorable also advances
+ * the magic number, which is the input that changes its password.
  */
 export function nextRotatedOptions<T extends RecipeOptions>(
     algorithm: GeneratorType,
-    options: T
+    options: T,
+    history: readonly RecipeSnapshot[] = [],
 ): T {
-    const counter = (options.counter ?? 1) + 1;
+    const counter = history.reduce((latest, entry) => Math.max(latest, entry.version), options.counter ?? 1) + 1;
     if (algorithm === 'memorizable') {
+        const lastMagicNumber = history.reduce((latest, entry) => Math.max(latest, entry.magicNumber ?? latest), options.magicNumber ?? 0);
         return {
             ...options,
             counter,
-            magicNumber: (options.magicNumber ?? 0) + 1,
+            magicNumber: lastMagicNumber + 1,
         };
     }
     return { ...options, counter };
