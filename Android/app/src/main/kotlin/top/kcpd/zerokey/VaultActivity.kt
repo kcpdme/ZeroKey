@@ -2,6 +2,7 @@ package top.kcpd.zerokey
 
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.ListPopupWindow
 import android.content.Intent
 import android.graphics.Color
@@ -557,7 +558,8 @@ class VaultActivity : AppActivity() {
                 return row
             }
         }
-        return ListPopupWindow(this).apply {
+        val menuContext = ContextThemeWrapper(this, R.style.ThemeOverlay_ZeroKey_RecipeMenu)
+        return ListPopupWindow(menuContext).apply {
             anchorView = anchor
             setDropDownGravity(Gravity.END)
             isModal = true

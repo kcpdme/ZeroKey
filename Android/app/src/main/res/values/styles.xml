@@ -18,5 +18,11 @@
         <item name="android:activityCloseEnterAnimation">@anim/tab_enter</item>
         <item name="android:activityCloseExitAnimation">@anim/tab_exit</item>
     </style>
+    <style name="ThemeOverlay.ZeroKey.RecipeMenu" parent="">
+        <item name="listPopupWindowStyle">@style/Widget.ZeroKey.RecipeMenu</item>
+    </style>
+    <style name="Widget.ZeroKey.RecipeMenu" parent="Widget.AppCompat.ListPopupWindow">
+        <item name="android:popupEnterTransition">@null</item>
+    </style>
     <string name="app_name">ZeroKey</string>
 </resources>
