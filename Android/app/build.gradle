@@ -34,8 +34,8 @@ android {
         applicationId 'top.kcpd.zerokey'
         minSdk 26
         targetSdk 36
-        versionCode 11
-        versionName '0.7.0'
+        versionCode 13
+        versionName '0.7.2'
         manifestPlaceholders = [allowEmulatorCleartext: useFirebaseEmulators]
         buildConfigField 'boolean', 'FIREBASE_EMULATOR', "${useFirebaseEmulators}"
 

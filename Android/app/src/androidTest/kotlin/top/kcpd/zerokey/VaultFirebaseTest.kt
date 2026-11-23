@@ -95,6 +95,11 @@ class VaultFirebaseTest {
                 signIn.findViewById<EditText>(R.id.account_email).setText(email)
                 signIn.findViewById<EditText>(R.id.account_password).setText(accountPassword)
                 signIn.findViewById<View>(R.id.email_sign_in).performClick()
+                val progress = signIn.findViewById<TextView>(R.id.account_progress_title)
+                assertTrue(progress.isShown)
+                assertEquals("Signing in…", progress.text.toString())
+                assertTrue(signIn.findViewById<View>(R.id.account_progress_spinner).isShown)
+                assertFalse(signIn.findViewById<View>(R.id.account_email).isShown)
             }
             assertTrue(instrumentation.waitForNodeById("vault_search", enabled = true).isVisibleToUser)
             assertEquals(uid, cloud.auth.uid)
@@ -119,6 +124,42 @@ class VaultFirebaseTest {
                 reopened.findViewById<View>(R.id.generator_tab).performClick()
             }
             generator.waitForView(R.id.site)
+        }
+    }
+
+    @Test fun firstSyncShowsProgressAndReopeningShowsCachedRecipes() = test {
+        val site = "first-sync.example"
+        val account = VaultStore.Account(email, site, site, site)
+        cloud.vault.create(uid, account, "pbkdf2", emptyMap())
+        waitForRecipe()
+        cloud.auth.signOut()
+        cloud.cache.observe(uid).first { it.isEmpty() }
+
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val firestore = FirebaseFirestore.getInstance(FirebaseApp.getInstance("zerokey-emulator"))
+        firestore.disableNetwork().await()
+        try {
+            ActivityScenario.launch(VaultActivity::class.java).use { vault ->
+                vault.waitForView(R.id.vault_sign_in, enabled = true)
+                cloud.auth.signInWithEmailAndPassword(email, accountPassword).await()
+                instrumentation.waitForNode("Syncing recipes…")
+                vault.onActivity {
+                    assertNull(it.findViewById<View>(R.id.vault_sign_in))
+                    assertTrue(it.findViewById<View>(R.id.vault_progress_spinner).isShown)
+                }
+                firestore.enableNetwork().await()
+                instrumentation.waitForNode(site)
+                cloud.sync.first { it == Cloud.Sync.ONLINE }
+                vault.onActivity { assertFalse(it.findViewById<View>(R.id.vault_progress_spinner).isShown) }
+            }
+            firestore.disableNetwork().await()
+            ActivityScenario.launch(VaultActivity::class.java).use { vault ->
+                instrumentation.waitForNode(site)
+                instrumentation.waitForNode("Offline · Last synced recipes")
+                vault.onActivity { assertNull(it.findViewById<View>(R.id.vault_sign_in)) }
+            }
+        } finally {
+            firestore.enableNetwork().await()
         }
     }
 
@@ -300,6 +341,7 @@ class VaultFirebaseTest {
         val firestore = FirebaseFirestore.getInstance(FirebaseApp.getInstance("zerokey-emulator"))
         firestore.collection("password_profiles").document(original.id)
             .update("versionHistory", listOf(mapOf("version" to 3))).await()
+        waitForRecipe { it.history.any { entry -> entry.number("version", 0) == 3L } }
         val master = "synthetic editor master key"
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         var preview = ""

@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
@@ -50,6 +51,12 @@ internal fun Activity.text(label: String, size: Float = 14f, color: Int = muted)
 internal fun Activity.heading(label: String, size: Float = 32f) = text(label, size, inkColor).apply {
     typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     ViewCompat.setAccessibilityHeading(this, true)
+}
+
+internal fun Activity.busyIndicator() = ProgressBar(this).apply {
+    isIndeterminate = true
+    indeterminateTintList = ColorStateList.valueOf(accent)
+    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
 }
 
 internal fun Activity.rounded(fill: Int, radius: Int, border: Int? = null) =

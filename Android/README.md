@@ -1,6 +1,8 @@
 # ZeroKey for Android
 
-ZeroKey opens in **Vault**. Tap **Sign in** if you are signed out. Use the Google or email account you use on the Web. Firebase restores the session when you reopen the app. The bottom bar shows **Vault** first, then **Generator**. Tap **+** in Vault to start with a cleared Generator form. The vault syncs with the same Firestore database as kcpd.top. Room keeps a local copy of your recipes and uses indexed lookups for the **Site** and **Login** dropdowns, including when you are offline. Signing out clears the local vault.
+ZeroKey opens in **Vault**. It shows **Opening Vault…** while Firebase restores your session. Saved recipes appear as soon as the local copy is ready. On first sign-in, **Syncing recipes…** appears while the vault downloads. Tap **Sign in** when you are signed out, using the Google or email account you use on the Web. The bottom bar shows **Vault** first, then **Generator**. Tap **+** in Vault to start with a cleared Generator form. The vault syncs with the same Firestore database as kcpd.top. Room keeps a local copy of your recipes and uses indexed lookups for the **Site** and **Login** dropdowns, including when you are offline. Signing out clears the local vault.
+
+After you choose an account in Android's Google picker, ZeroKey shows **Signing in with Google…** while Firebase establishes the session. To diagnose a slow sign-in, run `adb logcat -s ZeroKeySignIn:D`. The timing messages record the Google picker duration, Firebase sign-in, and first successful recipe sync.
 
 The generator saves new recipes when you are signed in. If it finds an existing site and login, choose the current recipe or select **Rotate**. Generate the new version, change the password at the site, then tap **Make current**.
 

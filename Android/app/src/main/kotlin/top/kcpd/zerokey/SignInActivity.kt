@@ -1,15 +1,20 @@
 package top.kcpd.zerokey
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.InputType
 import android.text.method.PasswordTransformationMethod
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -36,7 +41,9 @@ class SignInActivity : AppActivity() {
     private lateinit var showPassword: CheckBox
     private lateinit var emailButton: Button
     private lateinit var status: TextView
-    private var googleButton: Button? = null
+    private lateinit var signInForm: View
+    private lateinit var progressPage: View
+    private lateinit var progressTitle: TextView
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -45,7 +52,7 @@ class SignInActivity : AppActivity() {
             complete()
             return
         }
-        val body = page()
+        val page = page(scrollable = false)
         val back = button("Back to Vault", ::finish).apply {
             id = R.id.sign_in_back
             val arrow = getDrawable(R.drawable.ic_arrow_back)?.mutate()
@@ -54,7 +61,27 @@ class SignInActivity : AppActivity() {
             setCompoundDrawablesRelative(arrow, null, null, null)
             compoundDrawablePadding = dp(8)
         }
-        body.addView(back, LinearLayout.LayoutParams(-2, -2))
+        page.addView(back, LinearLayout.LayoutParams(-2, -2))
+        status = text("").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
+        add(page, status, 8)
+        message(null)
+        val content = FrameLayout(this)
+        page.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
+        val body = column().apply { setPadding(0, 0, 0, dp(24)) }
+        signInForm = ScrollView(this).apply { addView(body) }
+        content.addView(signInForm, FrameLayout.LayoutParams(-1, -1))
+        progressPage = column().apply {
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+            addView(busyIndicator().apply { id = R.id.account_progress_spinner }, LinearLayout.LayoutParams(dp(36), dp(36)))
+            progressTitle = heading("", 23f).apply {
+                id = R.id.account_progress_title
+                gravity = Gravity.CENTER
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            }
+            add(this, progressTitle, 16)
+        }
+        content.addView(progressPage, FrameLayout.LayoutParams(-1, -1))
         val mark = icon(R.drawable.ic_vault, accent).apply {
             background = rounded(accentSurface, 18)
             setPadding(dp(14), dp(14), dp(14), dp(14))
@@ -97,9 +124,6 @@ class SignInActivity : AppActivity() {
         label(form, "Account password", R.id.account_password, 14)
         add(form, password, 6)
         add(form, showPassword)
-        status = text("").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
-        add(form, status)
-        message(null)
         emailButton = primaryButton("Sign in with email") {
             val address = email.text.toString().trim()
             val credential = password.text.toString()
@@ -107,7 +131,9 @@ class SignInActivity : AppActivity() {
                 address.isEmpty() -> { message("Enter your email address.", true); email.requestFocus() }
                 credential.isEmpty() -> { message("Enter your account password.", true); password.requestFocus() }
                 else -> authenticate("Signing in…", "Could not sign in. Check your email and password.") {
+                    val startedAt = SystemClock.elapsedRealtime()
                     cloud.auth.signInWithEmailAndPassword(address, credential).await()
+                    Log.d("ZeroKeySignIn", "Firebase email sign-in completed in ${SystemClock.elapsedRealtime() - startedAt} ms")
                 }
             }
         }.apply { id = R.id.email_sign_in }
@@ -121,24 +147,31 @@ class SignInActivity : AppActivity() {
         val clientId = resources.getIdentifier("default_web_client_id", "string", packageName)
         if (clientId == 0) return
         add(body, text("or").apply { gravity = Gravity.CENTER }, 14)
-        googleButton = button("Continue with Google") {
+        val googleButton = button("Continue with Google") {
             authenticate("Opening Google sign-in…", "Could not sign in with Google. Try again.") {
+                val pickerStartedAt = SystemClock.elapsedRealtime()
                 val request = GetCredentialRequest.Builder().addCredentialOption(
                     GetSignInWithGoogleOption.Builder(getString(clientId)).build()).build()
                 val credential = CredentialManager.create(this).getCredential(this, request).credential
+                Log.d("ZeroKeySignIn", "Google account picker returned in ${SystemClock.elapsedRealtime() - pickerStartedAt} ms")
+                progressTitle.text = "Signing in with Google…"
                 check(credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)
                 val token = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                val firebaseStartedAt = SystemClock.elapsedRealtime()
                 cloud.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                Log.d("ZeroKeySignIn", "Firebase Google sign-in completed in ${SystemClock.elapsedRealtime() - firebaseStartedAt} ms")
             }
         }
-        add(body, requireNotNull(googleButton), 12)
+        add(body, googleButton, 12)
     }
 
     private fun authenticate(progress: String, failure: String, signIn: suspend () -> Unit) {
         if (operation?.isActive == true) return
-        message(progress)
-        emailButton.isEnabled = false
-        googleButton?.isEnabled = false
+        message(null)
+        currentFocus?.let { getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(it.windowToken, 0) }
+        progressTitle.text = progress
+        signInForm.visibility = View.GONE
+        progressPage.visibility = View.VISIBLE
         operation = scope.launch {
             try {
                 signIn()
@@ -152,8 +185,10 @@ class SignInActivity : AppActivity() {
             } catch (_: Exception) {
                 message(failure, true)
             } finally {
-                emailButton.isEnabled = true
-                googleButton?.isEnabled = true
+                if (!isFinishing && !isDestroyed) {
+                    progressPage.visibility = View.GONE
+                    signInForm.visibility = View.VISIBLE
+                }
             }
         }
     }
