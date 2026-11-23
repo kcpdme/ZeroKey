@@ -34,3 +34,11 @@ export function normalizeSiteForAlgorithm(site: string, algorithm: GeneratorType
         ? normalizeMemorizableSite(site)
         : normalizePbkdf2Site(site);
 }
+
+/** Saved inputs go through normalization again when regenerated from the vault. */
+export function siteForSavedRecipe(site: string, algorithm: GeneratorType): string {
+    const normalized = normalizeSiteForAlgorithm(site, algorithm);
+    return normalizeSiteForAlgorithm(normalized, algorithm) === normalized
+        ? normalized
+        : site.toLowerCase().trim();
+}

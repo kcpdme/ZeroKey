@@ -1,9 +1,9 @@
 // app/components/dashboard/GenerateModal.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { X, Globe, User, Eye, EyeOff, Copy, Check } from 'lucide-react';
-import { PasswordProfile } from '../../services/ProfileService';
+import { ProfileService, type PasswordProfile } from '../../services/ProfileService';
 import { generatePBKDF2Password, generateMemorizablePassword } from '../../lib/generators';
 import { assertPbkdf2Generatable } from '../../lib/pbkdf2-preflight';
 import { normalizeLogin, normalizeSiteForAlgorithm } from '../../lib/normalize-input';
@@ -13,15 +13,21 @@ interface GenerateModalProps {
     onClose: () => void;
     /** Seconds before the copied password is cleared. 0 keeps it. */
     clearClipboardAfter?: number;
+    initialMasterPassword?: string;
+    onMakeCurrent?: () => Promise<void>;
 }
 
-export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: GenerateModalProps) {
-    const [masterPassword, setMasterPassword] = useState('');
+export function GenerateModal({
+    profile, onClose, clearClipboardAfter = 30, initialMasterPassword = '', onMakeCurrent,
+}: GenerateModalProps) {
+    const headingId = useId();
+    const [masterPassword, setMasterPassword] = useState(initialMasterPassword);
     const [generatedPassword, setGeneratedPassword] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isConfirming, setIsConfirming] = useState(false);
 
     if (!profile) return null;
 
@@ -88,17 +94,33 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
         onClose();
     };
 
+    const handleMakeCurrent = async () => {
+        if (!onMakeCurrent || isConfirming) return;
+        setError(null);
+        setIsConfirming(true);
+        try {
+            await onMakeCurrent();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not make this version current.');
+        } finally {
+            setIsConfirming(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div
                 className="w-full max-w-md rounded-2xl p-6"
                 style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={headingId}
             >
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                        Generate Password
+                    <h2 id={headingId} className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {onMakeCurrent ? `Draft password · v${profile.options.counter}` : 'Generate Password'}
                     </h2>
-                    <button onClick={handleClose} style={{ color: 'var(--text-muted)' }}>
+                    <button onClick={handleClose} disabled={isConfirming} aria-label="Close" style={{ color: 'var(--text-muted)' }}>
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -157,6 +179,7 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setPasswordVisible(!passwordVisible)}
+                                    aria-label={passwordVisible ? 'Hide password' : 'Show password'}
                                     className="p-2 rounded-lg"
                                     style={{ color: 'var(--text-muted)' }}
                                 >
@@ -164,6 +187,7 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
                                 </button>
                                 <button
                                     onClick={handleCopy}
+                                    aria-label="Copy password"
                                     className="p-2 rounded-lg"
                                     style={{ color: copied ? 'var(--color-cyan-500)' : 'var(--text-muted)' }}
                                 >
@@ -175,7 +199,13 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
                 )}
 
                 {error && (
-                    <p className="mb-4 text-sm" style={{ color: '#f87171' }}>{error}</p>
+                    <p role="alert" className="mb-4 text-sm" style={{ color: '#f87171' }}>{error}</p>
+                )}
+
+                {generatedPassword && onMakeCurrent && (
+                    <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        Change the password on the site first. Once the site accepts it, make this version current.
+                    </p>
                 )}
 
                 {/* Actions */}
@@ -191,6 +221,14 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
                             }}
                         >
                             {isGenerating ? 'Generating...' : 'Generate Password'}
+                        </button>
+                    ) : onMakeCurrent ? (
+                        <button
+                            onClick={handleMakeCurrent}
+                            disabled={isConfirming}
+                            className="btn-primary flex-1 py-3 rounded-xl font-medium disabled:opacity-50"
+                        >
+                            {isConfirming ? 'Confirming…' : 'Make current'}
                         </button>
                     ) : (
                         <button
@@ -208,5 +246,29 @@ export function GenerateModal({ profile, onClose, clearClipboardAfter = 30 }: Ge
                 </div>
             </div>
         </div>
+    );
+}
+
+interface DraftPasswordModalProps extends Pick<GenerateModalProps, 'onClose' | 'clearClipboardAfter' | 'initialMasterPassword'> {
+    profile: PasswordProfile;
+    onConfirmed: (profile: PasswordProfile) => void;
+}
+
+export function DraftPasswordModal({ profile, onConfirmed, onClose, ...props }: DraftPasswordModalProps) {
+    const { id, pendingVersion } = profile;
+    if (!id || !pendingVersion) return null;
+
+    return (
+        <GenerateModal
+            key={pendingVersion.id}
+            {...props}
+            profile={{ ...profile, options: pendingVersion.options }}
+            onClose={onClose}
+            onMakeCurrent={async () => {
+                const updated = await ProfileService.confirmVersion(id, pendingVersion.id);
+                onConfirmed(updated);
+                onClose();
+            }}
+        />
     );
 }

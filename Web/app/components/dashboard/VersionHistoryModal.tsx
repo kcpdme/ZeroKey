@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, History, Clock, RotateCcw, Shield, Sparkles, AlertTriangle, ChevronRight, KeyRound } from 'lucide-react';
+import { X, History, Clock, RotateCcw, AlertTriangle, ChevronRight, KeyRound } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { PasswordProfile, ProfileService } from '../../services/ProfileService';
 import { optionsForHistoryEntry } from '../../lib/recipe-history';
@@ -11,8 +11,8 @@ interface VersionHistoryModalProps {
     profile: PasswordProfile | null;
     onClose: () => void;
     onRegenerateVersion: (profile: PasswordProfile, version: number) => void;
-    onRotate: () => Promise<void>;
-    onGenerateNew?: (profile: PasswordProfile) => void;
+    onProfileChanged: (profile: PasswordProfile) => void;
+    onGenerateDraft: (profile: PasswordProfile) => void;
 }
 
 const ROTATION_REASONS = [
@@ -27,35 +27,29 @@ export function VersionHistoryModal({
     profile,
     onClose,
     onRegenerateVersion,
-    onRotate,
-    onGenerateNew,
+    onProfileChanged,
+    onGenerateDraft,
 }: VersionHistoryModalProps) {
     const [isRotating, setIsRotating] = useState(false);
     const [showRotateForm, setShowRotateForm] = useState(false);
     const [rotateReason, setRotateReason] = useState('regular');
     const [expiryDays, setExpiryDays] = useState<number | undefined>(90);
-    const [rotateSuccess, setRotateSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Reset state when profile changes (different profile opened)
     useEffect(() => {
-        setRotateSuccess(false);
+        setError(null);
         setShowRotateForm(false);
         setRotateReason('regular');
         setExpiryDays(90);
     }, [profile?.id]);
 
-    // Auto-hide success message after 5 seconds
-    useEffect(() => {
-        if (rotateSuccess) {
-            const timer = setTimeout(() => setRotateSuccess(false), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [rotateSuccess]);
-
     if (!profile) return null;
 
     const isSecure = profile.algorithm === 'pbkdf2';
     const currentVersion = profile.options?.counter || 1;
+    const draft = profile.pendingVersion;
+    const canPrepare = profile.id && !profile.id.startsWith('seed-');
     const history = profile.versionHistory || [];
 
     // Sort history by version descending (newest first)
@@ -81,19 +75,31 @@ export function VersionHistoryModal({
         }
     };
 
-    const handleRotate = async () => {
-        if (!profile.id) return;
+    const handlePrepare = async () => {
+        if (!profile.id || isRotating) return;
         setIsRotating(true);
+        setError(null);
         try {
-            const reason = ROTATION_REASONS.find(r => r.id === rotateReason)?.label || 'Password rotated';
-            await ProfileService.rotatePassword(profile.id, reason, expiryDays);
+            const reason = ROTATION_REASONS.find(r => r.id === rotateReason)?.label || 'Password changed';
+            const updated = await ProfileService.prepareVersion(profile.id, reason, expiryDays);
             setShowRotateForm(false);
-            setRotateSuccess(true);
-            // Call onRotate after showing success (this refreshes data)
-            await onRotate();
-            // Don't auto-hide - user can dismiss manually or click Generate
-        } catch (error) {
-            console.error('Failed to rotate password:', error);
+            onProfileChanged(updated);
+            onGenerateDraft(updated);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not prepare the new version.');
+        } finally {
+            setIsRotating(false);
+        }
+    };
+
+    const handleDiscard = async () => {
+        if (!profile.id || !draft || isRotating) return;
+        setIsRotating(true);
+        setError(null);
+        try {
+            onProfileChanged(await ProfileService.discardVersion(profile.id, draft.id));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not discard the draft.');
         } finally {
             setIsRotating(false);
         }
@@ -244,51 +250,35 @@ export function VersionHistoryModal({
                             <span>Last updated {formatTimeAgo(profile.updatedAt)}</span>
                         </div>
 
-                        {/* Success Message with Generate Button */}
-                        {rotateSuccess && (
-                            <div
-                                className="mt-3 p-3 rounded-lg relative"
-                                style={{
-                                    background: 'rgba(34, 197, 94, 0.1)',
-                                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                                }}
-                            >
-                                {/* Dismiss button */}
-                                <button
-                                    onClick={() => setRotateSuccess(false)}
-                                    className="absolute top-2 right-2 p-1 rounded-full transition-colors hover:bg-white/10"
-                                    style={{ color: '#22c55e' }}
-                                    aria-label="Dismiss"
-                                >
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                                <p
-                                    className="text-sm font-medium text-center mb-2 pr-6"
-                                    style={{ color: '#22c55e' }}
-                                >
-                                    ✓ Password rotated to v{currentVersion}!
-                                </p>
-                                {onGenerateNew && (
+                        {error && <p role="alert" className="mt-3 text-sm text-red-500">{error}</p>}
+
+                        {draft && (
+                            <div className="mt-4 space-y-2 border-t pt-3" style={{ borderColor: 'var(--border-color)' }}>
+                                <p className="text-sm font-semibold">Draft · v{draft.options.counter}</p>
+                                <div className="flex flex-wrap gap-2">
                                     <button
-                                        onClick={() => {
-                                            onClose();
-                                            onGenerateNew(profile);
-                                        }}
-                                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]"
-                                        style={{
-                                            background: 'var(--btn-primary-gradient)',
-                                            color: 'white',
-                                        }}
+                                        type="button"
+                                        onClick={() => onGenerateDraft(profile)}
+                                        disabled={isRotating}
+                                        className="btn-primary flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium"
                                     >
-                                        <KeyRound className="w-4 h-4" />
-                                        Generate v{currentVersion} Password
+                                        <KeyRound className="h-4 w-4" />
+                                        Generate draft password
                                     </button>
-                                )}
+                                    <button
+                                        type="button"
+                                        onClick={handleDiscard}
+                                        disabled={isRotating}
+                                        className="rounded-lg border px-3 py-2 text-sm font-medium disabled:opacity-50"
+                                        style={{ borderColor: 'var(--border-color)' }}
+                                    >
+                                        Discard draft
+                                    </button>
+                                </div>
                             </div>
                         )}
 
-                        {/* Rotate Button */}
-                        {!showRotateForm ? (
+                        {canPrepare && !draft && (!showRotateForm ? (
                             <button
                                 onClick={() => setShowRotateForm(true)}
                                 className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all hover:scale-[1.02]"
@@ -298,16 +288,17 @@ export function VersionHistoryModal({
                                 }}
                             >
                                 <RotateCcw className="w-4 h-4" />
-                                Rotate to v{currentVersion + 1}
+                                Create new version
                             </button>
                         ) : (
                             <div className="mt-4 space-y-3">
                                 {/* Reason Select */}
                                 <div>
-                                    <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>
+                                    <label htmlFor="rotation-reason" className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>
                                         Reason for rotation
                                     </label>
                                     <select
+                                        id="rotation-reason"
                                         value={rotateReason}
                                         onChange={(e) => setRotateReason(e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg text-sm"
@@ -325,11 +316,13 @@ export function VersionHistoryModal({
 
                                 {/* Expiry Days */}
                                 <div>
-                                    <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>
+                                    <label htmlFor="rotation-expiry" className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>
                                         New password expires in (days)
                                     </label>
                                     <input
+                                        id="rotation-expiry"
                                         type="number"
+                                        min={1}
                                         value={expiryDays || ''}
                                         onChange={(e) => setExpiryDays(e.target.value ? parseInt(e.target.value) : undefined)}
                                         placeholder="90"
@@ -356,7 +349,7 @@ export function VersionHistoryModal({
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={handleRotate}
+                                        onClick={handlePrepare}
                                         disabled={isRotating}
                                         className="flex-1 py-2 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] disabled:opacity-50"
                                         style={{
@@ -364,11 +357,11 @@ export function VersionHistoryModal({
                                             color: 'white',
                                         }}
                                     >
-                                        {isRotating ? 'Rotating...' : 'Rotate Now'}
+                                        {isRotating ? 'Preparing…' : 'Create draft'}
                                     </button>
                                 </div>
                             </div>
-                        )}
+                        ))}
                     </div>
                 </div>
 

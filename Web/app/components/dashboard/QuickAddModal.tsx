@@ -95,15 +95,20 @@ export function QuickAddModal({ isOpen, onClose, userId, userSettings, onSuccess
                 );
             }
 
-            await ProfileService.saveProfile({
+            if (!password) throw new Error('Enter a valid site and login before saving.');
+
+            const saved = await ProfileService.createProfile({
                 userId,
-                site: normalizedSite,
-                login: normalizedLogin,
+                site,
+                login,
                 algorithm: type,
                 options,
                 ...(selectedTags.length > 0 && { tags: selectedTags }),
             });
-            setSite(normalizedSite);
+            if (saved.status === 'exists') {
+                throw new Error('This account already has a recipe. Open its version history to create a new version.');
+            }
+            setSite(saved.profile.site);
             setLogin(normalizedLogin);
 
             setGeneratedPassword(password);

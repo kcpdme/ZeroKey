@@ -7,7 +7,8 @@ import { useTheme } from '../../../hooks/useTheme';
 import { ProfileService, PasswordProfile } from '../../../services/ProfileService';
 import { SettingsService, UserSettings } from '../../../services/SettingsService';
 import { SettingsModal } from '../../settings';
-import { GenerateModal } from '../GenerateModal';
+import { DraftPasswordModal, GenerateModal } from '../GenerateModal';
+import { toast } from 'sonner';
 import { DeleteConfirmModal } from '../DeleteConfirmModal';
 import { QuickAddModal } from '../QuickAddModal';
 import { ExportImportModal } from '../ExportImportModal';
@@ -51,6 +52,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
     const [showExportImport, setShowExportImport] = useState(false);
     const [showQuickSearch, setShowQuickSearch] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<PasswordProfile | null>(null);
+    const [draftProfile, setDraftProfile] = useState<PasswordProfile | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<PasswordProfile | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [historyProfile, setHistoryProfile] = useState<PasswordProfile | null>(null);
@@ -81,7 +83,9 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                 else if (showQuickAdd) setShowQuickAdd(false);
                 else if (showExportImport) setShowExportImport(false);
                 else if (showSettings) setShowSettings(false);
+                else if (draftProfile) setDraftProfile(null);
                 else if (selectedProfile) setSelectedProfile(null);
+                else if (historyProfile) setHistoryProfile(null);
                 else if (deleteTarget) setDeleteTarget(null);
                 else if (isMobileMenuOpen) setIsMobileMenuOpen(false);
                 else onClose();
@@ -90,7 +94,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, showQuickSearch, showQuickAdd, showExportImport, showSettings, selectedProfile, deleteTarget, isMobileMenuOpen, onClose]);
+    }, [isOpen, showQuickSearch, showQuickAdd, showExportImport, showSettings, selectedProfile, draftProfile, historyProfile, deleteTarget, isMobileMenuOpen, onClose]);
 
     // Load data
     useEffect(() => {
@@ -237,11 +241,36 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
         onLoadProfile(profile);
     };
 
+    const replaceProfile = (profile: PasswordProfile) => {
+        setProfiles(current => current.map(item => item.id === profile.id ? profile : item));
+        setHistoryProfile(current => current?.id === profile.id ? profile : current);
+    };
+
     const handleGenerate = async (profile: PasswordProfile) => {
-        if (profile.id && !profile.id.startsWith('seed-')) {
-            ProfileService.updateLastUsed(profile.id).catch(console.error);
+        if (!profile.id || profile.id.startsWith('seed-')) {
+            setSelectedProfile(profile);
+            return;
         }
-        setSelectedProfile(profile);
+        try {
+            const current = await ProfileService.getCurrentProfile(profile.id);
+            replaceProfile(current);
+            setSelectedProfile(current);
+            ProfileService.updateLastUsed(profile.id).catch(console.error);
+        } catch {
+            toast.error('Could not check the current recipe. Try again.');
+        }
+    };
+
+    const handleViewHistory = async (profile: PasswordProfile) => {
+        try {
+            const current = profile.id && !profile.id.startsWith('seed-')
+                ? await ProfileService.getCurrentProfile(profile.id)
+                : profile;
+            replaceProfile(current);
+            setHistoryProfile(current);
+        } catch {
+            toast.error('Could not load version history. Try again.');
+        }
     };
 
     const handleViewChange = (view: ViewType) => {
@@ -298,6 +327,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
 
             {/* Generate Modal */}
             <GenerateModal
+                key={selectedProfile?.id}
                 profile={selectedProfile}
                 onClose={() => setSelectedProfile(null)}
                 clearClipboardAfter={userSettings?.preferences.clearClipboardAfter ?? 30}
@@ -328,26 +358,24 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                     setHistoryProfile(null);
                     setSelectedProfile(modifiedProfile);
                 }}
-                onRotate={async () => {
-                    // Refresh profiles in background
-                    await loadProfiles();
-                    // Update the modal with fresh profile data (don't close it)
-                    if (historyProfile?.id) {
-                        const freshProfiles = user
-                            ? await ProfileService.getUserProfiles(user.uid)
-                            : seedProfiles;
-                        const updatedProfile = freshProfiles.find(p => p.id === historyProfile.id);
-                        if (updatedProfile) {
-                            setHistoryProfile(updatedProfile);
-                        }
-                    }
-                }}
-                onGenerateNew={(updatedProfile) => {
-                    // Open generate modal with the rotated profile
-                    setSelectedProfile(updatedProfile);
+                onProfileChanged={replaceProfile}
+                onGenerateDraft={(profile) => {
+                    setHistoryProfile(null);
+                    setDraftProfile(profile);
                 }}
             />
 
+            {draftProfile && (
+                <DraftPasswordModal
+                    profile={draftProfile}
+                    onClose={() => setDraftProfile(null)}
+                    onConfirmed={profile => {
+                        replaceProfile(profile);
+                        toast.success(`v${profile.options.counter} is now current.`);
+                    }}
+                    clearClipboardAfter={userSettings?.preferences.clearClipboardAfter ?? 30}
+                />
+            )}
 
             {/* Mobile Drawer */}
             <MobileDrawer
@@ -420,7 +448,7 @@ export function DashboardV2({ isOpen, onClose, onLoadProfile }: DashboardV2Props
                             onGenerate={handleGenerate}
                             onEdit={handleEdit}
                             onDelete={setDeleteTarget}
-                            onViewHistory={setHistoryProfile}
+                            onViewHistory={handleViewHistory}
                             onToggleFavorite={handleToggleFavorite}
                             onProfilesChange={loadProfiles}
                         />

@@ -155,6 +155,9 @@ export function PasswordCard({
                         {profile.algorithm === 'memorizable' && (
                             <WavesIcon className="h-3.5 w-3.5 shrink-0 recipe-muted" aria-label="Memorizable" />
                         )}
+                        {profile.pendingVersion && (
+                            <span className="recipe-badge shrink-0">Draft v{profile.pendingVersion.options.counter}</span>
+                        )}
                     </span>
                     <span className="block truncate text-xs recipe-muted">
                         {profile.login}
