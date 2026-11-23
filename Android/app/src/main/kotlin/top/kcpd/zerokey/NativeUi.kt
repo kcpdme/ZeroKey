@@ -193,8 +193,9 @@ internal fun Activity.card() = column().apply {
 
 internal fun Activity.page(scrollable: Boolean = true, navigation: View? = null,
                            floatingAction: View? = null, toolbar: View? = null): LinearLayout {
+    val sidePadding = dp(10)
     val body = column().apply {
-        setPadding(dp(22), dp(12), dp(22), dp(if (scrollable) 24 else 0))
+        setPadding(sidePadding, dp(12), sidePadding, dp(if (scrollable) 24 else 0))
         isFocusableInTouchMode = true
     }
     val content = if (scrollable) {
@@ -218,7 +219,7 @@ internal fun Activity.page(scrollable: Boolean = true, navigation: View? = null,
         if (floatingAction != null) {
             val overlay = FrameLayout(this@page)
             overlay.addView(floatingAction, FrameLayout.LayoutParams(dp(56), dp(56), Gravity.END or Gravity.BOTTOM).apply {
-                marginEnd = dp(22)
+                marginEnd = sidePadding
                 bottomMargin = dp(16)
             })
             frame.addView(overlay, FrameLayout.LayoutParams(
