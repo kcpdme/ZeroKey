@@ -109,6 +109,8 @@ export function VersionHistoryModal({
         const entry = [...history].reverse().find((item) => item.version === version);
         const modifiedProfile = {
             ...profile,
+            site: entry?.site ?? profile.site,
+            login: entry?.login ?? profile.login,
             options: entry
                 ? optionsForHistoryEntry(profile.options, entry)
                 : { ...profile.options, counter: version }

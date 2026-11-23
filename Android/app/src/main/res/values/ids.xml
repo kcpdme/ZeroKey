@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="secure_mode" type="id" />
+    <item name="memorable_mode" type="id" />
+    <item name="site" type="id" />
+    <item name="login" type="id" />
+    <item name="master_key" type="id" />
+    <item name="show_master_key" type="id" />
+    <item name="generator_inputs" type="id" />
+    <item name="generator_clear_form" type="id" />
+    <item name="advanced_options" type="id" />
+    <item name="rotation" type="id" />
+    <item name="length" type="id" />
+    <item name="salt" type="id" />
+    <item name="shift" type="id" />
+    <item name="magic_number" type="id" />
+    <item name="generate" type="id" />
+    <item name="generated_password" type="id" />
+    <item name="show_password" type="id" />
+    <item name="vault_button" type="id" />
+    <item name="generator_tab" type="id" />
+    <item name="sign_in_back" type="id" />
+    <item name="theme_setting" type="id" />
+    <item name="biometric_setting" type="id" />
+    <item name="export_recipes" type="id" />
+    <item name="vault_sign_in" type="id" />
+    <item name="settings_button" type="id" />
+    <item name="unlock_app" type="id" />
+    <item name="app_lock_screen" type="id" />
+    <item name="category_input" type="id" />
+    <item name="category_create" type="id" />
+    <item name="category_save" type="id" />
+    <item name="vault_list" type="id" />
+    <item name="filter_all" type="id" />
+    <item name="recipe_overflow" type="id" />
+    <item name="vault_search" type="id" />
+    <item name="new_recipe" type="id" />
+    <item name="save_recipe_edit" type="id" />
+    <item name="account_email" type="id" />
+    <item name="account_password" type="id" />
+    <item name="email_sign_in" type="id" />
+    <item name="confirm_version" type="id" />
+</resources>

@@ -17,6 +17,9 @@ export interface BackupRecipeOptions {
 
 export interface BackupHistoryEntry {
     version: number;
+    site?: string;
+    login?: string;
+    completeRecipe?: boolean;
     changedAt?: string;
     reason?: string;
     expiresAt?: string;
@@ -106,6 +109,9 @@ function cleanHistory(entries: BackupSourceProfile['versionHistory']): BackupHis
     if (!entries?.length) return undefined;
     return entries.map((entry) => {
         const cleaned: BackupHistoryEntry = { version: entry.version };
+        if (entry.site !== undefined) cleaned.site = entry.site;
+        if (entry.login !== undefined) cleaned.login = entry.login;
+        if (entry.completeRecipe === true) cleaned.completeRecipe = true;
         const changedAt = timestampToIso(entry.changedAt);
         const expiresAt = timestampToIso(entry.expiresAt);
         if (changedAt) cleaned.changedAt = changedAt;

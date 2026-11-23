@@ -105,6 +105,12 @@ describe('PBKDF2 preflight', () => {
 });
 
 describe('recipe history', () => {
+    it('keeps omitted options when rebuilding a complete archived recipe', () => {
+        const active = { counter: 5, length: 24, useNumbers: false, userSalt: 'current salt' };
+        expect(optionsForHistoryEntry(active, { version: 4, completeRecipe: true })).toEqual({ counter: 4 });
+        expect(optionsForHistoryEntry(active, { version: 4 })).toEqual({ ...active, counter: 4 });
+    });
+
     it('rotates memorable passwords by advancing the magic number', () => {
         const next = nextRotatedOptions('memorizable', { counter: 2, shift: 3, magicNumber: 7 });
         expect(next).toEqual({ counter: 3, shift: 3, magicNumber: 8 });
@@ -226,6 +232,9 @@ describe('backup round trip', () => {
                 notes: 'office',
                 versionHistory: [{
                     version: 1,
+                    site: 'old.example',
+                    login: 'old@example.test',
+                    completeRecipe: true,
                     shift: 3,
                     magicNumber: 6,
                     reason: 'Regular rotation',
@@ -256,6 +265,11 @@ describe('backup round trip', () => {
         expect(parsed.invalid).toBe(0);
         expect(parsed.profiles[0].favorite).toBe(true);
         expect(parsed.profiles[0].versionHistory?.[0].shift).toBe(3);
+        expect(parsed.profiles[0].versionHistory?.[0]).toMatchObject({
+            site: 'old.example',
+            login: 'old@example.test',
+            completeRecipe: true,
+        });
     });
 
     it('rejects a profile with an unknown algorithm and still accepts older files', () => {
