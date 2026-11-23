@@ -18,6 +18,7 @@ export interface RecipeOptions {
 
 export interface RecipeSnapshot {
     version: number;
+    completeRecipe?: boolean;
     reason?: string;
     length?: number;
     shift?: number;
@@ -115,13 +116,13 @@ export function withMemorableVersionBump<T extends RecipeOptions>(
     return next;
 }
 
-/** Apply a history row onto current options so an old password can be rebuilt. */
+/** Earlier history rows inherited omitted options from the active recipe. */
 export function optionsForHistoryEntry<T extends RecipeOptions>(
     current: T,
     entry: RecipeSnapshot
 ): T {
     return {
-        ...current,
+        ...(entry.completeRecipe ? {} : current),
         counter: entry.version,
         ...(entry.length !== undefined ? { length: entry.length } : {}),
         ...(entry.shift !== undefined ? { shift: entry.shift } : {}),
@@ -131,5 +132,5 @@ export function optionsForHistoryEntry<T extends RecipeOptions>(
         ...(entry.useNumbers !== undefined ? { useNumbers: entry.useNumbers } : {}),
         ...(entry.useSymbols !== undefined ? { useSymbols: entry.useSymbols } : {}),
         ...(entry.userSalt !== undefined ? { userSalt: entry.userSalt } : {}),
-    };
+    } as T;
 }

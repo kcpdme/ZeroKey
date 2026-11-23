@@ -4,7 +4,7 @@ ZeroKey is a stateless password generator. You enter a master key, a site, and a
 
 Firebase stores the recipe (site, login, algorithm, and options) so you can generate the same password again. It does not store the master key or the generated password.
 
-The web app lives in [`Web/`](Web/). An Android client is planned and will live in [`Android/`](Android/). It is not started.
+The web app lives in [`Web/`](Web/). The Kotlin Android app with Firebase sync and offline recipe lookup lives in [`Android/`](Android/) and uses the same password derivation code.
 
 ## Generators
 

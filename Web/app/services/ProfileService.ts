@@ -30,6 +30,9 @@ import { BackupProfile } from '../lib/backup';
 
 export interface VersionHistoryEntry {
     version: number;           // The counter/version value
+    site?: string;
+    login?: string;
+    completeRecipe?: boolean;
     changedAt: any;            // Timestamp when this version was created
     reason?: string;           // Why the password was changed
     expiresAt?: any;           // When this password should expire
@@ -132,6 +135,9 @@ function historyFromBackup(entries: BackupProfile['versionHistory']): VersionHis
     if (!entries?.length) return undefined;
     return entries.map((entry) => removeUndefined({
         version: entry.version,
+        site: typeof entry.site === 'string' ? entry.site : undefined,
+        login: typeof entry.login === 'string' ? entry.login : undefined,
+        completeRecipe: entry.completeRecipe === true ? true : undefined,
         changedAt: isoToTimestamp(entry.changedAt),
         expiresAt: isoToTimestamp(entry.expiresAt),
         reason: entry.reason,

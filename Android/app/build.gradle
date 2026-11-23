@@ -1,0 +1,88 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
+}
+
+def useFirebaseEmulators = providers.gradleProperty('firebaseEmulator').map { it == 'true' }.getOrElse(false)
+if (!useFirebaseEmulators && file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
+def webProject = rootProject.file('../Web')
+def engineEntry = file('src/main/engine/entry.ts')
+def bundleScript = rootProject.file('scripts/bundle-engine.mjs')
+def engineAssets = layout.buildDirectory.dir('generated/zerokey-engine/main')
+def engineOutput = engineAssets.map { it.file('engine.js') }
+
+tasks.register('bundlePasswordEngine', Exec) {
+    inputs.files(engineEntry, bundleScript, new File(webProject, 'package-lock.json'))
+    inputs.files(fileTree(new File(webProject, 'app/lib/generators')) { include '**/*.ts' })
+    inputs.files(
+        new File(webProject, 'app/lib/normalize-input.ts'),
+        new File(webProject, 'app/lib/pbkdf2-preflight.ts'),
+    )
+    outputs.file(engineOutput)
+    commandLine 'node', bundleScript, webProject, engineEntry, engineOutput.get().asFile
+}
+
+android {
+    namespace 'top.kcpd.zerokey'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'top.kcpd.zerokey'
+        minSdk 26
+        targetSdk 36
+        versionCode 11
+        versionName '0.7.0'
+        manifestPlaceholders = [allowEmulatorCleartext: useFirebaseEmulators]
+        buildConfigField 'boolean', 'FIREBASE_EMULATOR', "${useFirebaseEmulators}"
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures { buildConfig true }
+
+    if (useFirebaseEmulators) {
+        // Emulator builds must never replace an installed production client.
+        buildTypes.debug.applicationIdSuffix '.emulator'
+        androidComponents.beforeVariants(androidComponents.selector().withBuildType('release')) { it.enable = false }
+    }
+
+    sourceSets {
+        main.assets.srcDir(engineAssets)
+        androidTest.assets.srcDir(new File(webProject, '__tests__/fixtures'))
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn 'bundlePasswordEngine'
+}
+
+kotlin { jvmToolchain(17) }
+ksp { arg('room.schemaLocation', file('schemas').absolutePath) }
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.14.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.9.4'
+    implementation platform('com.google.firebase:firebase-bom:35.2.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'androidx.credentials:credentials:1.5.0'
+    implementation 'androidx.credentials:credentials-play-services-auth:1.5.0'
+    implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.1'
+    implementation 'androidx.room:room-runtime:2.8.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2'
+    ksp 'androidx.room:room-compiler:2.8.4'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+}

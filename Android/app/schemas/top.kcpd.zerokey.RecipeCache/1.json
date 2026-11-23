@@ -1,0 +1,129 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "4a3a97a7b4bec85cee576ce5fec71e59",
+    "entities": [
+      {
+        "tableName": "recipes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`owner` TEXT NOT NULL, `id` TEXT NOT NULL, `site` TEXT NOT NULL, `login` TEXT NOT NULL, `siteKey` TEXT NOT NULL COLLATE NOCASE, `loginKey` TEXT NOT NULL COLLATE NOCASE, `algorithm` TEXT NOT NULL, `options` TEXT NOT NULL, `tags` TEXT NOT NULL, `favorite` INTEGER NOT NULL, `history` TEXT NOT NULL, `draftId` TEXT, `draftOptions` TEXT, `expiresAt` INTEGER, PRIMARY KEY(`owner`, `id`))",
+        "fields": [
+          {
+            "fieldPath": "owner",
+            "columnName": "owner",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site",
+            "columnName": "site",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "login",
+            "columnName": "login",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "siteKey",
+            "columnName": "siteKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "loginKey",
+            "columnName": "loginKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "algorithm",
+            "columnName": "algorithm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "options",
+            "columnName": "options",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favorite",
+            "columnName": "favorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "history",
+            "columnName": "history",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "draftId",
+            "columnName": "draftId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "draftOptions",
+            "columnName": "draftOptions",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expiresAt",
+            "columnName": "expiresAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "owner",
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recipes_owner_siteKey",
+            "unique": false,
+            "columnNames": [
+              "owner",
+              "siteKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recipes_owner_siteKey` ON `${TABLE_NAME}` (`owner`, `siteKey`)"
+          },
+          {
+            "name": "index_recipes_owner_loginKey",
+            "unique": false,
+            "columnNames": [
+              "owner",
+              "loginKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recipes_owner_loginKey` ON `${TABLE_NAME}` (`owner`, `loginKey`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4a3a97a7b4bec85cee576ce5fec71e59')"
+    ]
+  }
+}
